@@ -6,7 +6,7 @@ export default async function DemoControlPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Demo Control Center</h1>
+        <h1 className="text-3xl">Demo Control Center</h1>
         <p className="text-sm text-muted-foreground">
           Admin only. Before going on stage: <strong>Prepare Stage Demo</strong>, then <strong>Run Demo Health Check</strong> and
           make sure everything is green. See STAGE_DEMO.md.

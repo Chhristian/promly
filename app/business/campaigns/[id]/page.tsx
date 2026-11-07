@@ -1,3 +1,4 @@
+import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireRole } from "@/lib/auth";
@@ -39,13 +40,13 @@ export default async function CampaignEditorPage({ params }: { params: Promise<{
     <div className="space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex items-center gap-4">
-          <div className="h-20 w-20 shrink-0 overflow-hidden rounded-2xl">
+          <div className="h-20 w-20 shrink-0 overflow-hidden rounded-2xl border border-border">
             <CampaignCover category={campaign.businesses.category} imageUrl={photos[0]?.url} size="sm" />
           </div>
           <div>
-            <Link href="/business" className="text-sm text-muted-foreground hover:text-foreground">← Dashboard</Link>
+            <Link href="/business" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"><ArrowLeft className="h-4 w-4" /> Dashboard</Link>
             <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-2">
-              <h1 className="line-clamp-3 text-2xl font-bold tracking-tight sm:text-3xl">{campaign.service_name}</h1>
+              <h1 className="line-clamp-3 text-[clamp(1.6rem,4.5vw,2.25rem)]">{campaign.service_name}</h1>
               <StatusBadge status={campaign.status} />
             </div>
             <p className="line-clamp-1 text-muted-foreground">{campaign.businesses.name}</p>
@@ -54,20 +55,20 @@ export default async function CampaignEditorPage({ params }: { params: Promise<{
       </div>
 
       {/* One panel, one primary action: what it costs, and Publish. */}
-      <section className="card flex flex-col gap-5 p-5 sm:flex-row sm:items-center sm:justify-between">
+      <section className="card flex flex-col gap-5 border-2 border-ink p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
         {agreement ? (
           <dl className="grid flex-1 grid-cols-3 gap-4">
             <div>
               <dt className="text-sm text-muted-foreground">Promoter earns</dt>
-              <dd className="mt-1 whitespace-nowrap text-2xl font-bold tabular-nums tracking-tight sm:text-3xl">{money(agreement.commission_minor)}</dd>
+              <dd className="mt-1 money text-2xl sm:text-3xl">{money(agreement.commission_minor)}</dd>
             </div>
             <div>
               <dt className="text-sm text-muted-foreground">Promly fee (2.75%)</dt>
-              <dd className="mt-1 whitespace-nowrap text-2xl font-bold tabular-nums tracking-tight sm:text-3xl">{money(fee)}</dd>
+              <dd className="mt-1 money text-2xl sm:text-3xl">{money(fee)}</dd>
             </div>
             <div>
               <dt className="text-sm text-muted-foreground">You pay per verified booking</dt>
-              <dd className="text-gradient mt-1 whitespace-nowrap text-2xl font-bold tabular-nums tracking-tight sm:text-3xl">{money(agreement.commission_minor + fee)}</dd>
+              <dd className="mt-1 money text-2xl sm:text-3xl"><span className="marked">{money(agreement.commission_minor + fee)}</span></dd>
             </div>
           </dl>
         ) : (
@@ -80,7 +81,7 @@ export default async function CampaignEditorPage({ params }: { params: Promise<{
 
       <div className="grid gap-6 lg:grid-cols-2">
         <section className="space-y-3 card p-5">
-          <h2 className="font-semibold">Campaign details</h2>
+          <h2 className="text-lg">Campaign details</h2>
           <EditCampaignForm
             campaignId={campaign.id}
             currency={cur}
@@ -91,7 +92,7 @@ export default async function CampaignEditorPage({ params }: { params: Promise<{
         </section>
 
         <section className="space-y-3 card p-5">
-          <h2 className="font-semibold">Agreement terms</h2>
+          <h2 className="text-lg">Agreement terms</h2>
           <p className="text-sm text-muted-foreground">
             {agreement
               ? "Changing terms creates a new version. Promoters who already joined keep the version they accepted."
@@ -130,18 +131,18 @@ export default async function CampaignEditorPage({ params }: { params: Promise<{
       )}
 
       <section className="space-y-3">
-        <h2 className="font-semibold">Promoters ({members?.length ?? 0})</h2>
+        <h2 className="text-lg">Promoters ({members?.length ?? 0})</h2>
         {!members?.length && <p className="text-sm text-muted-foreground">No promoters have joined yet.</p>}
-        {members?.map((m) => (
+        {!!members?.length && <div className="ledger">{members.map((m) => (
           <Highlight key={m.id} ids={[m.id]}>
-          <div className="flex items-center justify-between card p-3 text-sm">
+          <div className="flex flex-wrap items-center justify-between gap-x-3 px-4 py-3 text-sm">
             <span className="font-medium">{m.profiles?.display_name || "Promoter"}</span>
             <span className="text-muted-foreground">
-              accepted v{m.agreements?.version} · {formatDateTime(m.promoter_accepted_at)}
+              accepted v{m.agreements?.version}, {formatDateTime(m.promoter_accepted_at)}
             </span>
           </div>
           </Highlight>
-        ))}
+        ))}</div>}
       </section>
     </div>
   );

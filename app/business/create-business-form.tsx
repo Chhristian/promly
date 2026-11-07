@@ -6,14 +6,14 @@ import { Label } from "@/components/ui/label";
 import { createBusiness } from "./actions";
 
 export const selectClass =
-  "h-10 w-full rounded-md border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring";
+  "h-11 w-full rounded-[10px] border border-input bg-card px-3.5 text-base focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/25 md:text-sm";
 export const textareaClass =
-  "min-h-24 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring";
+  "min-h-24 w-full rounded-[10px] border border-input bg-card px-3.5 py-2.5 text-base focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/25 md:text-sm";
 
 export function CreateBusinessForm() {
   return (
     <div className="mx-auto max-w-lg">
-      <h1 className="text-2xl font-bold">Set up your business</h1>
+      <h1 className="text-3xl">Set up your business</h1>
       <p className="mt-1 text-sm text-muted-foreground">Promoters and customers will see this.</p>
       <ActionForm action={createBusiness} className="mt-6 space-y-4 card p-5">
         <div className="grid gap-2">

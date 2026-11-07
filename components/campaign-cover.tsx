@@ -32,6 +32,11 @@ export function categoryColors(category?: string | null): { from: string; to: st
   return { from: c.from, to: c.to };
 }
 
+/** Flat tint of the category artwork (also used by the promo image). */
+export function categoryTint(category?: string | null): string {
+  return TINT[category ?? "other"] ?? TINT.other;
+}
+
 export function categoryLabel(category?: string | null) {
   return (CATEGORY[category ?? "other"] ?? CATEGORY.other).label;
 }

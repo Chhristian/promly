@@ -14,7 +14,7 @@ export function OnboardingForm({ email, suggestedName }: { email: string; sugges
       type="button"
       onClick={() => setRole(value)}
       aria-pressed={role === value}
-      className={cn("rounded-xl border p-3 text-left transition", role === value ? "border-primary bg-primary/15" : "border-border hover:bg-secondary")}
+      className={cn("rounded-[10px] border p-3 text-left transition-colors", role === value ? "border-ink bg-card ring-1 ring-ink" : "border-border bg-card hover:border-input")}
     >
       <div className="text-sm font-semibold">{title}</div>
       <div className="text-xs text-muted-foreground">{hint}</div>
@@ -22,7 +22,7 @@ export function OnboardingForm({ email, suggestedName }: { email: string; sugges
   );
   return (
     <div className="card p-6">
-      <h1 className="text-2xl font-bold">Finish setting up your account</h1>
+      <h1 className="text-3xl">Finish setting up your account</h1>
       <p className="mt-1 text-sm text-muted-foreground">
         You&apos;re logged in as {email}. Tell us how you&apos;ll use Promly.
       </p>

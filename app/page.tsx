@@ -38,7 +38,7 @@ export default async function Home() {
       <main className="mx-auto w-full max-w-6xl flex-1 px-4">
         <section className="grid items-center gap-10 pb-16 pt-6 sm:pt-12 lg:grid-cols-[1.15fr_1fr] lg:gap-14 lg:pb-24">
           <div>
-            <h1 className="text-[clamp(2.75rem,8.5vw,4.6rem)] font-extrabold leading-[0.98] tracking-[-0.045em]">
+            <h1 className="text-[clamp(2.75rem,8.5vw,4.6rem)] leading-[0.98] tracking-[-0.045em]">
               Share a link.
               <br />
               Get paid when they show up.

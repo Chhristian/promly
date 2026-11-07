@@ -9,7 +9,7 @@ export default async function NewCampaignPage() {
   if (!business) redirect("/business");
   return (
     <div className="mx-auto max-w-lg">
-      <h1 className="text-2xl font-bold">New campaign</h1>
+      <h1 className="text-3xl">New campaign</h1>
       <p className="mt-1 text-sm text-muted-foreground">
         Start with the service. You&apos;ll set the commission in the agreement on the next screen.
       </p>

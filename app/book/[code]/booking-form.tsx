@@ -36,13 +36,13 @@ export function BookingForm({ code, days }: { code: string; days: { day: string;
                 setSlot(null);
               }}
               className={cn(
-                "flex w-16 shrink-0 flex-col items-center rounded-2xl border py-2 transition",
+                "flex w-16 shrink-0 flex-col items-center rounded-2xl border py-2 transition-colors duration-150",
                 i === dayIdx ? "border-ink bg-ink text-white" : "border-border hover:bg-secondary",
               )}
             >
-              <span className="text-xs text-muted-foreground">{d.day === dayKey(new Date().toISOString()) ? "Today" : weekday(d.slots[0])}</span>
-              <span className="text-xl font-bold leading-tight">{dayNum(d.slots[0])}</span>
-              <span className="text-xs text-muted-foreground">{month(d.slots[0])}</span>
+              <span className={cn("text-xs", i === dayIdx ? "text-white/70" : "text-muted-foreground")}>{d.day === dayKey(new Date().toISOString()) ? "Today" : weekday(d.slots[0])}</span>
+              <span className="money text-xl leading-tight">{dayNum(d.slots[0])}</span>
+              <span className={cn("text-xs", i === dayIdx ? "text-white/70" : "text-muted-foreground")}>{month(d.slots[0])}</span>
             </button>
           ))}
         </div>
@@ -58,7 +58,7 @@ export function BookingForm({ code, days }: { code: string; days: { day: string;
               onClick={() => setSlot(s)}
               aria-pressed={slot === s}
               className={cn(
-                "rounded-xl border py-3 text-base font-semibold tabular-nums transition",
+                "rounded-[10px] border py-3 text-base font-bold tabular-nums transition-colors duration-150",
                 slot === s ? "border-ink bg-marker text-ink" : "border-border hover:bg-secondary",
               )}
             >
@@ -81,7 +81,7 @@ export function BookingForm({ code, days }: { code: string; days: { day: string;
       </div>
 
       <div className="sticky bottom-3 z-10">
-        <SubmitButton pendingText="Booking…" disabled={!slot} className={cn("h-14 w-full rounded-2xl text-lg", slot && "")}>
+        <SubmitButton pendingText="Booking…" disabled={!slot} className="h-14 w-full text-lg shadow-[0_8px_24px_-8px_hsl(232_87%_54%/0.6)]">
           {slot ? `Book ${longDay(slot)} ${formatTime(slot)}` : "Pick a time to book"}
         </SubmitButton>
       </div>

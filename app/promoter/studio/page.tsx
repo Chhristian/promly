@@ -43,13 +43,13 @@ export default async function StudioPage({ searchParams }: { searchParams: Promi
   return (
     <div className="space-y-5">
       <div>
-        <h1 className="text-2xl font-bold">Marketing Studio</h1>
+        <h1 className="text-[clamp(2rem,5vw,2.75rem)]">Marketing Studio</h1>
         <p className="text-sm text-muted-foreground">
           Ready-to-use texts for your campaigns, filled with the business&apos;s own details and your link. Edit them, then copy.
         </p>
       </div>
       {campaigns.length === 0 ? (
-        <p className="rounded-xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
+        <p className="rounded-2xl border border-dashed border-input p-8 text-sm text-muted-foreground">
           Join a campaign first. <Link href="/promoter/explore" className="underline">Explore campaigns</Link>
         </p>
       ) : (

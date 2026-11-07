@@ -60,7 +60,7 @@ export function DemoControl() {
   return (
     <div className="grid gap-6 lg:grid-cols-2">
       <section className="space-y-3 card p-5">
-        <h2 className="font-semibold">Prepare Stage Demo</h2>
+        <h2 className="text-lg">Prepare Stage Demo</h2>
         <p className="text-sm text-muted-foreground">
           Deletes <strong>only demo data</strong> (bookings, ledger rows, joins, notifications, campaigns of demo businesses) and
           creates it fresh: both campaigns as drafts with accepted agreements, no bookings, new time slots. Accounts and
@@ -85,7 +85,7 @@ export function DemoControl() {
 
       <section className="space-y-3 card p-5">
         <div className="flex items-center justify-between gap-2">
-          <h2 className="font-semibold">Run Demo Health Check</h2>
+          <h2 className="text-lg">Run Demo Health Check</h2>
           {checks && (
             <span className={cn("rounded-full px-2 py-0.5 text-xs font-semibold", allOk ? "bg-[hsl(155_60%_92%)] text-paid" : "bg-[hsl(0_80%_96%)] text-destructive")}>
               {allOk ? "All green" : `${checks.list.filter((c) => !c.ok).length} problem(s)`}

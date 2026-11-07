@@ -30,7 +30,7 @@ export function Studio({ campaigns, initialCampaignId }: { campaigns: StudioCamp
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center gap-3">
-        <div className="inline-flex rounded-full border border-border bg-card/60 p-1" role="tablist">
+        <div className="inline-flex rounded-full bg-secondary p-1" role="tablist">
           {([["texts", "Texts", Type], ["image", "Promo image", ImageIcon]] as const).map(([k, label, Icon]) => (
             <button
               key={k}
@@ -38,7 +38,7 @@ export function Studio({ campaigns, initialCampaignId }: { campaigns: StudioCamp
               role="tab"
               aria-selected={tab === k}
               onClick={() => setTab(k)}
-              className={cn("flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-medium transition-colors", tab === k ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground")}
+              className={cn("flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-medium transition-colors", tab === k ? "bg-ink text-white" : "text-muted-foreground hover:text-foreground")}
             >
               <Icon className="h-4 w-4" /> {label}
             </button>
@@ -48,7 +48,7 @@ export function Studio({ campaigns, initialCampaignId }: { campaigns: StudioCamp
           aria-label="Campaign"
           value={campaign.id}
           onChange={(e) => setCampaignId(e.target.value)}
-          className="h-10 w-full min-w-0 truncate rounded-full border border-input bg-background px-4 text-sm sm:w-auto sm:max-w-md"
+          className="h-10 w-full min-w-0 truncate rounded-full border border-input bg-card px-4 text-sm font-medium sm:w-auto sm:max-w-md"
         >
           {campaigns.map((c) => (
             <option key={c.id} value={c.id}>
@@ -131,8 +131,8 @@ function TextStudio({ campaign }: { campaign: StudioCampaign }) {
                   }}
                   aria-pressed={activeType === t.type}
                   className={cn(
-                    "rounded-lg border p-3 text-left",
-                    activeType === t.type ? "border-primary bg-primary/15" : "border-border hover:bg-secondary",
+                    "rounded-[10px] border p-3 text-left transition-colors",
+                    activeType === t.type ? "border-ink bg-card ring-1 ring-ink" : "border-border bg-card hover:border-input",
                   )}
                 >
                   <div className="text-sm font-semibold">{t.label}</div>
@@ -146,7 +146,7 @@ function TextStudio({ campaign }: { campaign: StudioCampaign }) {
           </p>
         </div>
 
-        <div className="rounded-xl border border-[hsl(40_80%_72%)] bg-pending-bg/60 p-3 text-sm">
+        <div className="rounded-2xl border border-[hsl(40_80%_72%)] bg-pending-bg/60 p-4 text-sm">
           <div className="font-semibold text-pending">Brand rules from {campaign.businessName}</div>
           <p className="text-muted-foreground">{campaign.brandRules || "No extra brand rules."}</p>
           <p className="mt-2 text-xs text-muted-foreground">
@@ -165,7 +165,7 @@ function TextStudio({ campaign }: { campaign: StudioCampaign }) {
           id="studio-text"
           value={text}
           onChange={(e) => setEdited(e.target.value)}
-          className="min-h-72 w-full rounded-xl border border-input bg-background p-4 font-mono text-sm leading-relaxed focus:outline-none focus:ring-2 focus:ring-ring"
+          className="min-h-72 w-full rounded-2xl border border-input bg-card p-4 text-base leading-relaxed focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/25"
         />
         <div className="flex flex-wrap gap-2">
           <Button type="button" onClick={copy}  disabled={!text}>

@@ -97,7 +97,7 @@ export function PhotoManager({ campaignId, photos }: { campaignId: string; photo
     <section className="card space-y-4 p-5">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h2 className="text-lg font-semibold">Photos</h2>
+          <h2 className="text-lg">Photos</h2>
           <p className="text-sm text-muted-foreground">Up to 3 photos (JPG, PNG or WebP, max 5 MB). The first one is the cover everywhere.</p>
         </div>
         <input

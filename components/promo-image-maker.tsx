@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import QRCode from "qrcode";
 import { AlertTriangle, Download, ImageIcon, Loader2, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { categoryColors } from "@/components/campaign-cover";
+import { categoryTint } from "@/components/campaign-cover";
 import { FORMATS, fitText, promoLayout, wrapLines, type PromoFormat } from "@/lib/promo-image-layout";
 import { cn } from "@/lib/utils";
 
@@ -20,7 +20,9 @@ export type PromoImageCampaign = {
   mustMentions: { phrase: string; sentence: string | null }[];
 };
 
-const NAVY = "#0b0e1f";
+const NAVY = "#0d1b2a"; // ink
+const MARKER = "#ffe14d";
+const COBALT = "#2440f0";
 const AD_NOTE = "Ad · I earn a commission if you book through my link.";
 
 function loadImage(url: string): Promise<HTMLImageElement> {
@@ -55,11 +57,6 @@ async function draw(canvas: HTMLCanvasElement, c: PromoImageCampaign, format: Pr
   // Background
   ctx.fillStyle = NAVY;
   ctx.fillRect(0, 0, W, H);
-  const glow = ctx.createRadialGradient(W * 0.2, L.photo.h + 200, 0, W * 0.2, L.photo.h + 200, W);
-  glow.addColorStop(0, "rgba(124,58,237,0.28)");
-  glow.addColorStop(1, "rgba(124,58,237,0)");
-  ctx.fillStyle = glow;
-  ctx.fillRect(0, L.photo.h, W, H - L.photo.h);
 
   // Photo (cover-fit) or category artwork
   const p = L.photo;
@@ -70,15 +67,9 @@ async function draw(canvas: HTMLCanvasElement, c: PromoImageCampaign, format: Pr
     const sh = p.h / scale;
     ctx.drawImage(img, (img.width - sw) / 2, (img.height - sh) / 2, sw, sh, p.x, p.y, p.w, p.h);
   } else {
-    const { from, to } = categoryColors(c.category);
-    const g = ctx.createLinearGradient(0, 0, p.w, p.h);
-    g.addColorStop(0, from);
-    g.addColorStop(1, to);
-    ctx.fillStyle = g;
+    ctx.fillStyle = categoryTint(c.category);
     ctx.fillRect(p.x, p.y, p.w, p.h);
-    ctx.fillStyle = "rgba(255,255,255,0.18)";
-    for (let y = 24; y < p.h; y += 44) for (let x = 24; x < p.w; x += 44) ctx.fillRect(x, y, 3, 3);
-    ctx.fillStyle = "rgba(255,255,255,0.9)";
+    ctx.fillStyle = NAVY;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     const initial = fitText(c.businessName, { maxWidth: p.w - 160, maxLines: 2, maxSize: 110, minSize: 56, measure: measureAt(800) });
@@ -89,7 +80,7 @@ async function draw(canvas: HTMLCanvasElement, c: PromoImageCampaign, format: Pr
   }
   // Fade the photo into the panel
   const fade = ctx.createLinearGradient(0, p.h - 260, 0, p.h);
-  fade.addColorStop(0, "rgba(11,14,31,0)");
+  fade.addColorStop(0, "rgba(13,27,42,0)");
   fade.addColorStop(1, NAVY);
   ctx.fillStyle = fade;
   ctx.fillRect(0, p.h - 260, W, 260);
@@ -105,23 +96,25 @@ async function draw(canvas: HTMLCanvasElement, c: PromoImageCampaign, format: Pr
   ctx.fillText("AD", L.pad + 4, 82);
 
   const markX = W - L.pad - 210;
-  const mg = ctx.createLinearGradient(markX, 40, markX + 60, 100);
-  mg.addColorStop(0, "#a78bfa");
-  mg.addColorStop(1, "#3b82f6");
-  ctx.fillStyle = mg;
+  ctx.fillStyle = COBALT;
   ctx.beginPath();
-  ctx.roundRect(markX, 40, 60, 60, 16);
+  ctx.roundRect(markX, 40, 60, 60, 15);
   ctx.fill();
   ctx.fillStyle = "#ffffff";
-  ctx.font = font(38, 800);
-  ctx.fillText("P", markX + 18, 84);
+  ctx.font = font(44, 800);
+  ctx.fillText("p", markX + 16, 82);
+  ctx.fillStyle = MARKER;
+  ctx.beginPath();
+  ctx.arc(markX + 47, 86, 6, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#ffffff";
   ctx.font = font(40, 800);
   ctx.fillText("promly", markX + 74, 84);
 
   // Top text block
   let y = L.businessY;
-  ctx.fillStyle = "rgba(226,232,255,0.72)";
-  const biz = wrapLines(`${c.businessName}${c.city ? ` · ${c.city}` : ""}`.toUpperCase(), 34, L.textW, 1, measureAt(700));
+  ctx.fillStyle = "rgba(255,255,255,0.72)";
+  const biz = wrapLines(`${c.businessName}${c.city ? `, ${c.city}` : ""}`, 34, L.textW, 1, measureAt(700));
   ctx.font = font(34, 700);
   ctx.fillText(biz.lines[0] ?? "", L.textX, y);
 
@@ -137,10 +130,13 @@ async function draw(canvas: HTMLCanvasElement, c: PromoImageCampaign, format: Pr
   const priceSize = Math.min(L.priceSize, fitText(c.price, { maxWidth: L.textW, maxLines: 1, maxSize: L.priceSize, minSize: 40, measure: measureAt(800) }).size);
   y += priceSize * (format === "story" ? 0.02 : 0);
   ctx.font = font(priceSize, 800);
-  const pg = ctx.createLinearGradient(L.textX, 0, L.textX + ctx.measureText(c.price).width, 0);
-  pg.addColorStop(0, "#a78bfa");
-  pg.addColorStop(1, "#60a5fa");
-  ctx.fillStyle = pg;
+  // The price on a highlighter block, like the app's money figures
+  const pw = ctx.measureText(c.price).width;
+  ctx.fillStyle = MARKER;
+  ctx.beginPath();
+  ctx.roundRect(L.textX - priceSize * 0.12, y + priceSize * 0.08, pw + priceSize * 0.24, priceSize * 0.9, priceSize * 0.1);
+  ctx.fill();
+  ctx.fillStyle = NAVY;
   ctx.fillText(c.price, L.textX, y + priceSize * 0.8);
   y += priceSize * (format === "story" ? 1.05 : 0.95);
 
@@ -153,7 +149,7 @@ async function draw(canvas: HTMLCanvasElement, c: PromoImageCampaign, format: Pr
     if (y + m.lines.length * size * 1.3 <= L.textBottom) {
       mentionShown = true;
       ctx.font = font(size, 500);
-      ctx.fillStyle = "rgba(226,232,255,0.85)";
+      ctx.fillStyle = "rgba(255,255,255,0.85)";
       for (const line of m.lines) {
         y += size * 1.3;
         ctx.fillText(line, L.textX, y);
@@ -174,7 +170,7 @@ async function draw(canvas: HTMLCanvasElement, c: PromoImageCampaign, format: Pr
   const shortLink = c.link.replace(/^https?:\/\//, "");
   const linkSize = fitText(shortLink, { maxWidth: q.w + 40, maxLines: 1, maxSize: 26, minSize: 16, measure: measureAt(600) }).size;
   ctx.font = font(linkSize, 600);
-  ctx.fillStyle = "rgba(226,232,255,0.85)";
+  ctx.fillStyle = "rgba(255,255,255,0.85)";
   ctx.textAlign = "center";
   ctx.fillText(shortLink, q.x + q.w / 2, L.linkY);
   ctx.textAlign = "left";
@@ -187,14 +183,14 @@ async function draw(canvas: HTMLCanvasElement, c: PromoImageCampaign, format: Pr
   const ctaY = format === "story" ? L.ctaY : L.ctaY;
   ctx.fillText("Scan to book", ctaX, ctaY);
   ctx.font = font(format === "story" ? 34 : 24, 500);
-  ctx.fillStyle = "rgba(226,232,255,0.72)";
-  ctx.fillText(format === "story" ? "or open the link →" : "or open the link", ctaX, ctaY + (format === "story" ? 56 : 36));
+  ctx.fillStyle = "rgba(255,255,255,0.72)";
+  ctx.fillText(format === "story" ? "or open the link" : "or open the link", ctaX, ctaY + (format === "story" ? 56 : 36));
 
   // Honest ad note
   const adSize = format === "story" ? 26 : 20;
   const ad = wrapLines(AD_NOTE, adSize, L.bottomTextW, 2, measureAt(500));
   ctx.font = font(adSize, 500);
-  ctx.fillStyle = "rgba(226,232,255,0.6)";
+  ctx.fillStyle = "rgba(255,255,255,0.6)";
   ad.lines.forEach((line, i) => ctx.fillText(line, L.textX, L.adY - (ad.lines.length - 1 - i) * adSize * 1.3));
   return { mentionShown };
 }
@@ -276,7 +272,7 @@ export function PromoImageMaker({ campaign }: { campaign: PromoImageCampaign }) 
                 type="button"
                 onClick={() => setFormat(f)}
                 aria-pressed={format === f}
-                className={cn("rounded-xl border p-3 text-left", format === f ? "border-primary bg-primary/15" : "border-border hover:bg-secondary")}
+                className={cn("rounded-[10px] border p-3 text-left transition-colors", format === f ? "border-ink ring-1 ring-ink bg-card" : "border-border bg-card hover:border-input")}
               >
                 <div className="text-sm font-semibold">{FORMATS[f].label}</div>
                 <div className="text-xs text-muted-foreground">{f === "story" ? "Instagram / Snapchat / TikTok story" : "Feed post / WhatsApp"}</div>
@@ -295,7 +291,7 @@ export function PromoImageMaker({ campaign }: { campaign: PromoImageCampaign }) 
                 onClick={() => setPhoto(i)}
                 aria-label={`Use photo ${i + 1}`}
                 data-testid="promo-photo-option"
-                className={cn("h-20 w-20 overflow-hidden rounded-xl border-2", photo === i ? "border-primary" : "border-transparent opacity-70 hover:opacity-100")}
+                className={cn("h-20 w-20 overflow-hidden rounded-xl border-2", photo === i ? "border-ink" : "border-transparent opacity-70 hover:opacity-100")}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={url} alt="" className="h-full w-full object-cover" />
@@ -306,7 +302,7 @@ export function PromoImageMaker({ campaign }: { campaign: PromoImageCampaign }) 
               onClick={() => setPhoto(-1)}
               className={cn(
                 "grid h-20 w-20 place-items-center rounded-xl border-2 bg-secondary text-xs text-muted-foreground",
-                photo === -1 ? "border-primary" : "border-transparent hover:bg-secondary/70",
+                photo === -1 ? "border-ink" : "border-transparent hover:bg-secondary/70",
               )}
             >
               <span className="flex flex-col items-center gap-1">

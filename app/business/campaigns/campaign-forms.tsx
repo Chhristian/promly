@@ -108,7 +108,7 @@ export function AgreementForm({
         <legend className="mb-1 text-sm font-medium">Allowed marketing channels</legend>
         <div className="flex flex-wrap gap-2">
           {CHANNELS.map((c) => (
-            <label key={c.value} className="flex cursor-pointer items-center gap-2 rounded-md border border-border px-3 py-1.5 text-sm has-[:checked]:border-primary has-[:checked]:bg-primary/15">
+            <label key={c.value} className="flex cursor-pointer items-center gap-2 rounded-full border border-input bg-card px-3.5 py-1.5 text-sm font-medium has-[:checked]:border-ink has-[:checked]:bg-ink has-[:checked]:text-white">
               <input type="checkbox" name="allowed_channels" value={c.value} defaultChecked={defaults.allowedChannels.includes(c.value)} className="accent-[hsl(232_87%_54%)]" />
               {c.label}
             </label>

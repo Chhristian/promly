@@ -39,21 +39,21 @@ export default async function ConfirmedPage({
 
   return (
     <div className="mx-auto min-h-screen max-w-md px-3 py-6 sm:py-10">
-      <div className="card overflow-hidden text-center">
-        <div className="bg-[hsl(155_60%_94%)] px-6 pb-2 pt-8">
-          <CheckCircle2 className="mx-auto h-16 w-16 text-paid" strokeWidth={1.6} />
-          <h1 className="mt-4 text-3xl font-bold tracking-tight">You&apos;re booked!</h1>
+      <div className="overflow-hidden rounded-[1.75rem] border border-border bg-card text-center">
+        <div className="px-6 pb-2 pt-9">
+          <span className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-marker"><CheckCircle2 className="h-9 w-9 text-ink" strokeWidth={1.8} /></span>
+          <h1 className="mt-4 text-3xl">You&apos;re booked!</h1>
         </div>
         {details ? (
           <div className="space-y-4 px-6 pb-8 pt-4">
             <div>
-              <div className="text-xl font-semibold">{details.service}</div>
+              <div className="text-xl font-bold">{details.service}</div>
               <div className="mt-0.5 flex items-center justify-center gap-1 text-muted-foreground">
-                {details.business} · <MapPin className="h-3.5 w-3.5" /> {details.city}
+                {details.business}, <MapPin className="h-3.5 w-3.5" /> {details.city}
               </div>
             </div>
-            <div className="mx-auto flex max-w-xs items-center justify-center gap-2 rounded-2xl border border-primary/40 bg-[hsl(232_90%_96%)] px-4 py-3 text-xl font-bold">
-              <CalendarCheck className="h-5 w-5 text-primary" /> {details.slot}
+            <div className="mx-auto flex max-w-xs items-center justify-center gap-2 rounded-2xl bg-ink px-4 py-3.5 text-xl font-bold text-white">
+              <CalendarCheck className="h-5 w-5 text-marker" /> {details.slot}
             </div>
             <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
               <CreditCard className="h-4 w-4" /> Pay {details.price} at your appointment.
