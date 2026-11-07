@@ -11,6 +11,7 @@ export default async function PromoterLayout({ children }: { children: React.Rea
       nav={[
         { href: "/promoter", label: "Dashboard" },
         { href: "/promoter/explore", label: "Explore campaigns" },
+        { href: "/promoter/studio", label: "Marketing Studio" },
       ]}
     >
       {children}

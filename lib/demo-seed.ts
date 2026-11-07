@@ -23,6 +23,8 @@ export const DEMO_ACCOUNTS = {
 export type DemoKey = keyof typeof DEMO_ACCOUNTS;
 
 const OSLO = "Europe/Oslo";
+export const SLOT_FIRST_HOUR = 8; // first slot 08:00
+export const SLOT_LAST_START_HOUR = 21; // last slot 21:00–22:00
 
 export async function findUserIdByEmail(db: Db, email: string): Promise<string | undefined> {
   for (let page = 1; page < 50; page++) {
@@ -99,7 +101,7 @@ function osloOffsetMinutes(at: Date): number {
   return m ? (m[1] === "-" ? -1 : 1) * (Number(m[2]) * 60 + Number(m[3])) : 60;
 }
 
-/** Hourly slots 10:00–17:00 Oslo time for today's remaining hours and the next 3 days. */
+/** Hourly 60-minute slots from 08:00 to 22:00 Oslo time (last one starts 21:00), today's remaining hours and the next 3 days. */
 async function ensureSlots(db: Db, businessId: string): Promise<number> {
   const rows: { business_id: string; starts_at: string }[] = [];
   const now = Date.now();
@@ -110,7 +112,7 @@ async function ensureSlots(db: Db, businessId: string): Promise<number> {
     const sign = off >= 0 ? "+" : "-";
     const hh = String(Math.floor(Math.abs(off) / 60)).padStart(2, "0");
     const mm = String(Math.abs(off) % 60).padStart(2, "0");
-    for (let h = 10; h <= 17; h++) {
+    for (let h = SLOT_FIRST_HOUR; h <= SLOT_LAST_START_HOUR; h++) {
       const startsAt = new Date(`${day}T${String(h).padStart(2, "0")}:00:00${sign}${hh}:${mm}`);
       if (startsAt.getTime() > now + 15 * 60_000) rows.push({ business_id: businessId, starts_at: startsAt.toISOString() });
     }
@@ -255,10 +257,10 @@ export async function runServerHealthChecks(db: Db, liveUrl: string | null): Pro
     const dayOf = (iso: string) => new Date(iso).toLocaleDateString("sv-SE", { timeZone: OSLO });
     const today = free.filter((s) => dayOf(s.starts_at) === osloDay(0)).length;
     const tomorrow = free.filter((s) => dayOf(s.starts_at) === osloDay(1)).length;
-    // Late in the evening there are no slots left today; tomorrow must always have some.
-    const lateEvening = Number(new Date().toLocaleString("en-GB", { timeZone: OSLO, hour: "2-digit", hour12: false })) >= 17;
+    // After the last slot of the day there are none left today; tomorrow must always have some.
+    const lateEvening = Number(new Date().toLocaleString("en-GB", { timeZone: OSLO, hour: "2-digit", hour12: false })) >= SLOT_LAST_START_HOUR;
     const ok = tomorrow > 0 && (today > 0 || lateEvening);
-    return { ok, detail: `${today} free today${today === 0 && lateEvening ? " (none left after 17:00, OK)" : ""}, ${tomorrow} free tomorrow` };
+    return { ok, detail: `${today} free today${today === 0 && lateEvening ? " (none left this late, OK)" : ""}, ${tomorrow} free tomorrow` };
   });
 
   await run("Live site responding", async () => {

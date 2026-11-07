@@ -9,6 +9,15 @@ import { test, expect, devices, type Page } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "../../lib/database.types";
 import { resetDemo } from "../../lib/demo-seed";
+import { readFileSync } from "node:fs";
+import { PNG } from "pngjs";
+import jsQR from "jsqr";
+
+/** Decode a QR code PNG the way a phone camera would. */
+function decodeQrPng(file: string): string | null {
+  const png = PNG.sync.read(readFileSync(file));
+  return jsQR(new Uint8ClampedArray(png.data), png.width, png.height)?.data ?? null;
+}
 
 const NOK = (amount: string) => new RegExp(`${amount.replace(".", ",")}\\s*kr`); // "100,00 kr"
 
@@ -108,6 +117,16 @@ test("stage flow: publish → join → book → verify → commission appears li
   const link = (await pro.locator("code").first().innerText()).trim();
   expect(link).toMatch(/\/r\/[a-z0-9]{10}$/);
 
+  // Sharing: WhatsApp button carries the link; the QR code encodes exactly the link.
+  const wa = await pro.getByRole("link", { name: /WhatsApp/ }).getAttribute("href");
+  expect(wa).toMatch(/^https:\/\/wa\.me\/\?text=/);
+  expect(decodeURIComponent(wa!.split("text=")[1])).toContain(link);
+  await expect(pro.getByTestId("qr-image")).toBeVisible();
+  const [download] = await Promise.all([pro.waitForEvent("download"), pro.getByTestId("download-qr").click()]);
+  expect(download.suggestedFilename()).toBe("promly-qr-premium-haircut.png");
+  const qrUrl = decodeQrPng(await download.path());
+  expect(qrUrl).toBe(link);
+
   // → business sees the join live.
   await expect(biz.getByText("Alex joined your campaign.").first()).toBeVisible();
 
@@ -116,8 +135,8 @@ test("stage flow: publish → join → book → verify → commission appears li
   await waitForLive(pro);
   await expect(stats(pro)).toContainText(/available\s*0,00\s*kr/i);
 
-  // Customer opens the link on a phone and books (no login).
-  await cus.goto(link);
+  // Customer "scans" the QR code on a phone and books (no login).
+  await cus.goto(qrUrl!);
   await cus.waitForURL("**/book/**");
   await expect(cus.getByRole("heading", { name: "Premium Haircut" })).toBeVisible();
   await expect(cus.getByText(NOK("500.00")).first()).toBeVisible();

@@ -4,7 +4,7 @@ import { getPromoterOverview, siteUrl } from "@/lib/promoter-data";
 import { formatMinor, type Currency } from "@/lib/money";
 import { formatDate, formatDateTime, formatSlot } from "@/lib/format";
 import { Stat, StatusBadge, bookingStage } from "@/components/stat";
-import { CopyLink } from "@/components/copy-link";
+import { ShareTools } from "@/components/share-tools";
 import { Button } from "@/components/ui/button";
 import { Highlight } from "@/components/live";
 
@@ -105,7 +105,15 @@ export default async function PromoterDashboard() {
                     </div>
                   </div>
                 </div>
-                {code && <CopyLink url={`${base}/r/${code}`} />}
+                {code && (
+                  <ShareTools
+                    compact
+                    url={`${base}/r/${code}`}
+                    serviceName={c?.service_name ?? ""}
+                    businessName={c?.businesses?.name ?? ""}
+                    whatsappAllowed={!!m.agreements?.allowed_channels?.includes("whatsapp")}
+                  />
+                )}
               </div>
             );
           })}

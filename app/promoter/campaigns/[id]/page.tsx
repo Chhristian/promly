@@ -5,7 +5,7 @@ import { formatMinor, type Currency } from "@/lib/money";
 import { formatDateTime } from "@/lib/format";
 import { siteUrl } from "@/lib/promoter-data";
 import { AgreementView } from "@/components/agreement-view";
-import { CopyLink } from "@/components/copy-link";
+import { ShareTools } from "@/components/share-tools";
 import { JoinForm } from "./join-form";
 
 export default async function PromoterCampaignPage({ params }: { params: Promise<{ id: string }> }) {
@@ -59,8 +59,18 @@ export default async function PromoterCampaignPage({ params }: { params: Promise
         <section className="space-y-2 rounded-xl border border-emerald-500/40 bg-emerald-500/5 p-4">
           <h2 className="font-semibold">Your personal link</h2>
           <p className="text-sm text-muted-foreground">Share it anywhere the agreement allows. Bookings through it are credited to you.</p>
-          <CopyLink url={link} />
-          <p className="text-xs text-muted-foreground">You accepted the agreement on {formatDateTime(membership?.promoter_accepted_at)}.</p>
+          <ShareTools
+            url={link}
+            serviceName={c.service_name}
+            businessName={c.businesses.name}
+            whatsappAllowed={!!agreement?.allowed_channels.includes("whatsapp")}
+          />
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+            <p className="text-xs text-muted-foreground">You accepted the agreement on {formatDateTime(membership?.promoter_accepted_at)}.</p>
+            <Link href={`/promoter/studio?campaign=${c.id}`} className="text-sm font-medium text-blue-300 hover:underline">
+              Create promo text →
+            </Link>
+          </div>
         </section>
       ) : c.status !== "published" ? (
         <p className="rounded-xl border border-border p-4 text-sm text-muted-foreground">This campaign isn&apos;t accepting new promoters right now.</p>

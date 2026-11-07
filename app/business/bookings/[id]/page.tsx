@@ -20,6 +20,8 @@ export default async function BookingDetailPage({ params }: { params: Promise<{ 
   const cur = b.currency as Currency;
   const money = (m: number) => formatMinor(m, cur);
   const stage = bookingStage(b);
+  const owed = { pending: 0, available: 0 };
+  for (const e of ledger ?? []) owed[e.bucket as "pending" | "available"] += -e.amount_minor;
   const now = Date.now();
   const windowOver = !!b.refund_window_ends_at && new Date(b.refund_window_ends_at).getTime() <= now;
   const beforePayout = !b.payout_at || new Date(b.payout_at).getTime() > now;
@@ -75,20 +77,47 @@ export default async function BookingDetailPage({ params }: { params: Promise<{ 
       />
 
       <section className="space-y-2 text-sm">
-        <h2 className="font-semibold">Your ledger entries</h2>
-        <p className="text-xs text-muted-foreground">Append-only: rows are never changed. Refunds add reversal rows.</p>
-        {!ledger?.length && <p className="text-muted-foreground">None yet. Entries appear when the service is verified.</p>}
-        {ledger?.map((e) => (
-          <div key={e.id} className="flex justify-between rounded-lg border border-border bg-card/50 px-3 py-2">
-            <span>
-              {e.entry_type.replace("_", " ")} · {e.bucket}
-            </span>
-            <span className="tabular-nums">{money(e.amount_minor)}</span>
-          </div>
-        ))}
+        <div className="flex flex-wrap items-end justify-between gap-2">
+          <h2 className="font-semibold">Money log for this booking</h2>
+          {!!ledger?.length && (
+            <div className="text-xs text-muted-foreground">
+              You owe now: <span className="text-foreground">{money(owed.pending)} pending</span> ·{" "}
+              <span className="text-foreground">{money(owed.available)} due</span>
+            </div>
+          )}
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Append-only: entries are never changed. A refund adds new entries that cancel the old ones.
+        </p>
+        {!ledger?.length && <p className="text-muted-foreground">Nothing yet. Entries appear when you verify the service.</p>}
+        {ledger?.map((e) => {
+          const owes = -e.amount_minor; // business rows are negative when the business owes
+          return (
+            <div key={e.id} className="flex items-center justify-between gap-3 rounded-lg border border-border bg-card/50 px-3 py-2">
+              <span>
+                {ledgerLabel(e.entry_type, e.bucket)}
+                <span className="ml-2 rounded-full bg-secondary px-2 py-0.5 text-xs text-muted-foreground">
+                  {e.bucket === "pending" ? "pending" : "due"}
+                </span>
+              </span>
+              <span className="tabular-nums">
+                {owes > 0 ? "+" : "−"}
+                {money(Math.abs(owes))} owed
+              </span>
+            </div>
+          );
+        })}
       </section>
     </div>
   );
+}
+
+/** Plain-language description of a business ledger entry. */
+function ledgerLabel(type: string, bucket: string): string {
+  if (type === "business_charge") return "Booking charge (commission + Promly fee)";
+  if (type === "release") return bucket === "pending" ? "Refund window ended → moved out of pending" : "Refund window ended → now due";
+  if (type === "reversal") return bucket === "pending" ? "Refund → pending charge cancelled" : "Refund → due charge cancelled";
+  return type;
 }
 
 function Row({ k, v }: { k: string; v: React.ReactNode }) {
