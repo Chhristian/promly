@@ -29,7 +29,7 @@ export async function getBookingPageData(code: string) {
     admin.from("time_slots").select("starts_at, duration_minutes").eq("business_id", c.business_id).gt("starts_at", nowIso).order("starts_at").limit(200),
     admin.from("bookings").select("slot_start").eq("business_id", c.business_id).in("status", ["pending", "verified"]).gt("slot_start", nowIso),
   ]);
-  const takenSet = new Set((taken ?? []).map((t) => new Date(t.slot_start).getTime()));
+  const takenSet = new Set((taken ?? []).flatMap((t) => (t.slot_start ? [new Date(t.slot_start).getTime()] : [])));
   const free = (slots ?? []).filter((s) => !takenSet.has(new Date(s.starts_at).getTime()));
 
   const coverPath = c.status === "published" ? c.photo_paths[0] : undefined;
