@@ -1,110 +1,188 @@
-<a href="https://demo-nextjs-with-supabase.vercel.app/">
-  <img alt="Next.js and Supabase Starter Kit - the fastest way to build apps with Next.js and Supabase" src="https://demo-nextjs-with-supabase.vercel.app/opengraph-image.png">
-  <h1 align="center">Next.js and Supabase Starter Kit</h1>
-</a>
+# Promly — Businesses get customers. People get paid.
 
-<p align="center">
- The fastest way to build apps with Next.js and Supabase
-</p>
+**Live:** https://promly-eight.vercel.app
 
-<p align="center">
-  <a href="#features"><strong>Features</strong></a> ·
-  <a href="#demo"><strong>Demo</strong></a> ·
-  <a href="#deploy-to-vercel"><strong>Deploy to Vercel</strong></a> ·
-  <a href="#clone-and-run-locally"><strong>Clone and run locally</strong></a> ·
-  <a href="#feedback-and-issues"><strong>Feedback and issues</strong></a>
-  <a href="#more-supabase-examples"><strong>More Examples</strong></a>
-</p>
-<br/>
+Local businesses pay for ads whether or not a customer ever walks in, while people recommend places to their friends every day for free. **Promly is a performance-based marketing marketplace that connects the two.** A business publishes a campaign with a commission. Anyone can join it as a promoter and share a personal link, QR code or ready-made post. When a referred customer books and the business confirms the service actually happened, the promoter earns the full commission. Businesses only pay for real, verified customers, and anyone can be a marketer.
+
+> Built during **Oslo Sprint, 6–8 Nov 2026**.
+
+---
+
+## How it works
+
+1. **Business publishes.** A barbershop creates "Premium Haircut — 500 NOK", sets a 100 NOK commission, accepts the standard promoter agreement and publishes.
+2. **Promoter joins.** The campaign appears instantly on every promoter's Explore page. A promoter reads the agreement, accepts it and gets a personal referral link, QR code, promo texts and a branded promo image.
+3. **Customer books.** A friend opens the link or scans the QR code on their phone, picks a time and books with a name and phone number. No account needed.
+4. **Business verifies.** The booking appears live on the business dashboard. After the appointment, the business clicks **Verify service completed**. The commission is now *pending*.
+5. **Promoter gets paid.** When the refund window has passed, the commission becomes *available* and appears live on the promoter's dashboard with its payout date.
+
+Both dashboards update in real time from actual database changes. There are no fake animations or page refreshes.
+
+---
+
+## Architecture
+
+```mermaid
+flowchart LR
+  subgraph Clients
+    B["Business<br/>(browser)"]
+    P["Promoter<br/>(browser)"]
+    C["Customer<br/>(phone, no login)"]
+  end
+
+  subgraph Vercel["Vercel · region fra1 (Frankfurt)"]
+    N["Next.js App Router<br/>Server Components + Server Actions<br/>(Zod validation, service role only on the server)"]
+  end
+
+  subgraph Supabase["Supabase · eu-central-1 (Frankfurt)"]
+    A["Auth"]
+    DB[("Postgres<br/>RLS on every table<br/>money functions + append-only ledger")]
+    RT["Realtime<br/>(RLS-filtered changes)"]
+    S["Storage<br/>(private campaign-photos bucket)"]
+  end
+
+  B & P & C -->|HTTPS| N
+  N --> A
+  N -->|user session or server-only service role| DB
+  N -->|signed photo URLs| S
+  B & P -->|login| A
+  B & P -->|live updates| RT
+  B -->|photo upload, own campaigns only| S
+  DB --> RT
+```
+
+- **Frontend and server:** Next.js on Vercel, with server functions in `fra1`, next to the database.
+- **Database:** Supabase Postgres in Frankfurt. The schema is in [`supabase/migrations/`](supabase/migrations).
+- **Writes:**
+  - Logged-in users read and write through their own session, limited by Row Level Security.
+  - Anything that moves money goes through Postgres functions that only the server can call.
+- **Realtime:** browsers subscribe to Supabase Realtime. Changes are filtered by the same RLS policies, so each user only ever receives their own data.
+
+---
+
+## The money model
+
+All amounts are stored as **integers in minor units** (øre / cents). Fees are calculated only on the server.
+
+- The **promoter keeps 100%** of the advertised commission.
+- The **business pays a platform fee on top**: `PLATFORM_FEE_BPS = 275` (2.75%) of the **booking price**, rounded half-up.
+
+| Example: Premium Haircut | NOK | stored as (øre) |
+|---|---:|---:|
+| Booking price | 500.00 | 50 000 |
+| Commission → **promoter** | 100.00 | 10 000 |
+| Platform fee 2.75% × 500 → **Promly** | 13.75 | 1 375 |
+| **Business pays per verified booking** | **113.75** | **11 375** |
+
+The Spain example works the same way: €150 jet ski, 20% commission = €30.00, fee 2.75% × 15 000 = 412.5 → **413 cents**, so the business pays €34.13.
+
+- **Commission lifecycle:** booking → service verified (**pending**) → refund window ends (**available**) → payout date (7 or 14 days after verification, set in the agreement).
+- **Refunds:** a refund before payout appends **reversal** entries. Old rows are never changed.
+- **Frozen terms:** the price, commission, fee, currency, refund window, payout days and agreement version are **frozen on each booking**, so later campaign edits never change existing bookings.
+
+The same maths lives in [`lib/money.ts`](lib/money.ts) and in the database function `platform_fee_minor`. A unit test checks that both give the same result.
+
+---
+
+## Security
+
+- **Row Level Security on every table:**
+  - Businesses see only their own campaigns, bookings and ledger rows.
+  - Promoters see only their own memberships, links, bookings and ledger rows.
+  - Published campaigns are visible to logged-in users.
+  - Logged-in users can write only the specific columns they need (column-level grants).
+- **Money functions are server-only.** `create_booking`, `verify_booking`, `simulate_end_of_refund_window`, `release_commission` and `refund_booking` run as single transactions and can only be called with the server-side service role. The server passes the acting user's id, and the function checks that they own the business. Nobody can insert, edit or approve a commission from the browser, and a promoter can never approve their own commission.
+- **Append-only ledger.** A trigger blocks every `UPDATE`, `DELETE` and `TRUNCATE` on `ledger_entries`, even from the server. The only exception is the admin demo reset, which purges demo-flagged data.
+- **Idempotency.** Each one-time ledger entry has a unique key (`booking_id + entry_type + account + bucket`), so double clicks or retries can never pay twice. Verify, release and refund are safe to repeat.
+- **No double bookings.** A unique index allows one active booking per business per time slot, and only slots the business has offered can be booked.
+- **Customer contact details are visible only to the business.** Name and phone live in a separate `booking_contacts` table readable only by the business that owns the booking. The promoter who referred the customer never sees them, and customers never see commissions.
+- **Agreements are versioned.** The business accepts before publishing and the promoter accepts when joining, each with a stored version and timestamp. An accepted agreement can never be edited; changes create a new version.
+- **Photos** live in a private Storage bucket. A business can only upload to its own campaigns' folders, and photos of unpublished campaigns are not readable by others. Pages show them through short-lived signed URLs.
+- **Secrets** stay out of the repo. `.env.local` is git-ignored, and the service role key is only used in server code (`import "server-only"`).
+
+---
+
+## What is simulated
+
+This is a hackathon demo, so a few things are deliberately simulated and clearly labelled in the app:
+
+- **Refund window fast-forward.** In Demo Mode the business can click **"Simulate end of refund window"** (shown in a yellow "Demo Mode · simulated" box) instead of waiting 3–7 days. It runs the same release logic as the real path.
+- **No real money moves.** Balances, payout dates and fees are real database records, but there are no real payouts, card payments or bank transfers. Real payouts would need a payment provider, identity checks and the right licences.
+- **The agreement is a template.** Every agreement is labelled *"Agreement template, to be reviewed by a lawyer before real use"*.
+- **Demo businesses are illustrative.** "Demo Barber Club" and "Mediterranean Water Sports Demo" are not real partners.
+
+---
 
 ## Features
 
-- Works across the entire [Next.js](https://nextjs.org) stack
-  - App Router
-  - Pages Router
-  - Proxy
-  - Client
-  - Server
-  - It just works!
-- supabase-ssr. A package to configure Supabase Auth to use cookies
-- Password-based authentication block installed via the [Supabase UI Library](https://supabase.com/ui/docs/nextjs/password-based-auth)
-- Styling with [Tailwind CSS](https://tailwindcss.com)
-- Components with [shadcn/ui](https://ui.shadcn.com/)
-- Optional deployment with [Supabase Vercel Integration and Vercel deploy](#deploy-your-own)
-  - Environment variables automatically assigned to Vercel project
+- **Business:**
+  - campaign editor with agreement terms, accept and publish
+  - up to 3 photos per campaign, resized in the browser
+  - bookings with verify, simulate and refund
+  - dashboard with sales, pending vs available commissions, fees and payout dates
+  - live toasts
+- **Promoter:**
+  - real-time Explore
+  - agreement and join
+  - personal link, QR code (download and full screen), WhatsApp and the native share sheet
+  - **Marketing Studio:** text templates per channel, plus a branded promo image (Story 1080×1920 / Post 1080×1080) with the promoter's QR code
+  - dashboard with the live "money moment" when a commission becomes available
+- **Customer:** a mobile booking page with free time slots, then a confirmation. No account needed.
+- **Marketing Studio rules:** only campaign facts and the business's own photos are used, it never invents discounts, reviews or guarantees, every text carries an "ad / I earn a commission" note, and only channels the agreement allows are offered.
+- **Admin:** a Demo Control Center with **Prepare Stage Demo** (reset) and a **Demo Health Check** that runs real checks.
 
-## Demo
+---
 
-You can view a fully working demo at [demo-nextjs-with-supabase.vercel.app](https://demo-nextjs-with-supabase.vercel.app/).
+## Tests
 
-## Deploy to Vercel
+| Suite | What it covers | Command |
+|---|---|---|
+| **Unit (Vitest)**, `tests/*.test.ts` | Money maths (500/100 NOK, the €150 rounding case, a refund that brings every balance back to zero, TypeScript vs database fee); promo text templates (always include link and disclosure, never invent claims, allowed channels only); promo image layout (long names never overflow, must-mentions only from the business's own text) | `npm test` |
+| **End-to-end (Playwright)**, `tests/e2e/*.spec.ts`, against the live site | Health check all green; the **full stage flow in three browsers** (business publishes → promoter sees it live and joins → QR decodes to the link → promo images have the right size and a scannable QR → customer books on a phone → business verifies → promoter sees the commission live, including the money toast); photo upload and removal; sign-up and login for new business and promoter accounts; onboarding for accounts without a profile; clear errors for a wrong password, a duplicate email or a hung network | `npm run test:e2e` |
 
-Vercel deployment will guide you through creating a Supabase account and project.
+The e2e tests reset the demo before and after, and delete every account they create. `npm run build` type-checks the whole app.
 
-After installation of the Supabase integration, all relevant environment variables will be assigned to the project so the deployment is fully functioning.
+---
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fnext.js%2Ftree%2Fcanary%2Fexamples%2Fwith-supabase&project-name=nextjs-with-supabase&repository-name=nextjs-with-supabase&demo-title=nextjs-with-supabase&demo-description=This+starter+configures+Supabase+Auth+to+use+cookies%2C+making+the+user%27s+session+available+throughout+the+entire+Next.js+app+-+Client+Components%2C+Server+Components%2C+Route+Handlers%2C+Server+Actions+and+Middleware.&demo-url=https%3A%2F%2Fdemo-nextjs-with-supabase.vercel.app%2F&external-id=https%3A%2F%2Fgithub.com%2Fvercel%2Fnext.js%2Ftree%2Fcanary%2Fexamples%2Fwith-supabase&demo-image=https%3A%2F%2Fdemo-nextjs-with-supabase.vercel.app%2Fopengraph-image.png)
+## Running it yourself
 
-The above will also clone the Starter kit to your GitHub, you can clone that locally and develop locally.
+Requirements: Node 20+ and a **hosted** Supabase project (no Docker needed).
 
-If you wish to just develop locally and not deploy to Vercel, [follow the steps below](#clone-and-run-locally).
-
-## Clone and run locally
-
-1. You'll first need a Supabase project which can be made [via the Supabase dashboard](https://database.new)
-
-2. Create a Next.js app using the Supabase Starter template npx command
-
-   ```bash
-   npx create-next-app --example with-supabase with-supabase-app
-   ```
-
-   ```bash
-   yarn create next-app --example with-supabase with-supabase-app
-   ```
-
-   ```bash
-   pnpm create next-app --example with-supabase with-supabase-app
-   ```
-
-3. Use `cd` to change into the app's directory
-
-   ```bash
-   cd with-supabase-app
-   ```
-
-4. Rename `.env.example` to `.env.local` and update the following:
-
-```env
-NEXT_PUBLIC_SUPABASE_URL=[INSERT SUPABASE PROJECT URL]
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=[INSERT SUPABASE PROJECT API PUBLISHABLE OR ANON KEY]
+```bash
+npm install
+cp .env.example .env.local   # then fill in the values below
+npx supabase link --project-ref <your-project-ref>
+npx supabase db push --remote # applies supabase/migrations
+npm run seed-demo             # creates demo accounts (passwords go only into .env.local) and demo campaigns
+npm run dev                   # http://localhost:3000
 ```
 
-> [!NOTE]
-> This example uses `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, which refers to Supabase's new **publishable** key format.
-> Both legacy **anon** keys and new **publishable** keys can be used with this variable name during the transition period. Supabase's dashboard may show `NEXT_PUBLIC_SUPABASE_ANON_KEY`; its value can be used in this example.
-> See the [full announcement](https://github.com/orgs/supabase/discussions/29260) for more information.
+`.env.local` needs these variables (never commit this file):
 
-Both `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` can be found in [your Supabase project's API settings](https://supabase.com/dashboard/project/_?showConnect=true)
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY` (server-only)
+- `DEMO_MODE=true` (shows the labelled refund-window simulation)
 
-5. You can now run the Next.js local development server:
+Other scripts:
 
-   ```bash
-   npm run dev
-   ```
+- `npm run reset-demo`: resets demo data only, and keeps uploaded demo photos
+- `npm test`: unit tests
+- `npm run test:e2e`: end-to-end tests (set `E2E_BASE_URL=http://localhost:3000` to run them locally)
 
-   The starter kit should now be running on [localhost:3000](http://localhost:3000/).
+You can try the live site by creating your own business or promoter account at [/auth/sign-up](https://promly-eight.vercel.app/auth/sign-up).
 
-6. This template comes with the default shadcn/ui style initialized. If you instead want other ui.shadcn styles, delete `components.json` and [re-install shadcn/ui](https://ui.shadcn.com/docs/installation/next)
+---
 
-> Check out [the docs for Local Development](https://supabase.com/docs/guides/getting-started/local-development) to also run Supabase locally.
+## Tech stack
 
-## Feedback and issues
+- **Next.js 16** (App Router, Server Components, Server Actions) · **React 19** · **TypeScript**
+- **Tailwind CSS** · **shadcn/ui** · **lucide** icons
+- **Supabase**: Postgres, Auth, Realtime and Storage (hosted, Frankfurt)
+- **Vercel**: hosting and automatic deploys from `main`, functions in `fra1`
+- **Zod** for input validation · `qrcode` for QR codes · HTML canvas for promo images
+- **Vitest** and **Playwright** for tests
 
-Please file feedback and issues over on the [Supabase GitHub org](https://github.com/supabase/supabase/issues/new/choose).
+---
 
-## More Supabase examples
-
-- [Next.js Subscription Payments Starter](https://github.com/vercel/nextjs-subscription-payments)
-- [Cookie-based Auth and the Next.js 13 App Router (free course)](https://youtube.com/playlist?list=PL5S4mPUpp4OtMhpnp93EFSo42iQ40XjbF)
-- [Supabase Auth and the Next.js App Router](https://github.com/supabase/supabase/tree/master/examples/auth/nextjs)
+*Built during Oslo Sprint, 6–8 Nov 2026.*
