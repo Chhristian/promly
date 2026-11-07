@@ -31,7 +31,7 @@ export default async function PromoterDashboard() {
   const totalAvailable = currencies.reduce((sum, cur) => sum + (o.earnings[cur]?.available ?? 0), 0);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-[clamp(2rem,5vw,2.75rem)]">Hi {profile.display_name || "there"}</h1>
@@ -48,7 +48,7 @@ export default async function PromoterDashboard() {
       </div>
 
       {/* The payout slip: the one dark element on the page. Labels come before amounts. */}
-      <section className="slip grid gap-6 p-6 sm:p-8 lg:grid-cols-[1.4fr_1fr] lg:gap-10">
+      <section className="slip grid gap-6 p-6 sm:px-8 sm:py-7 lg:grid-cols-[1.4fr_1fr] lg:items-center lg:gap-10">
         <div className="space-y-6">
           {currencies.map((cur) => (
             <MoneyPulse key={`a-${cur}`}>
@@ -63,12 +63,12 @@ export default async function PromoterDashboard() {
             </MoneyPulse>
           ))}
         </div>
-        <div className="grid grid-cols-2 gap-x-6 gap-y-5 border-t border-white/15 pt-6 lg:grid-cols-1 lg:border-l lg:border-t-0 lg:pl-10 lg:pt-0">
+        <div className="grid grid-cols-2 gap-x-6 gap-y-4 border-t border-white/15 pt-6 lg:border-l lg:border-t-0 lg:pl-10 lg:pt-0">
           {currencies.map((cur) => (
             <Stat
               key={`p-${cur}`}
               onSlip
-              className="col-span-2 lg:col-span-1"
+              className="col-span-2"
               label={`Pending${multi ? ` (${cur})` : ""}`}
               value={formatMinor(o.earnings[cur]?.pending ?? 0, cur)}
               hint="Verified, refund window still open"
