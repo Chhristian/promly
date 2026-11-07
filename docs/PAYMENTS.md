@@ -13,8 +13,12 @@ feature flag `PAYMENTS_ENABLED`. With the flag off, the app behaves exactly as b
    - **After** 14 days the promoter keeps the commission and Promly keeps the fee. Later refunds or claims are between
      the business and its customer.
    - Only exception: an **admin-only fraud clawback** with a required written reason, recorded in the ledger.
-     The promoter's commission is reversed (netted against later payouts if already paid out), and the 2.75% fee is
-     credited back to the business on its next invoice.
+     The promoter's commission is reversed (netted against later payouts if already paid out). The business gets
+     credit lines on its next invoice, and **Promly never refunds money it hasn't received or recovered**:
+     - the 2.75% fee: as soon as Promly has received the invoice payment that charged it;
+     - the commission: at the same moment if it was never paid out to the promoter; if it was paid out, only once a
+       later payout has recovered it from the promoter (if the promoter never earns again, it is never recovered).
+     - If credits exceed a month's charges, no invoice is sent and everything carries over to the next month.
 3. **Statuses, each with a date:** Pending (inside the 14 days) → Final → Invoiced → Paid by business → Paid out.
 4. **One Stripe invoice per business per month.** A line per booking: the commission that became final, plus Promly's
    2.75% fee on the booking price. Stripe-hosted invoice page, due in 14 days, **bank transfer first, card as a
@@ -107,9 +111,6 @@ Stripe calls this a marketplace with **separate charges and transfers**:
 - Reporting payments to individual promoters to Skatteetaten.
 - Can a parent or guardian receive payouts for a minor (16-17)? Who is taxed on that income, and what consent wording
   is needed?
-- Fraud clawback: the commission the business paid for a fraudulent booking is reversed from the promoter but not yet
-  returned to the business (only the fee is credited). Should it be?
-
 ## Phase 2 (app code, after the migration)
 
 - Business campaign editor: 16+ / 18+ choice and an "age-restricted" tick (locked to 18+ where required).

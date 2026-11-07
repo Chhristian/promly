@@ -80,7 +80,7 @@ create table public.business_invoices (
   business_id        uuid not null references public.businesses (id) on delete restrict,
   period_month       date not null check (extract(day from period_month) = 1),
   currency           text not null check (currency in ('NOK', 'EUR')),
-  commission_minor   bigint not null check (commission_minor >= 0),
+  commission_minor   bigint not null, -- net of commission credits from fraud clawbacks
   fee_minor          bigint not null, -- net of fee credits from fraud clawbacks
   total_minor        bigint not null check (total_minor > 0),
   status             text not null default 'draft'
@@ -101,8 +101,10 @@ create unique index business_invoices_one_per_month
   on public.business_invoices (business_id, period_month) where status <> 'void';
 create index business_invoices_business_idx on public.business_invoices (business_id);
 
--- A line per booking ('booking': commission + fee), plus 'fee_credit' lines that
--- give a business back the fee of a booking reversed by a fraud clawback.
+-- A line per booking ('booking': commission + fee), plus credit lines that give
+-- a business back what it paid for a booking reversed by a fraud clawback:
+-- 'fee_credit' (the 2.75% fee) and 'commission_credit' (the commission), each
+-- only once Promly actually holds that money (see create_invoice_draft).
 -- `active` turns false only if the invoice is voided, so the line can go on a
 -- later invoice; at most one active line of each kind per booking.
 create table public.invoice_lines (
@@ -111,7 +113,8 @@ create table public.invoice_lines (
   business_id      uuid not null references public.businesses (id) on delete restrict,
   booking_id       uuid not null references public.bookings (id) on delete restrict,
   promoter_id      uuid not null references public.profiles (id) on delete restrict,
-  kind             text not null default 'booking' check (kind in ('booking', 'fee_credit')),
+  kind             text not null default 'booking'
+                     check (kind in ('booking', 'fee_credit', 'commission_credit')),
   commission_minor bigint not null,
   fee_minor        bigint not null,
   currency         text not null check (currency in ('NOK', 'EUR')),
@@ -119,7 +122,8 @@ create table public.invoice_lines (
   created_at       timestamptz not null default now(),
   constraint invoice_lines_amounts check (
     (kind = 'booking' and commission_minor >= 0 and fee_minor >= 0)
-    or (kind = 'fee_credit' and commission_minor = 0 and fee_minor < 0))
+    or (kind = 'fee_credit' and commission_minor = 0 and fee_minor < 0)
+    or (kind = 'commission_credit' and commission_minor < 0 and fee_minor = 0))
 );
 create unique index invoice_lines_one_active_per_booking on public.invoice_lines (booking_id, kind) where active;
 create index invoice_lines_invoice_idx on public.invoice_lines (invoice_id);
@@ -138,9 +142,7 @@ create table public.clawbacks (
   booking_id   uuid primary key references public.bookings (id) on delete restrict,
   admin_id     uuid not null references public.profiles (id) on delete restrict,
   reason       text not null check (char_length(btrim(reason)) between 10 and 1000),
-  amount_minor bigint not null check (amount_minor > 0),
-  -- The 2.75% fee to credit back on the business's next invoice (0 if the booking was never invoiced).
-  fee_credit_minor bigint not null default 0 check (fee_credit_minor >= 0),
+  amount_minor bigint not null check (amount_minor > 0), -- the commission reversed from the promoter
   currency     text not null check (currency in ('NOK', 'EUR')),
   created_at   timestamptz not null default now()
 );
@@ -591,6 +593,45 @@ begin
   return n;
 end $$;
 
+-- Credits owed to a business for fraud clawbacks, as negative amounts, not yet on an
+-- active invoice line. Promly never refunds money it hasn't received or recovered:
+--   * only for bookings whose charge Promly received (their invoice is paid);
+--   * the 2.75% fee: as soon as that is true;
+--   * the commission: at once if it never reached the promoter; if it was paid out,
+--     only once recovered (a transferred payout netted the clawback off).
+create function public._due_credits(p_business_id uuid)
+returns table (booking_id uuid, promoter_id uuid, kind text, commission_minor bigint, fee_minor bigint, currency text)
+language sql stable set search_path = '' as $$
+  with received as (
+    select c.booking_id, b.promoter_id, l.commission_minor, l.fee_minor, l.currency
+    from public.clawbacks c
+    join public.bookings b on b.id = c.booking_id
+    join public.invoice_lines l on l.booking_id = c.booking_id and l.kind = 'booking' and l.active
+    join public.business_invoices i on i.id = l.invoice_id and i.status = 'paid'
+    where b.business_id = p_business_id
+  )
+  select r.booking_id, r.promoter_id, 'fee_credit'::text, 0::bigint, -r.fee_minor, r.currency
+  from received r
+  where r.fee_minor > 0
+    and not exists (select 1 from public.invoice_lines x
+                    where x.booking_id = r.booking_id and x.kind = 'fee_credit' and x.active)
+  union all
+  select r.booking_id, r.promoter_id, 'commission_credit'::text, -r.commission_minor, 0::bigint, r.currency
+  from received r
+  where r.commission_minor > 0
+    and not exists (select 1 from public.invoice_lines x
+                    where x.booking_id = r.booking_id and x.kind = 'commission_credit' and x.active)
+    and (
+      -- never paid out (and not waiting in a pending payout)
+      not exists (select 1 from public.payout_items pi
+                  where pi.booking_id = r.booking_id and pi.kind = 'commission' and pi.active)
+      -- or paid out and since recovered from the promoter
+      or exists (select 1 from public.payout_items pi join public.payouts p on p.id = pi.payout_id
+                 where pi.booking_id = r.booking_id and pi.kind = 'clawback' and pi.active
+                   and p.status = 'transferred')
+    );
+$$;
+
 -- Monthly run, step 1: draft invoice with a line per final, not-yet-invoiced booking.
 -- Returns the draft id (also an earlier draft that still needs its Stripe invoice), or null.
 create function public.create_invoice_draft(p_business_id uuid, p_period_month date)
@@ -625,11 +666,10 @@ begin
   where b.business_id = p_business_id and b.status = 'verified' and b.final_at is not null
     and not exists (select 1 from public.invoice_lines l where l.booking_id = b.id and l.kind = 'booking' and l.active)
     and not exists (select 1 from public.clawbacks c where c.booking_id = b.id);
-  -- Credits: the fee of clawed-back bookings that were invoiced before (not yet credited).
-  select v_fee - coalesce(sum(c.fee_credit_minor), 0) into v_fee
-  from public.clawbacks c join public.bookings b on b.id = c.booking_id
-  where b.business_id = p_business_id and c.fee_credit_minor > 0
-    and not exists (select 1 from public.invoice_lines l where l.booking_id = c.booking_id and l.kind = 'fee_credit' and l.active);
+  -- Credits for fraud clawbacks that are due now (amounts are negative).
+  select v_comm + coalesce(sum(d.commission_minor), 0), v_fee + coalesce(sum(d.fee_minor), 0)
+  into v_comm, v_fee
+  from public._due_credits(p_business_id) d;
   if v_comm + v_fee <= 0 then
     return null; -- nothing to charge (or credits exceed charges): carry over to a later month
   end if;
@@ -646,10 +686,8 @@ begin
     and not exists (select 1 from public.clawbacks c where c.booking_id = b.id);
 
   insert into public.invoice_lines (invoice_id, business_id, booking_id, promoter_id, kind, commission_minor, fee_minor, currency)
-  select v_id, b.business_id, b.id, b.promoter_id, 'fee_credit', 0, -c.fee_credit_minor, c.currency
-  from public.clawbacks c join public.bookings b on b.id = c.booking_id
-  where b.business_id = p_business_id and c.fee_credit_minor > 0
-    and not exists (select 1 from public.invoice_lines l where l.booking_id = c.booking_id and l.kind = 'fee_credit' and l.active);
+  select v_id, p_business_id, d.booking_id, d.promoter_id, d.kind, d.commission_minor, d.fee_minor, d.currency
+  from public._due_credits(p_business_id) d;
 
   return v_id;
 end $$;
@@ -848,15 +886,9 @@ begin
            (v.id, 'business', v.business_id, r.bucket, 'clawback',  r.balance, v.currency);
   end loop;
 
-  -- If the booking was already invoiced, its 2.75% fee is credited on the business's next invoice.
-  insert into public.clawbacks (booking_id, admin_id, reason, amount_minor, fee_credit_minor, currency)
-  values (v.id, p_admin_id, btrim(p_reason), v.commission_minor,
-          case when exists (select 1 from public.invoice_lines l
-                            join public.business_invoices i on i.id = l.invoice_id
-                            where l.booking_id = v.id and l.kind = 'booking' and l.active
-                              and i.status in ('open', 'paid', 'uncollectible'))
-               then v.fee_minor else 0 end,
-          v.currency)
+  -- What the business gets back (fee, commission) and when: see _due_credits.
+  insert into public.clawbacks (booking_id, admin_id, reason, amount_minor, currency)
+  values (v.id, p_admin_id, btrim(p_reason), v.commission_minor, v.currency)
   returning * into c;
 
   insert into public.notifications (user_id, type, title, payload)
@@ -1072,6 +1104,7 @@ revoke execute on function
   public.simulate_end_of_holding_period(uuid, uuid),
   public.refund_booking_before_final(uuid, uuid),
   public.cancel_unverified_bookings(),
+  public._due_credits(uuid),
   public.create_invoice_draft(uuid, date),
   public.attach_stripe_invoice(uuid, text, text, timestamptz),
   public._release_billing_hold(uuid),
@@ -1105,6 +1138,7 @@ grant execute on function
   public.simulate_end_of_holding_period(uuid, uuid),
   public.refund_booking_before_final(uuid, uuid),
   public.cancel_unverified_bookings(),
+  public._due_credits(uuid),
   public.create_invoice_draft(uuid, date),
   public.attach_stripe_invoice(uuid, text, text, timestamptz),
   public._release_billing_hold(uuid),
