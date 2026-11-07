@@ -19,6 +19,7 @@ export async function getCurrentUser() {
 
 /** Where each role lands after logging in. */
 export function homeFor(role: string): string {
+  if (role === "admin") return "/admin/demo";
   return role === "business" ? "/business" : "/promoter";
 }
 
