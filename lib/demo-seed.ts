@@ -300,7 +300,8 @@ export async function runServerHealthChecks(db: Db, liveUrl: string | null): Pro
     const t0 = Date.now();
     const res = await fetch(liveUrl, { cache: "no-store", redirect: "follow" });
     const text = await res.text();
-    const ok = res.ok && text.includes("People get paid");
+    // Check it is our app (not a Vercel error page) without depending on the landing copy.
+    const ok = res.ok && /<title>[^<]*Promly[^<]*<\/title>/.test(text);
     return { ok, detail: `${liveUrl} → HTTP ${res.status} in ${Date.now() - t0} ms${ok ? "" : ", landing page text missing"}` };
   });
 
