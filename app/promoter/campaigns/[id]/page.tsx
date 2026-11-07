@@ -43,34 +43,54 @@ export default async function PromoterCampaignPage({ params }: { params: Promise
         <ArrowLeft className="h-4 w-4" /> Explore
       </Link>
 
-      <div className="space-y-5">
-        <div className={link ? "relative h-32 overflow-hidden rounded-3xl sm:h-40" : "relative h-48 overflow-hidden rounded-3xl sm:h-60"}>
-          <CampaignCover category={c.businesses.category} imageUrl={cover} size="lg" />
-          <span className="absolute left-4 top-4 rounded-full bg-card px-2.5 py-1 text-xs font-semibold text-ink">{categoryLabel(c.businesses.category)}</span>
-        </div>
-        <div>
-          <h1 className="line-clamp-3 text-[clamp(1.75rem,5vw,2.6rem)]">{c.service_name}</h1>
-          <p className="mt-1 flex flex-wrap items-center gap-x-1.5 text-muted-foreground">
-            <span className="font-medium text-foreground">{c.businesses.name}</span>
-            <span className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5" /> {c.businesses.city}</span>
-          </p>
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          <div className="card p-5">
-            <div className="text-sm text-muted-foreground">Customer pays</div>
-            <div className="money mt-1 text-[clamp(1.5rem,5vw,2rem)]">{formatMinor(c.price_minor, cur)}</div>
+      {link ? (
+        // Joined: a compact header so the link and QR actions stay above the fold on stage.
+        <div className="flex items-center gap-4">
+          <div className="h-16 w-16 shrink-0 overflow-hidden rounded-2xl border border-border sm:h-20 sm:w-20">
+            <CampaignCover category={c.businesses.category} imageUrl={cover} size="sm" />
           </div>
-          <div className="slip p-5">
-            <div className="text-sm text-white/65">You earn per verified booking</div>
-            <div className="money mt-1 text-[clamp(1.5rem,5vw,2rem)]">{formatMinor(agreement?.commission_minor ?? c.commission_minor, cur)}</div>
+          <div className="min-w-0 flex-1">
+            <h1 className="line-clamp-2 text-[clamp(1.5rem,4vw,2.1rem)]">{c.service_name}</h1>
+            <p className="truncate text-sm text-muted-foreground">
+              <span className="font-medium text-foreground">{c.businesses.name}</span>, {c.businesses.city}. Customer pays{" "}
+              <span className="whitespace-nowrap">{formatMinor(c.price_minor, cur)}</span>
+            </p>
+          </div>
+          <div className="slip hidden shrink-0 px-5 py-3 sm:block">
+            <div className="text-xs text-white/65">You earn per booking</div>
+            <div className="money text-2xl">{formatMinor(agreement?.commission_minor ?? c.commission_minor, cur)}</div>
           </div>
         </div>
-      </div>
+      ) : (
+        <div className="space-y-5">
+          <div className="relative h-48 overflow-hidden rounded-3xl sm:h-60">
+            <CampaignCover category={c.businesses.category} imageUrl={cover} size="lg" />
+            <span className="absolute left-4 top-4 rounded-full bg-card px-2.5 py-1 text-xs font-semibold text-ink">{categoryLabel(c.businesses.category)}</span>
+          </div>
+          <div>
+            <h1 className="line-clamp-3 text-[clamp(1.75rem,5vw,2.6rem)]">{c.service_name}</h1>
+            <p className="mt-1 flex flex-wrap items-center gap-x-1.5 text-muted-foreground">
+              <span className="font-medium text-foreground">{c.businesses.name}</span>
+              <span className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5" /> {c.businesses.city}</span>
+            </p>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="card p-5">
+              <div className="text-sm text-muted-foreground">Customer pays</div>
+              <div className="money mt-1 text-[clamp(1.5rem,5vw,2rem)]">{formatMinor(c.price_minor, cur)}</div>
+            </div>
+            <div className="slip p-5">
+              <div className="text-sm text-white/65">You earn per verified booking</div>
+              <div className="money mt-1 text-[clamp(1.5rem,5vw,2rem)]">{formatMinor(agreement?.commission_minor ?? c.commission_minor, cur)}</div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {c.description && !link && <p className="text-muted-foreground">{c.description}</p>}
 
       {link ? (
-        <section className="card space-y-3 border-2 border-ink p-5 sm:p-6">
+        <section className="card space-y-3 border-2 border-ink p-5">
           <h2 className="text-xl">Your personal link</h2>
           <p className="text-sm text-muted-foreground">Share it anywhere the agreement allows. Bookings through it are credited to you.</p>
           <ShareTools

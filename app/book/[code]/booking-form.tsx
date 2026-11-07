@@ -58,7 +58,7 @@ export function BookingForm({ code, days }: { code: string; days: { day: string;
               onClick={() => setSlot(s)}
               aria-pressed={slot === s}
               className={cn(
-                "rounded-[10px] border py-3 text-base font-bold tabular-nums transition-colors duration-150",
+                "rounded-[10px] border py-3 text-base font-bold transition-colors duration-150",
                 slot === s ? "border-ink bg-marker text-ink" : "border-border hover:bg-secondary",
               )}
             >
@@ -81,7 +81,7 @@ export function BookingForm({ code, days }: { code: string; days: { day: string;
       </div>
 
       <div className="sticky bottom-3 z-10">
-        <SubmitButton pendingText="Booking…" disabled={!slot} className="h-14 w-full text-lg shadow-[0_8px_24px_-8px_hsl(232_87%_54%/0.6)]">
+        <SubmitButton pendingText="Booking…" disabled={!slot} className={cn("h-14 w-full text-lg", slot && "shadow-[0_8px_24px_-8px_hsl(232_87%_54%/0.6)]")}>
           {slot ? `Book ${longDay(slot)} ${formatTime(slot)}` : "Pick a time to book"}
         </SubmitButton>
       </div>

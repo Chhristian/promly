@@ -47,7 +47,7 @@ export default async function BookPage({ params }: { params: Promise<{ code: str
           <span className="relative flex items-center gap-1"><MapPin className="h-3.5 w-3.5" /> {business.city}</span>
         </div>
         <h1 className="mt-3 text-[2rem]">{campaign.serviceName}</h1>
-        <div className="money mt-1 text-4xl">{formatMinor(campaign.priceMinor, cur)}</div>
+        <div className="money mt-2 text-4xl">{formatMinor(campaign.priceMinor, cur)}</div>
         {campaign.description && <p className="mt-3 leading-relaxed text-muted-foreground">{campaign.description}</p>}
 
         <ul className="mt-5 grid gap-2 text-sm">

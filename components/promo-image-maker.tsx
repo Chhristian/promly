@@ -79,11 +79,13 @@ async function draw(canvas: HTMLCanvasElement, c: PromoImageCampaign, format: Pr
     ctx.textBaseline = "alphabetic";
   }
   // Fade the photo into the panel
-  const fade = ctx.createLinearGradient(0, p.h - 260, 0, p.h);
-  fade.addColorStop(0, "rgba(13,27,42,0)");
-  fade.addColorStop(1, NAVY);
-  ctx.fillStyle = fade;
-  ctx.fillRect(0, p.h - 260, W, 260);
+  if (photoUrl) {
+    const fade = ctx.createLinearGradient(0, p.h - 260, 0, p.h);
+    fade.addColorStop(0, "rgba(13,27,42,0)");
+    fade.addColorStop(1, NAVY);
+    ctx.fillStyle = fade;
+    ctx.fillRect(0, p.h - 260, W, 260);
+  }
 
   // "AD" label (top-left) and Promly mark (top-right)
   ctx.font = font(30, 800);

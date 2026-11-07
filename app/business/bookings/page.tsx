@@ -37,7 +37,7 @@ export default async function BookingsPage() {
             >
               <div>
                 <div className="line-clamp-2 font-bold">{b.campaigns?.service_name}</div>
-                <div className="font-medium tabular-nums">{formatSlot(b.slot_start)}</div>
+                <div className="font-medium">{formatSlot(b.slot_start)}</div>
                 <div className="text-sm text-muted-foreground">
                   via {b.profiles?.display_name || "promoter"}, booked {formatDateTime(b.created_at)}, commission{" "}
                   {formatMinor(b.commission_minor, cur)}
