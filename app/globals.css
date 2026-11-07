@@ -5,31 +5,39 @@
 /* Promly "Payout slip" theme (docs/DESIGN.md): daylight paper, ink, cobalt, highlighter yellow. */
 @layer base {
   :root {
-    --background: 216 23% 96%; /* paper #F2F4F7 */
-    --foreground: 211 53% 11%; /* ink #0D1B2A */
-    --card: 0 0% 100%;
-    --card-foreground: 211 53% 11%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 211 53% 11%;
-    --primary: 232 87% 54%; /* cobalt #2440F0 */
-    --primary-foreground: 0 0% 100%;
+    /* Promly palette (docs/BRAND.md). HSL channels, so Tailwind can add opacity (bg-ink/50). */
+    --ink: 211 52.7% 10.8%; /* #0D1B2A text, dark cards */
+    --cobalt: 232 87% 54%; /* #2440F0 primary: buttons, links, logo */
+    --paper: 220 38% 97%; /* #F4F6FA page background */
+    --white: 0 0% 100%; /* #FFFFFF cards */
+    --yellow: 50 100% 65%; /* #FFE14D small accents only */
+    --muted-text: 213.3 16.5% 42.7%; /* #5B6B7F secondary text */
+
+    /* Semantic tokens (shadcn/ui) point at the palette. */
+    --background: var(--paper);
+    --foreground: var(--ink);
+    --card: var(--white);
+    --card-foreground: var(--ink);
+    --popover: var(--white);
+    --popover-foreground: var(--ink);
+    --primary: var(--cobalt);
+    --primary-foreground: var(--white);
     --secondary: 214 27% 93%;
     --secondary-foreground: 211 53% 11%;
     --muted: 214 27% 93%;
-    --muted-foreground: 214 16% 40%; /* #566476 */
+    --muted-foreground: var(--muted-text);
     --accent: 214 27% 93%;
     --accent-foreground: 211 53% 11%;
     --destructive: 0 66% 47%;
     --destructive-foreground: 0 0% 100%;
     --border: 212 24% 89%; /* line #DDE3EA */
     --input: 212 20% 82%;
-    --ring: 232 87% 54%;
+    --ring: var(--cobalt);
     --radius: 0.625rem;
-    --marker: 50 100% 65%; /* #FFE14D */
-    --paid: 155 85% 27%; /* #0A7F4F */
+    --marker: var(--yellow);
+    --paid: 155 85% 27%; /* #0A7F4F status colour, not part of the brand palette */
     --pending: 35 100% 30%;
     --pending-bg: 40 100% 92%;
-    --ink: 211 53% 11%;
     color-scheme: light;
     /* Motion tokens */
     --ease-out: cubic-bezier(0.23, 1, 0.32, 1);

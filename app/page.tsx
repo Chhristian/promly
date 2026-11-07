@@ -68,7 +68,6 @@ export default async function Home() {
               <li>Promoters keep 100% of the commission</li>
               <li>Businesses pay 2.75% only on verified bookings</li>
               <li>Both sides see every step live</li>
-              <li>Norway and Spain, in NOK and EUR</li>
             </ul>
           </div>
 
@@ -79,7 +78,7 @@ export default async function Home() {
                 <span>Example payout slip</span>
                 <span>Oslo</span>
               </div>
-              <div className="mt-5 text-lg font-bold">Premium haircut at a barbershop</div>
+              <div className="mt-5 text-lg font-bold">Dinner for two at a local restaurant</div>
               <dl className="mt-5 space-y-2.5 text-[0.95rem]">
                 <div className="flex justify-between gap-4">
                   <dt className="text-white/65">Customer pays the business</dt>
@@ -97,7 +96,7 @@ export default async function Home() {
               <div className="my-6 border-t border-dashed border-white/25" />
               <div className="text-sm text-white/65">You earn</div>
               <div className="money mt-1 text-[clamp(3rem,10vw,4.5rem)] leading-none tracking-[-0.045em]">
-                <span className="marked marked-full ml-[0.16em]">{kr(COMMISSION)}</span>
+                <span className="text-marker">{kr(COMMISSION)}</span>
               </div>
               <p className="mt-4 text-sm text-white/60">Paid once the service is verified and the refund window has passed.</p>
             </div>

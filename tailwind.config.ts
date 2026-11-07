@@ -41,8 +41,11 @@ export default {
           DEFAULT: "hsl(var(--destructive))",
           foreground: "hsl(var(--destructive-foreground))",
         },
-        ink: "hsl(var(--ink))",
-        marker: "hsl(var(--marker))",
+        // Promly palette (docs/BRAND.md). Yellow is `marker` so Tailwind's own yellow scale stays intact.
+        ink: "hsl(var(--ink) / <alpha-value>)",
+        cobalt: "hsl(var(--cobalt) / <alpha-value>)",
+        paper: "hsl(var(--paper) / <alpha-value>)",
+        marker: "hsl(var(--marker) / <alpha-value>)",
         paid: "hsl(var(--paid))",
         pending: { DEFAULT: "hsl(var(--pending))", bg: "hsl(var(--pending-bg))" },
         border: "hsl(var(--border))",

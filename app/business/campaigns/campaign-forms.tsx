@@ -131,7 +131,7 @@ export function AgreementForm({
         <div className="flex flex-wrap gap-2">
           {CHANNELS.map((c) => (
             <label key={c.value} className="flex cursor-pointer items-center gap-2 rounded-full border border-input bg-card px-3.5 py-1.5 text-sm font-medium has-[:checked]:border-ink has-[:checked]:bg-ink has-[:checked]:text-white">
-              <input type="checkbox" name="allowed_channels" value={c.value} defaultChecked={defaults.allowedChannels.includes(c.value)} className="accent-[hsl(232_87%_54%)]" />
+              <input type="checkbox" name="allowed_channels" value={c.value} defaultChecked={defaults.allowedChannels.includes(c.value)} className="accent-cobalt" />
               {c.label}
             </label>
           ))}
@@ -142,7 +142,7 @@ export function AgreementForm({
         <textarea id="brand_rules" name="brand_rules" maxLength={2000} defaultValue={defaults.brandRules} className={textareaClass} placeholder="e.g. Use only our photos. No discounts that aren't in the campaign." />
       </div>
       <label className="flex items-start gap-2 text-sm">
-        <input type="checkbox" name="accept" required className="mt-1 accent-[hsl(232_87%_54%)]" />
+        <input type="checkbox" name="accept" required className="mt-1 accent-cobalt" />
         <span>I accept this agreement on behalf of the business.</span>
       </label>
       <SubmitButton>Accept agreement</SubmitButton>
