@@ -132,7 +132,7 @@ function Row({ k, v }: { k: string; v: React.ReactNode }) {
   return (
     <div className="flex justify-between gap-4">
       <span className="text-muted-foreground">{k}</span>
-      <span className="whitespace-nowrap text-right tabular-nums">{v}</span>
+      <span className="whitespace-nowrap text-right">{v}</span>
     </div>
   );
 }

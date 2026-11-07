@@ -74,7 +74,7 @@ export default async function ExplorePage() {
                         <div className="money text-3xl leading-none">{formatMinor(c.commission_minor, cur)}</div>
                       </div>
                       <div className="min-w-0 text-right text-sm text-muted-foreground">
-                        {isJoined ? "Open campaign" : "View and join"}
+                        <span className="font-semibold text-primary group-hover:underline">{isJoined ? "Open campaign" : "View and join"}</span>
                         <div className="whitespace-nowrap">price {formatMinor(c.price_minor, cur)}</div>
                       </div>
                     </div>

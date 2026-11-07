@@ -107,7 +107,8 @@
     @apply border-t border-border;
   }
   .money {
-    font-variant-numeric: tabular-nums;
+    /* Proportional figures: tabular ones give the decimal comma a full digit width in this face */
+    font-variant-numeric: proportional-nums;
     font-weight: 800;
     letter-spacing: -0.02em;
     white-space: nowrap;
