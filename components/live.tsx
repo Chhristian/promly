@@ -10,7 +10,8 @@ import { cn } from "@/lib/utils";
 
 type Status = "connecting" | "live" | "offline";
 type Role = "business" | "promoter" | "admin";
-type Toast = { id: string; title: string; body?: string; icon: LucideIcon; tone: "default" | "money" | "warn" };
+type Toast = { id: string; title: string; body?: string; icon: LucideIcon; tone: "default" | "money" | "warn"; leaving?: boolean };
+const TOAST_EXIT_MS = 160;
 
 type LiveState = {
   status: Status;
@@ -48,7 +49,14 @@ export function LiveProvider({ role, children }: { role: Role; children: React.R
     if (toasted.current.has(t.id)) return;
     toasted.current.add(t.id);
     setToasts((prev) => [...prev.slice(-3), t]);
+    // Fade out just before removal, so toasts leave instead of vanishing.
+    setTimeout(() => setToasts((prev) => prev.map((x) => (x.id === t.id ? { ...x, leaving: true } : x))), ms - TOAST_EXIT_MS);
     setTimeout(() => setToasts((prev) => prev.filter((x) => x.id !== t.id)), ms);
+  }, []);
+
+  const dismissToast = useCallback((id: string) => {
+    setToasts((prev) => prev.map((x) => (x.id === id ? { ...x, leaving: true } : x)));
+    setTimeout(() => setToasts((prev) => prev.filter((x) => x.id !== id)), TOAST_EXIT_MS);
   }, []);
 
   const handleToast = useCallback(
@@ -151,7 +159,7 @@ export function LiveProvider({ role, children }: { role: Role; children: React.R
   return (
     <LiveContext.Provider value={{ status, recent, refresh, moneyPulse }}>
       {children}
-      <Toasts toasts={toasts} onClose={(id) => setToasts((p) => p.filter((t) => t.id !== id))} />
+      <Toasts toasts={toasts} onClose={dismissToast} />
     </LiveContext.Provider>
   );
 }
@@ -167,7 +175,8 @@ function Toasts({ toasts, onClose }: { toasts: Toast[]; onClose: (id: string) =>
             role="status"
             data-testid={t.tone === "money" ? "money-toast" : "toast"}
             className={cn(
-              "toast-in pointer-events-auto flex items-start gap-3 rounded-2xl border p-4 shadow-2xl backdrop-blur",
+              t.leaving ? "toast-out" : "toast-in",
+              "pointer-events-auto flex items-start gap-3 rounded-2xl border p-4 shadow-2xl backdrop-blur",
               t.tone === "money"
                 ? "border-emerald-400/60 bg-gradient-to-br from-emerald-500/30 via-[#0f1430]/95 to-violet-600/30 shadow-emerald-500/20"
                 : t.tone === "warn"

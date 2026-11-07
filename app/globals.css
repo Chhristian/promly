@@ -26,6 +26,11 @@
     --ring: 262 83% 66%;
     --radius: 0.75rem;
     color-scheme: dark;
+    /* Motion tokens (docs/DESIGN.md) */
+    --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+    --dur-fast: 150ms;
+    --dur-base: 220ms;
+    --dur-slow: 300ms;
   }
 }
 
@@ -84,29 +89,42 @@
     }
   }
   /* The money moment: big, smooth glow when commission becomes available */
+  /* The money moment: one quick pop, then a glow that only fades (opacity) */
   .money-pop {
-    animation: money-pop 2.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+    position: relative;
+    animation: money-scale var(--dur-slow) var(--ease-out);
   }
-  @keyframes money-pop {
+  .money-pop::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    box-shadow: 0 0 0 3px hsl(152 76% 50% / 0.9), 0 0 60px 8px hsl(152 76% 50% / 0.45);
+    animation: money-glow 1.8s ease-out both;
+  }
+  @keyframes money-scale {
     0% {
       transform: scale(1);
-      box-shadow: 0 0 0 0 hsl(152 76% 50% / 0);
     }
-    18% {
-      transform: scale(1.04);
-      box-shadow: 0 0 0 3px hsl(152 76% 50% / 0.9), 0 0 60px 8px hsl(152 76% 50% / 0.45);
-    }
-    60% {
-      transform: scale(1);
-      box-shadow: 0 0 0 2px hsl(152 76% 50% / 0.6), 0 0 40px 4px hsl(262 83% 66% / 0.35);
+    45% {
+      transform: scale(1.03);
     }
     100% {
       transform: scale(1);
-      box-shadow: 0 0 0 0 transparent;
+    }
+  }
+  @keyframes money-glow {
+    0%,
+    25% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
     }
   }
   .toast-in {
-    animation: toast-in 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+    animation: toast-in var(--dur-base) var(--ease-out) both;
   }
   @keyframes toast-in {
     from {
@@ -118,17 +136,77 @@
       transform: none;
     }
   }
-  /* Short pulse for rows that just changed in real time */
-  .live-new {
-    animation: live-new 6s ease-out;
+  .toast-out {
+    animation: toast-out var(--dur-fast) ease-out forwards;
   }
-  @keyframes live-new {
+  @keyframes toast-out {
+    to {
+      opacity: 0;
+      transform: translateY(6px) scale(0.98);
+    }
+  }
+  /* A row that just arrived from the database: quick entrance, then a ring that fades */
+  .live-new {
+    position: relative;
+    animation: live-enter var(--dur-base) var(--ease-out) both;
+  }
+  .live-new::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    box-shadow: 0 0 0 2px hsl(217 91% 60% / 0.9), 0 0 24px hsl(262 83% 66% / 0.45);
+    animation: live-ring 2.4s ease-out both;
+  }
+  @keyframes live-enter {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @keyframes live-ring {
     0%,
-    30% {
-      box-shadow: 0 0 0 2px hsl(217 91% 60% / 0.9), 0 0 24px hsl(262 83% 66% / 0.45);
+    35% {
+      opacity: 1;
     }
     100% {
-      box-shadow: 0 0 0 0 transparent;
+      opacity: 0;
     }
+  }
+}
+
+/* Reduced motion: keep the feedback, drop the movement */
+@media (prefers-reduced-motion: reduce) {
+  .live-new,
+  .money-pop,
+  .toast-in,
+  .toast-out {
+    animation-name: fade-only !important;
+    animation-duration: 200ms !important;
+    transform: none !important;
+  }
+  .live-new::after,
+  .money-pop::after {
+    animation-duration: 1.2s !important;
+  }
+  .skeleton::after {
+    animation: none;
+  }
+  *,
+  *::before {
+    transition-duration: 0.01ms !important;
+  }
+}
+@keyframes fade-only {
+  from {
+    opacity: 0.4;
+  }
+  to {
+    opacity: 1;
   }
 }

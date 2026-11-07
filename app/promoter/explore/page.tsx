@@ -42,7 +42,7 @@ export default async function ExplorePage() {
                 <Link
                   href={`/promoter/campaigns/${c.id}`}
                   data-campaign-id={c.id}
-                  className="card group flex h-full flex-col overflow-hidden transition hover:-translate-y-0.5 hover:border-violet-400/60"
+                  className="card group flex h-full flex-col overflow-hidden transition [@media(hover:hover)_and_(pointer:fine)]:hover:-translate-y-0.5 hover:border-violet-400/60"
                 >
                   <div className="relative h-36">
                     <CampaignCover category={c.businesses?.category} imageUrl={covers[c.id]} />
