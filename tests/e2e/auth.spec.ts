@@ -107,3 +107,12 @@ test("a wrong password shows a clear error instead of spinning", async ({ page }
   await expect(page.getByText("That email and password don't match.")).toBeVisible({ timeout: 15_000 });
   await expect(page.getByRole("button", { name: "Log in" })).toBeEnabled();
 });
+
+test("if the server never answers, the button stops spinning and explains after ~10 s", async ({ page }) => {
+  // Simulate a hung network: hold the Supabase login request forever.
+  await page.route("**/auth/v1/token**", () => {});
+  await logIn(page, process.env.DEMO_PROMOTER_EMAIL!, "any-password");
+  await expect(page.getByRole("button", { name: "Logging in…" })).toBeVisible();
+  await expect(page.getByText("This is taking longer than it should.")).toBeVisible({ timeout: 14_000 });
+  await expect(page.getByRole("button", { name: "Log in" })).toBeEnabled();
+});
