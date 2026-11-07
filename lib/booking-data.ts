@@ -17,9 +17,11 @@ export async function getBookingPageData(code: string) {
   const { data: link } = await admin.from("referral_links").select("campaign_id").eq("code", code).maybeSingle();
   if (!link) return null;
 
+  // "*" (not a column list) so the page keeps working whether or not the
+  // external_booking_url migration has been applied yet.
   const { data: c } = await admin
     .from("campaigns")
-    .select("id, service_name, description, price_minor, currency, status, business_id, photo_paths, businesses(name, city, country, description, category)")
+    .select("*, businesses(name, city, country, description, category)")
     .eq("id", link.campaign_id)
     .single();
   if (!c || !c.businesses) return null;
@@ -43,8 +45,27 @@ export async function getBookingPageData(code: string) {
       priceMinor: c.price_minor,
       currency: c.currency,
       open: c.status === "published",
+      // Only whether it's external: the URL itself is looked up again on the server when sending the customer on.
+      external: !!c.external_booking_url,
     },
     business: c.businesses,
     freeSlots: free.map((s) => ({ startsAt: s.starts_at, minutes: s.duration_minutes })),
   };
+}
+
+/** Where to send the customer after an external referral: the business URL with ?ref=<code>. */
+export async function getExternalRedirect(code: string): Promise<{ url: string; promoterId: string } | null> {
+  if (!REFERRAL_CODE.test(code)) return null;
+  const admin = createAdminClient();
+  const { data } = await admin
+    .from("referral_links")
+    .select("promoter_id, campaigns(external_booking_url)")
+    .eq("code", code)
+    .maybeSingle();
+  const raw = data?.campaigns?.external_booking_url;
+  if (!data || !raw || !URL.canParse(raw)) return null;
+  const url = new URL(raw);
+  if (url.protocol !== "https:") return null;
+  url.searchParams.set("ref", code);
+  return { url: url.toString(), promoterId: data.promoter_id };
 }
