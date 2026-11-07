@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { categoryTint } from "@/components/campaign-cover";
 import { FORMATS, fitText, promoLayout, wrapLines, type PromoFormat } from "@/lib/promo-image-layout";
 import { cn } from "@/lib/utils";
+import { MARK } from "@/lib/logo-mark";
 
 export type PromoImageCampaign = {
   id: string;
@@ -33,6 +34,30 @@ function loadImage(url: string): Promise<HTMLImageElement> {
     img.onerror = () => reject(new Error("photo failed to load"));
     img.src = url;
   });
+}
+
+/** The megaphone mark on a dark background: white handle and rim, yellow sound lines. */
+function drawMark(ctx: CanvasRenderingContext2D, x: number, y: number, size: number) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(size / 40, size / 40);
+  ctx.lineCap = "round";
+  ctx.strokeStyle = "#ffffff";
+  ctx.lineWidth = MARK.stroke.handle;
+  ctx.stroke(new Path2D(MARK.handle));
+  ctx.fillStyle = COBALT;
+  ctx.fill(new Path2D(MARK.horn));
+  const { cx, cy, rx, ry } = MARK.bell;
+  ctx.beginPath();
+  ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+  ctx.fillStyle = MARKER;
+  ctx.fill();
+  ctx.lineWidth = MARK.stroke.rim;
+  ctx.stroke();
+  ctx.strokeStyle = MARKER;
+  ctx.lineWidth = MARK.stroke.sound;
+  for (const d of MARK.sound) ctx.stroke(new Path2D(d));
+  ctx.restore();
 }
 
 function slug(s: string) {
@@ -98,17 +123,7 @@ async function draw(canvas: HTMLCanvasElement, c: PromoImageCampaign, format: Pr
   ctx.fillText("AD", L.pad + 4, 82);
 
   const markX = W - L.pad - 210;
-  ctx.fillStyle = COBALT;
-  ctx.beginPath();
-  ctx.roundRect(markX, 40, 60, 60, 15);
-  ctx.fill();
-  ctx.fillStyle = "#ffffff";
-  ctx.font = font(44, 800);
-  ctx.fillText("p", markX + 16, 82);
-  ctx.fillStyle = MARKER;
-  ctx.beginPath();
-  ctx.arc(markX + 47, 86, 6, 0, Math.PI * 2);
-  ctx.fill();
+  drawMark(ctx, markX, 40, 60);
   ctx.fillStyle = "#ffffff";
   ctx.font = font(40, 800);
   ctx.fillText("promly", markX + 74, 84);

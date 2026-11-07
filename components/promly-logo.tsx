@@ -1,47 +1,47 @@
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { MARK } from "@/lib/logo-mark";
 
 /**
- * Promly mark: a megaphone facing right, blue-to-violet horn, three violet sound lines.
- * Rim and handle use currentColor (ink, like the wordmark) so they read on light backgrounds.
+ * Promly mark: Jakob's megaphone, in the payout-slip palette.
+ * Flat colours only (no gradient ids), so any number of logos can share a page.
+ * `onDark` swaps the ink parts to white and the sound lines to yellow.
  */
-export function PromlyMark({ className }: { className?: string }) {
+export function PromlyMark({ className, onDark = false }: { className?: string; onDark?: boolean }) {
+  const ink = onDark ? "#FFFFFF" : MARK.ink;
   return (
-    <svg viewBox="0 0 40 40" className={cn("h-8 w-8 text-ink", className)} aria-hidden>
-      <defs>
-        <linearGradient id="promly-mark-horn" x1="3" y1="20" x2="25" y2="20" gradientUnits="userSpaceOnUse">
-          <stop offset="0" stopColor="#4F86F7" />
-          <stop offset="1" stopColor="#7C3AED" />
-        </linearGradient>
-      </defs>
-      {/* handle */}
-      <path d="M12.5 23.5 10.25 32.5" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" />
-      {/* horn */}
-      <path
-        d="M5.5 16.25 24.5 8.5v23L5.5 23.75C3.6 23.1 2.75 21.8 2.75 20s.85-3.1 2.75-3.75Z"
-        fill="url(#promly-mark-horn)"
-      />
-      {/* bell opening and rim */}
-      <ellipse cx="25" cy="20" rx="3.75" ry="11.75" fill="#2E1065" stroke="currentColor" strokeWidth="2.5" />
-      {/* sound lines */}
-      <g fill="none" stroke="#7C3AED" strokeWidth="2.75" strokeLinecap="round">
-        <path d="M32 13.25 36 11" />
-        <path d="M32.5 20h4.75" />
-        <path d="M32 26.75 36 29" />
+    <svg viewBox="0 0 40 40" className={cn("h-8 w-8 shrink-0", className)} aria-hidden>
+      <path d={MARK.handle} fill="none" stroke={ink} strokeWidth={MARK.stroke.handle} strokeLinecap="round" />
+      <path d={MARK.horn} fill={MARK.cobalt} />
+      <ellipse {...MARK.bell} fill={MARK.marker} stroke={ink} strokeWidth={MARK.stroke.rim} />
+      <g fill="none" stroke={onDark ? MARK.marker : ink} strokeWidth={MARK.stroke.sound} strokeLinecap="round">
+        {MARK.sound.map((d) => (
+          <path key={d} d={d} />
+        ))}
       </g>
     </svg>
   );
 }
 
-export function PromlyWordmark({ className }: { className?: string }) {
-  return <span className={cn("text-[1.4rem] font-extrabold leading-none tracking-[-0.045em] text-ink", className)}>promly</span>;
+export function PromlyWordmark({ className, onDark = false }: { className?: string; onDark?: boolean }) {
+  return (
+    <span
+      className={cn(
+        "text-[1.4rem] font-extrabold leading-none tracking-[-0.045em]",
+        onDark ? "text-white" : "text-ink",
+        className,
+      )}
+    >
+      promly
+    </span>
+  );
 }
 
-export function PromlyLogo({ href = "/", className }: { href?: string; className?: string }) {
+export function PromlyLogo({ href = "/", className, onDark = false }: { href?: string; className?: string; onDark?: boolean }) {
   return (
     <Link href={href} className={cn("flex shrink-0 items-center gap-2", className)} aria-label="Promly home">
-      <PromlyMark />
-      <PromlyWordmark />
+      <PromlyMark onDark={onDark} />
+      <PromlyWordmark onDark={onDark} />
     </Link>
   );
 }
