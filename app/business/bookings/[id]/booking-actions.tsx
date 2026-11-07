@@ -24,6 +24,13 @@ export function BookingActions({
   return (
     <section className="space-y-3 rounded-xl border border-border bg-card/70 p-4">
       <h2 className="font-semibold">Actions</h2>
+      <p className="rounded-lg bg-secondary/60 px-3 py-2 text-sm" role="status">
+        {status === "pending" && "Waiting for the appointment. Verify once the service is done."}
+        {status === "verified" && !released && "✓ Service verified — commission pending until the refund window ends."}
+        {status === "verified" && released && "✓ Commission available to the promoter."}
+        {status === "refunded" && "Refunded — any commission was reversed."}
+        {status === "cancelled" && "Cancelled."}
+      </p>
 
       {status === "pending" && (
         <ActionForm action={verifyBooking}>
