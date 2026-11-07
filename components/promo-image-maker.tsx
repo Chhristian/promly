@@ -344,13 +344,17 @@ export function PromoImageMaker({ campaign }: { campaign: PromoImageCampaign }) 
         </p>
       </div>
 
-      <div className="flex justify-center">
+      <div className="flex justify-center lg:sticky lg:top-24 lg:self-start">
         <canvas
           ref={canvas}
           data-testid="promo-canvas"
           data-rendering={rendering ? "yes" : "no"}
           data-rendered={rendered}
-          className={cn("h-auto rounded-2xl border border-border shadow-2xl shadow-violet-950/50", format === "story" ? "w-[min(100%,22rem)]" : "w-[min(100%,30rem)]")}
+          className={cn(
+            "h-auto max-w-full rounded-2xl border border-border shadow-2xl shadow-violet-950/50",
+            // Fit the whole image on screen (projector 1280×720 and phones).
+            format === "story" ? "w-[min(100%,calc(72vh*1080/1920))]" : "w-[min(100%,72vh,30rem)]",
+          )}
         />
       </div>
     </div>
