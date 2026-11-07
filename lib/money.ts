@@ -157,6 +157,27 @@ export function reversalEntries(entries: LedgerEntry[]): LedgerEntry[] {
 }
 
 // ---------------------------------------------------------------------------
+// Input
+// ---------------------------------------------------------------------------
+
+/**
+ * Parse an amount typed by a person ("100", "99.50", "99,5", "1 250") into minor units.
+ * Returns null if it isn't a valid non-negative amount with at most 2 decimals.
+ */
+export function parseMajorToMinor(input: string): number | null {
+  const s = input.trim().replace(/[\s ]/g, "").replace(",", ".");
+  const m = /^(\d{1,9})(?:\.(\d{1,2}))?$/.exec(s);
+  if (!m) return null;
+  const minor = Number(m[1]) * 100 + Number((m[2] ?? "").padEnd(2, "0"));
+  return Number.isSafeInteger(minor) && minor <= MAX_MINOR ? minor : null;
+}
+
+/** 11 375 → "113.75" (for pre-filling inputs). */
+export function minorToMajorInput(amountMinor: number): string {
+  return (amountMinor / 100).toFixed(2).replace(/\.00$/, "");
+}
+
+// ---------------------------------------------------------------------------
 // Display
 // ---------------------------------------------------------------------------
 

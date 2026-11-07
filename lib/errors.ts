@@ -1,0 +1,29 @@
+/** Turn database error codes (raised by our triggers and functions) into plain English. */
+const MESSAGES: Record<string, string> = {
+  agreement_required_to_publish: "Accept the agreement before publishing.",
+  agreement_not_accepted_for_this_campaign: "That agreement isn't accepted for this campaign.",
+  agreement_is_accepted_and_cannot_change: "An accepted agreement can't be changed. Accept a new version instead.",
+  commission_exceeds_price: "The commission can't be higher than the price.",
+  invalid_agreement_for_campaign: "This campaign's agreement has changed. Reload and try again.",
+  referral_link_not_found: "This referral link doesn't exist.",
+  campaign_not_published: "This campaign isn't accepting bookings right now.",
+  slot_in_past: "That time has already passed. Pick another time.",
+  slot_not_offered: "That time isn't available. Pick another time.",
+  slot_taken: "Someone just booked that time. Pick another time.",
+  booking_not_found: "Booking not found.",
+  not_booking_owner: "You can only manage bookings for your own business.",
+  booking_not_pending: "This booking can't be verified in its current state.",
+  booking_not_verified: "Verify the service first.",
+  refund_window_not_over: "The refund window hasn't ended yet.",
+  already_paid_out: "This commission has already been paid out and can't be refunded here.",
+  booking_cancelled: "This booking was cancelled.",
+};
+
+export function friendlyError(error: { message?: string; code?: string } | null | undefined): string {
+  if (!error) return "Something went wrong.";
+  const msg = error.message ?? "";
+  for (const [code, text] of Object.entries(MESSAGES)) if (msg.includes(code)) return text;
+  if (error.code === "23505") return "That already exists.";
+  if (error.code === "42501" || /row-level security|permission denied/i.test(msg)) return "You don't have permission to do that.";
+  return "Something went wrong. Please try again.";
+}

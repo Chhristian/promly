@@ -1,0 +1,149 @@
+"use client";
+
+import { ActionForm, SubmitButton } from "@/components/action-form";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { CHANNELS } from "@/lib/agreement-template";
+import { minorToMajorInput } from "@/lib/money";
+import { acceptAgreement, createCampaign, setCampaignStatus, updateCampaign } from "../actions";
+import { selectClass, textareaClass } from "../create-business-form";
+
+export function NewCampaignForm({ currency }: { currency: string }) {
+  return (
+    <ActionForm action={createCampaign} className="mt-6 space-y-4 rounded-xl border border-border bg-card/70 p-5">
+      <CampaignFields currency={currency} />
+      <SubmitButton className="w-full">Create campaign</SubmitButton>
+    </ActionForm>
+  );
+}
+
+function CampaignFields({
+  currency,
+  serviceName = "",
+  description = "",
+  priceMinor,
+}: {
+  currency: string;
+  serviceName?: string;
+  description?: string;
+  priceMinor?: number;
+}) {
+  return (
+    <>
+      <div className="grid gap-2">
+        <Label htmlFor="service_name">Service</Label>
+        <Input id="service_name" name="service_name" required maxLength={120} defaultValue={serviceName} placeholder="Premium Haircut" />
+      </div>
+      <div className="grid gap-2">
+        <Label htmlFor="price">Price ({currency})</Label>
+        <Input id="price" name="price" required inputMode="decimal" defaultValue={priceMinor ? minorToMajorInput(priceMinor) : ""} placeholder="500" />
+      </div>
+      <div className="grid gap-2">
+        <Label htmlFor="description">Description</Label>
+        <textarea id="description" name="description" maxLength={4000} defaultValue={description} className={textareaClass} />
+      </div>
+    </>
+  );
+}
+
+export function EditCampaignForm(props: {
+  campaignId: string;
+  currency: string;
+  serviceName: string;
+  description: string;
+  priceMinor: number;
+}) {
+  return (
+    <ActionForm action={updateCampaign} className="space-y-4">
+      <input type="hidden" name="campaign_id" value={props.campaignId} />
+      <CampaignFields {...props} />
+      <SubmitButton variant="secondary">Save details</SubmitButton>
+    </ActionForm>
+  );
+}
+
+export function AgreementForm({
+  campaignId,
+  currency,
+  defaults,
+}: {
+  campaignId: string;
+  currency: string;
+  defaults: {
+    commissionMinor?: number;
+    payoutDays: number;
+    refundWindowDays: number;
+    allowedChannels: string[];
+    brandRules: string;
+  };
+}) {
+  return (
+    <ActionForm action={acceptAgreement} className="space-y-4">
+      <input type="hidden" name="campaign_id" value={campaignId} />
+      <div className="grid gap-3 sm:grid-cols-3">
+        <div className="grid gap-2">
+          <Label htmlFor="commission">Commission per verified booking ({currency})</Label>
+          <Input
+            id="commission"
+            name="commission"
+            required
+            inputMode="decimal"
+            placeholder="100"
+            defaultValue={defaults.commissionMinor ? minorToMajorInput(defaults.commissionMinor) : ""}
+          />
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor="payout_days">Payout after verification</Label>
+          <select id="payout_days" name="payout_days" defaultValue={String(defaults.payoutDays)} className={selectClass}>
+            <option value="7">7 days</option>
+            <option value="14">14 days</option>
+          </select>
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor="refund_window_days">Refund window (days)</Label>
+          <Input id="refund_window_days" name="refund_window_days" type="number" min={0} max={14} required defaultValue={defaults.refundWindowDays} />
+        </div>
+      </div>
+      <fieldset className="grid gap-2">
+        <legend className="mb-1 text-sm font-medium">Allowed marketing channels</legend>
+        <div className="flex flex-wrap gap-2">
+          {CHANNELS.map((c) => (
+            <label key={c.value} className="flex cursor-pointer items-center gap-2 rounded-md border border-border px-3 py-1.5 text-sm has-[:checked]:border-primary has-[:checked]:bg-primary/15">
+              <input type="checkbox" name="allowed_channels" value={c.value} defaultChecked={defaults.allowedChannels.includes(c.value)} className="accent-violet-500" />
+              {c.label}
+            </label>
+          ))}
+        </div>
+      </fieldset>
+      <div className="grid gap-2">
+        <Label htmlFor="brand_rules">Brand rules</Label>
+        <textarea id="brand_rules" name="brand_rules" maxLength={2000} defaultValue={defaults.brandRules} className={textareaClass} placeholder="e.g. Use only our photos. No discounts that aren't in the campaign." />
+      </div>
+      <label className="flex items-start gap-2 text-sm">
+        <input type="checkbox" name="accept" required className="mt-1 accent-violet-500" />
+        <span>I accept this agreement on behalf of the business.</span>
+      </label>
+      <SubmitButton>Accept agreement</SubmitButton>
+    </ActionForm>
+  );
+}
+
+export function StatusButtons({ campaignId, status, canPublish }: { campaignId: string; status: string; canPublish: boolean }) {
+  return (
+    <ActionForm action={setCampaignStatus} className="flex flex-wrap items-center gap-2">
+      <input type="hidden" name="campaign_id" value={campaignId} />
+      {status !== "published" ? (
+        <SubmitButton name="status" value="published" pendingText="Publishing…" className={!canPublish ? "opacity-60" : ""}>
+          Publish
+        </SubmitButton>
+      ) : (
+        <SubmitButton name="status" value="paused" variant="secondary" pendingText="Pausing…">
+          Pause campaign
+        </SubmitButton>
+      )}
+      {!canPublish && status !== "published" && (
+        <span className="text-xs text-muted-foreground">Accept the agreement first.</span>
+      )}
+    </ActionForm>
+  );
+}
