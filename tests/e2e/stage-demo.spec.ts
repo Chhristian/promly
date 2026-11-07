@@ -165,6 +165,9 @@ test("stage flow: publish → join → book → verify → commission appears li
   await biz.getByRole("button", { name: "Simulate end of refund window" }).click();
   await expect(biz.getByText("✓ Commission available to the promoter.")).toBeVisible();
 
+  // → the money moment: a toast driven by the real database change.
+  await expect(pro.getByTestId("money-toast")).toContainText(/\+100,00\s*kr available/);
+
   // → promoter sees 100 kr available, 0 pending, live.
   await expect(stats(pro)).toContainText(/available\s*100,00\s*kr/i);
   await expect(stats(pro)).toContainText(/pending\s*0,00\s*kr/i);
