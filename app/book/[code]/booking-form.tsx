@@ -81,7 +81,7 @@ export function BookingForm({ code, days }: { code: string; days: { day: string;
       </div>
 
       <div className="sticky bottom-3 z-10">
-        <SubmitButton pendingText="Booking…" className="h-14 w-full rounded-2xl text-lg shadow-xl shadow-violet-900/50">
+        <SubmitButton pendingText="Booking…" disabled={!slot} className={cn("h-14 w-full rounded-2xl text-lg", slot && "shadow-xl shadow-violet-900/50")}>
           {slot ? `Book ${longDay(slot)} ${formatTime(slot)}` : "Pick a time to book"}
         </SubmitButton>
       </div>

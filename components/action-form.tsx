@@ -35,6 +35,7 @@ export function SubmitButton({
   variant,
   name,
   value,
+  disabled,
 }: {
   children: React.ReactNode;
   pendingText?: string;
@@ -42,16 +43,18 @@ export function SubmitButton({
   variant?: "default" | "secondary" | "destructive" | "outline" | "ghost";
   name?: string;
   value?: string;
+  disabled?: boolean;
 }) {
   const { pending } = useFormStatus();
+  const off = pending || !!disabled;
   return (
     <Button
       type="submit"
-      disabled={pending}
+      disabled={off}
       variant={variant}
       name={name}
       value={value}
-      className={cn(!variant && "bg-brand text-white", className)}
+      className={cn(!variant && (disabled ? "bg-secondary text-muted-foreground" : "bg-brand text-white"), className)}
     >
       {pending ? pendingText : children}
     </Button>
