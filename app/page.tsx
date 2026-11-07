@@ -78,7 +78,7 @@ export default async function Home() {
                 <span>Example payout slip</span>
                 <span>Oslo</span>
               </div>
-              <div className="mt-5 text-lg font-bold">Dinner for two at a local restaurant</div>
+              <div className="mt-5 text-lg font-bold">Full car wash &amp; interior clean</div>
               <dl className="mt-5 space-y-2.5 text-[0.95rem]">
                 <div className="flex justify-between gap-4">
                   <dt className="text-white/65">Customer pays the business</dt>
