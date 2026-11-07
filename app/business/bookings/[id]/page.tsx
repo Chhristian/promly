@@ -30,10 +30,11 @@ export default async function BookingDetailPage({ params }: { params: Promise<{ 
     <div className="mx-auto max-w-3xl space-y-5">
       <div>
         <Link href="/business/bookings" className="text-sm text-muted-foreground hover:text-foreground">← Bookings</Link>
-        <h1 className="mt-1 flex flex-wrap items-center gap-3 text-3xl font-bold tracking-tight">
-          {b.campaigns?.service_name} <StatusBadge status={stage.key} label={stage.label} />
-        </h1>
-        <p className="mt-1 text-muted-foreground">
+        <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-2">
+          <h1 className="line-clamp-3 text-2xl font-bold tracking-tight sm:text-3xl">{b.campaigns?.service_name}</h1>
+          <StatusBadge status={stage.key} label={stage.label} />
+        </div>
+        <p className="mt-1 line-clamp-2 text-muted-foreground">
           {formatSlot(b.slot_start)} · {contact?.customer_name ?? "Customer"} · via {b.profiles?.display_name || "promoter"}
         </p>
       </div>

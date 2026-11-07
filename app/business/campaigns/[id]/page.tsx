@@ -44,10 +44,11 @@ export default async function CampaignEditorPage({ params }: { params: Promise<{
           </div>
           <div>
             <Link href="/business" className="text-sm text-muted-foreground hover:text-foreground">← Dashboard</Link>
-            <h1 className="mt-1 flex flex-wrap items-center gap-3 text-3xl font-bold tracking-tight">
-              {campaign.service_name} <StatusBadge status={campaign.status} />
-            </h1>
-            <p className="text-muted-foreground">{campaign.businesses.name}</p>
+            <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-2">
+              <h1 className="line-clamp-3 text-2xl font-bold tracking-tight sm:text-3xl">{campaign.service_name}</h1>
+              <StatusBadge status={campaign.status} />
+            </div>
+            <p className="line-clamp-1 text-muted-foreground">{campaign.businesses.name}</p>
           </div>
         </div>
       </div>

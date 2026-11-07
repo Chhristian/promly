@@ -34,8 +34,8 @@ export function AppShell({
                 <span className="bg-brand grid h-7 w-7 place-items-center rounded-full text-xs font-bold text-white">
                   {(userName[0] ?? "?").toUpperCase()}
                 </span>
-                <span className="text-left text-xs leading-tight">
-                  <span className="block font-semibold">{userName}</span>
+                <span className="max-w-[11rem] text-left text-xs leading-tight">
+                  <span className="block truncate font-semibold">{userName}</span>
                   <span className="block text-muted-foreground">{roleLabel}</span>
                 </span>
               </Link>

@@ -48,7 +48,7 @@ export function Studio({ campaigns, initialCampaignId }: { campaigns: StudioCamp
           aria-label="Campaign"
           value={campaign.id}
           onChange={(e) => setCampaignId(e.target.value)}
-          className="h-10 rounded-full border border-input bg-background px-4 text-sm"
+          className="h-10 w-full min-w-0 truncate rounded-full border border-input bg-background px-4 text-sm sm:w-auto sm:max-w-md"
         >
           {campaigns.map((c) => (
             <option key={c.id} value={c.id}>

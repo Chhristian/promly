@@ -30,7 +30,7 @@ export default async function BusinessDashboard() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">{business.name}</h1>
+          <h1 className="line-clamp-2 text-3xl font-bold tracking-tight sm:text-4xl">{business.name}</h1>
           <p className="mt-1 text-muted-foreground">{business.city}{business.country === "ES" ? ", Spain" : ", Norway"}</p>
         </div>
         <Button asChild className="bg-brand text-white shadow-lg shadow-violet-900/40">

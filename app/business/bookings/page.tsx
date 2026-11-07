@@ -36,16 +36,17 @@ export default async function BookingsPage() {
               className="grid gap-2 card p-4 hover:border-primary/60 sm:grid-cols-[1fr_auto] sm:items-center"
             >
               <div>
-                <div className="font-medium">
-                  {b.campaigns?.service_name} · {formatSlot(b.slot_start)}
-                </div>
+                <div className="line-clamp-2 font-medium">{b.campaigns?.service_name}</div>
+                <div className="font-medium tabular-nums">{formatSlot(b.slot_start)}</div>
                 <div className="text-sm text-muted-foreground">
                   via {b.profiles?.display_name || "promoter"} · booked {formatDateTime(b.created_at)} · commission{" "}
                   {formatMinor(b.commission_minor, cur)}
                   {b.payout_at && b.status === "verified" ? ` · payout ${formatDate(b.payout_at)}` : ""}
                 </div>
               </div>
-              <StatusBadge status={stage.key} label={stage.label} />
+              <span className="justify-self-start sm:justify-self-end">
+                <StatusBadge status={stage.key} label={stage.label} />
+              </span>
             </Link>
             </Highlight>
           );

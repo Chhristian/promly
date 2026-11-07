@@ -56,12 +56,13 @@ export default async function ExplorePage() {
                     )}
                   </div>
                   <div className="flex flex-1 flex-col p-5">
-                    <div className="text-xl font-semibold leading-tight">{c.service_name}</div>
-                    <div className="mt-1 flex items-center gap-1 text-sm text-muted-foreground">
-                      {c.businesses?.name} · <MapPin className="h-3.5 w-3.5" /> {c.businesses?.city}
+                    <div className="line-clamp-3 text-xl font-semibold leading-tight">{c.service_name}</div>
+                    <div className="mt-1 line-clamp-1 text-sm text-muted-foreground">{c.businesses?.name}</div>
+                    <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                      <MapPin className="h-3.5 w-3.5 shrink-0" /> {c.businesses?.city}
                       {c.businesses?.country === "ES" ? ", Spain" : ", Norway"}
                     </div>
-                    <div className="mt-5 flex items-end justify-between gap-3">
+                    <div className="mt-auto flex flex-wrap items-end justify-between gap-x-3 gap-y-1 pt-5">
                       <div className="min-w-0 text-sm text-muted-foreground">Price <span className="whitespace-nowrap">{formatMinor(c.price_minor, cur)}</span></div>
                       <div className="text-right">
                         <div className="text-sm text-muted-foreground">You earn</div>

@@ -16,10 +16,14 @@ export function Stat({
   icon?: LucideIcon;
   size?: "md" | "lg" | "quiet";
 }) {
+  // Long amounts (e.g. 25 000 000,00 kr) step down in size so they always fit the card.
+  const len = typeof value === "string" ? value.length : 0;
+  const long = len > 14;
+  const veryLong = len > 17;
   return (
     <div
       className={cn(
-        "card h-full p-4 sm:p-5",
+        "card h-full min-w-0 p-4 sm:p-5",
         accent && "border-violet-400/50 bg-gradient-to-br from-violet-600/25 via-card/80 to-blue-600/15",
       )}
     >
@@ -31,10 +35,10 @@ export function Stat({
         className={cn(
           "mt-2 whitespace-nowrap font-bold tabular-nums tracking-tight",
           size === "lg"
-            ? "text-[clamp(2.25rem,10vw,3.75rem)] tracking-[-0.03em]"
+            ? veryLong ? "text-[clamp(1.75rem,7vw,2.5rem)]" : long ? "text-[clamp(2rem,8vw,3rem)]" : "text-[clamp(2.25rem,10vw,3.75rem)] tracking-[-0.03em]"
             : size === "quiet"
-              ? "text-[clamp(1.6rem,7vw,1.875rem)] font-semibold text-foreground/90"
-              : "text-[clamp(1.6rem,7vw,2.25rem)]",
+              ? veryLong ? "text-xl font-semibold text-foreground/90" : long ? "text-2xl font-semibold text-foreground/90" : "text-[clamp(1.6rem,7vw,1.875rem)] font-semibold text-foreground/90"
+              : veryLong ? "text-xl sm:text-2xl" : long ? "text-2xl sm:text-[1.65rem]" : "text-[clamp(1.6rem,7vw,2.25rem)]",
           accent && "text-gradient",
         )}
       >

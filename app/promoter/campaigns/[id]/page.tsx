@@ -48,7 +48,7 @@ export default async function PromoterCampaignPage({ params }: { params: Promise
           <CampaignCover category={c.businesses.category} imageUrl={cover} size="lg" />
           <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-5">
             <span className="rounded-full bg-black/40 px-2.5 py-1 text-xs font-medium text-white backdrop-blur">{categoryLabel(c.businesses.category)}</span>
-            <h1 className="mt-2 text-3xl font-bold tracking-tight text-white">{c.service_name}</h1>
+            <h1 className="mt-2 line-clamp-2 text-2xl font-bold tracking-tight text-white sm:text-3xl">{c.service_name}</h1>
             <p className="flex items-center gap-1 text-sm text-white/80">
               {c.businesses.name} · <MapPin className="h-3.5 w-3.5" /> {c.businesses.city}
             </p>
