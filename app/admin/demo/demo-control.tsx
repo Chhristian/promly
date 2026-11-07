@@ -59,7 +59,7 @@ export function DemoControl() {
 
   return (
     <div className="grid gap-6 lg:grid-cols-2">
-      <section className="space-y-3 rounded-xl border border-border bg-card/70 p-5">
+      <section className="space-y-3 card p-5">
         <h2 className="font-semibold">Prepare Stage Demo</h2>
         <p className="text-sm text-muted-foreground">
           Deletes <strong>only demo data</strong> (bookings, ledger rows, joins, notifications, campaigns of demo businesses) and
@@ -83,7 +83,7 @@ export function DemoControl() {
         )}
       </section>
 
-      <section className="space-y-3 rounded-xl border border-border bg-card/70 p-5">
+      <section className="space-y-3 card p-5">
         <div className="flex items-center justify-between gap-2">
           <h2 className="font-semibold">Run Demo Health Check</h2>
           {checks && (

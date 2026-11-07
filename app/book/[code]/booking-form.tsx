@@ -4,9 +4,15 @@ import { useState } from "react";
 import { ActionForm, SubmitButton } from "@/components/action-form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { formatDayHeading, formatTime } from "@/lib/format";
+import { dayKey, formatTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { createBookingAction } from "../actions";
+
+const TZ = "Europe/Oslo";
+const weekday = (iso: string) => new Intl.DateTimeFormat("en-GB", { timeZone: TZ, weekday: "short" }).format(new Date(iso));
+const dayNum = (iso: string) => new Intl.DateTimeFormat("en-GB", { timeZone: TZ, day: "numeric" }).format(new Date(iso));
+const month = (iso: string) => new Intl.DateTimeFormat("en-GB", { timeZone: TZ, month: "short" }).format(new Date(iso));
+const longDay = (iso: string) => new Intl.DateTimeFormat("en-GB", { timeZone: TZ, weekday: "long" }).format(new Date(iso));
 
 export function BookingForm({ code, days }: { code: string; days: { day: string; slots: string[] }[] }) {
   const [dayIdx, setDayIdx] = useState(0);
@@ -14,31 +20,36 @@ export function BookingForm({ code, days }: { code: string; days: { day: string;
   const current = days[dayIdx];
 
   return (
-    <ActionForm action={createBookingAction} className="mt-6 space-y-5">
+    <ActionForm action={createBookingAction} className="mt-7 space-y-6">
       <input type="hidden" name="code" value={code} />
       <input type="hidden" name="slot_start" value={slot ?? ""} />
 
       <div>
-        <div className="mb-2 text-sm font-medium">1. Pick a day</div>
-        <div className="flex gap-2 overflow-x-auto pb-1">
+        <div className="mb-2 text-sm font-semibold">Pick a day</div>
+        <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
           {days.map((d, i) => (
             <button
               key={d.day}
               type="button"
-              onClick={() => { setDayIdx(i); setSlot(null); }}
+              onClick={() => {
+                setDayIdx(i);
+                setSlot(null);
+              }}
               className={cn(
-                "shrink-0 rounded-lg border px-3 py-2 text-sm",
-                i === dayIdx ? "border-primary bg-primary/15" : "border-border",
+                "flex w-16 shrink-0 flex-col items-center rounded-2xl border py-2 transition",
+                i === dayIdx ? "border-violet-400 bg-violet-500/20" : "border-border hover:bg-secondary",
               )}
             >
-              {formatDayHeading(d.slots[0]).replace(/ \w+$/, "")}
+              <span className="text-xs text-muted-foreground">{d.day === dayKey(new Date().toISOString()) ? "Today" : weekday(d.slots[0])}</span>
+              <span className="text-xl font-bold leading-tight">{dayNum(d.slots[0])}</span>
+              <span className="text-xs text-muted-foreground">{month(d.slots[0])}</span>
             </button>
           ))}
         </div>
       </div>
 
       <div>
-        <div className="mb-2 text-sm font-medium">2. Pick a time</div>
+        <div className="mb-2 text-sm font-semibold">Pick a time</div>
         <div className="grid grid-cols-4 gap-2">
           {current?.slots.map((s) => (
             <button
@@ -47,8 +58,8 @@ export function BookingForm({ code, days }: { code: string; days: { day: string;
               onClick={() => setSlot(s)}
               aria-pressed={slot === s}
               className={cn(
-                "rounded-lg border py-3 text-sm font-medium tabular-nums",
-                slot === s ? "bg-brand border-transparent text-white" : "border-border hover:bg-secondary",
+                "rounded-xl border py-3 text-base font-semibold tabular-nums transition",
+                slot === s ? "bg-brand border-transparent text-white shadow-lg shadow-violet-900/40" : "border-border hover:bg-secondary",
               )}
             >
               {formatTime(s)}
@@ -58,20 +69,22 @@ export function BookingForm({ code, days }: { code: string; days: { day: string;
       </div>
 
       <div className="space-y-3">
-        <div className="text-sm font-medium">3. Your details</div>
-        <div className="grid gap-2">
+        <div className="text-sm font-semibold">Your details</div>
+        <div className="grid gap-1.5">
           <Label htmlFor="customer_name">Name</Label>
-          <Input id="customer_name" name="customer_name" required maxLength={100} autoComplete="name" />
+          <Input id="customer_name" name="customer_name" required maxLength={100} autoComplete="name" className="h-12 text-base" />
         </div>
-        <div className="grid gap-2">
+        <div className="grid gap-1.5">
           <Label htmlFor="customer_phone">Phone</Label>
-          <Input id="customer_phone" name="customer_phone" required type="tel" inputMode="tel" maxLength={40} autoComplete="tel" placeholder="+47 400 00 000" />
+          <Input id="customer_phone" name="customer_phone" required type="tel" inputMode="tel" maxLength={40} autoComplete="tel" placeholder="+47 400 00 000" className="h-12 text-base" />
         </div>
       </div>
 
-      <SubmitButton pendingText="Booking…" className="h-12 w-full text-base">
-        {slot ? `Book ${formatDayHeading(slot).split(" ").slice(0, 1).join("")} ${formatTime(slot)}` : "Pick a time to book"}
-      </SubmitButton>
+      <div className="sticky bottom-3 z-10">
+        <SubmitButton pendingText="Booking…" className="h-14 w-full rounded-2xl text-lg shadow-xl shadow-violet-900/50">
+          {slot ? `Book ${longDay(slot)} ${formatTime(slot)}` : "Pick a time to book"}
+        </SubmitButton>
+      </div>
     </ActionForm>
   );
 }

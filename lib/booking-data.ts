@@ -18,7 +18,7 @@ export async function getBookingPageData(code: string) {
 
   const { data: c } = await admin
     .from("campaigns")
-    .select("id, service_name, description, price_minor, currency, status, business_id, businesses(name, city, country, description)")
+    .select("id, service_name, description, price_minor, currency, status, business_id, businesses(name, city, country, description, category)")
     .eq("id", link.campaign_id)
     .single();
   if (!c || !c.businesses) return null;

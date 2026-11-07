@@ -8,10 +8,11 @@ export default async function PromoterLayout({ children }: { children: React.Rea
       home="/promoter"
       userName={profile.display_name || "Promoter"}
       roleLabel="Promoter"
+      role="promoter"
       nav={[
-        { href: "/promoter", label: "Dashboard" },
-        { href: "/promoter/explore", label: "Explore campaigns" },
-        { href: "/promoter/studio", label: "Marketing Studio" },
+        { href: "/promoter", label: "Dashboard", icon: "dashboard" },
+        { href: "/promoter/explore", label: "Explore campaigns", icon: "explore" },
+        { href: "/promoter/studio", label: "Marketing Studio", icon: "studio" },
       ]}
     >
       {children}

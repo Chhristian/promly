@@ -1,12 +1,16 @@
 import Link from "next/link";
+import { ArrowRight, BadgeCheck, CalendarClock, CalendarDays, Clock, Coins, Eye, Megaphone, Plus, Receipt, Users, Wallet } from "lucide-react";
 import { requireRole } from "@/lib/auth";
 import { getBusinessOverview, getMyBusiness, moneyTotals } from "@/lib/business-data";
 import { formatMinor, type Currency } from "@/lib/money";
-import { formatDate, formatDateTime, formatSlot } from "@/lib/format";
+import { formatDate, formatSlot } from "@/lib/format";
 import { Stat, StatusBadge, bookingStage } from "@/components/stat";
 import { Button } from "@/components/ui/button";
-import { CreateBusinessForm } from "./create-business-form";
 import { Highlight } from "@/components/live";
+import { ActivityFeed } from "@/components/activity-feed";
+import { CampaignCover } from "@/components/campaign-cover";
+import { EmptyState } from "@/components/empty-state";
+import { CreateBusinessForm } from "./create-business-form";
 
 export default async function BusinessDashboard() {
   const { user, supabase } = await requireRole("business");
@@ -22,94 +26,116 @@ export default async function BusinessDashboard() {
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-wrap items-end justify-between gap-3">
+      <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-sm text-muted-foreground">Business dashboard</p>
-          <h1 className="text-2xl font-bold sm:text-3xl">{business.name}</h1>
+          <p className="eyebrow">Business dashboard</p>
+          <h1 className="mt-1 text-3xl font-bold tracking-tight sm:text-4xl">{business.name}</h1>
+          <p className="mt-1 text-muted-foreground">{business.city}{business.country === "ES" ? ", Spain" : ", Norway"}</p>
         </div>
-        <Button asChild className="bg-brand text-white">
-          <Link href="/business/campaigns/new">New campaign</Link>
+        <Button asChild className="bg-brand text-white shadow-lg shadow-violet-900/40">
+          <Link href="/business/campaigns/new">
+            <Plus className="h-4 w-4" /> New campaign
+          </Link>
         </Button>
       </div>
 
-      <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Stat label="Verified sales" value={money(t.salesMinor)} hint={`${t.salesCount} booking${t.salesCount === 1 ? "" : "s"}`} accent />
-        <Stat label="Commission pending" value={money(t.commissionPendingMinor)} hint="Until refund window ends" />
-        <Stat label="Commission available" value={money(t.commissionAvailableMinor)} hint={t.nextPayoutAt ? `Next payout ${formatDate(t.nextPayoutAt)}` : "Owed to promoters"} />
-        <Stat label="Platform fees (2.75%)" value={money(t.feesMinor)} hint={`Total cost ${money(t.totalCostMinor)}`} />
-        <Stat label="Awaiting service" value={t.awaitingServiceCount} hint="Bookings to verify" />
-        <Stat label="Promoters" value={o.memberships.length} hint="Joined your campaigns" />
-        <Stat label="Link visits" value={o.clicks} hint="Referral link clicks" />
-        <Stat label="Active campaigns" value={o.campaigns.filter((c) => c.status === "published").length} hint={`${o.campaigns.length} total`} />
+      <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <Stat label="Verified sales" value={money(t.salesMinor)} hint={`${t.salesCount} booking${t.salesCount === 1 ? "" : "s"}`} accent icon={Receipt} />
+        <Stat label="Commission pending" value={money(t.commissionPendingMinor)} hint="Until refund window ends" icon={Clock} />
+        <Stat label="Commission available" value={money(t.commissionAvailableMinor)} hint={t.nextPayoutAt ? `Next payout ${formatDate(t.nextPayoutAt)}` : "Owed to promoters"} icon={Wallet} />
+        <Stat label="Platform fees (2.75%)" value={money(t.feesMinor)} hint={`Total cost ${money(t.totalCostMinor)}`} icon={Coins} />
       </section>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <section className="space-y-3 lg:col-span-2">
-          <h2 className="font-semibold">Campaigns</h2>
-          {o.campaigns.length === 0 && (
-            <p className="rounded-xl border border-dashed border-border p-6 text-sm text-muted-foreground">
-              No campaigns yet. Create one to start getting customers.
-            </p>
-          )}
-          {o.campaigns.map((c) => (
-            <Highlight key={c.id} ids={[c.id]}>
-            <Link
-              href={`/business/campaigns/${c.id}`}
-              className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card/70 p-4 hover:border-primary/60"
-            >
-              <div>
-                <div className="font-medium">{c.service_name}</div>
-                <div className="text-sm text-muted-foreground">
-                  {money(c.price_minor)} · commission {money(c.commission_minor)} · {membersByCampaign.get(c.id) ?? 0} promoter(s)
-                </div>
-              </div>
-              <StatusBadge status={c.status} />
-            </Link>
-            </Highlight>
-          ))}
-
-          <div className="flex items-center justify-between pt-4">
-            <h2 className="font-semibold">Recent bookings</h2>
-            <Link href="/business/bookings" className="text-sm text-muted-foreground hover:text-foreground">All bookings →</Link>
-          </div>
-          {o.bookings.length === 0 && (
-            <p className="rounded-xl border border-dashed border-border p-6 text-sm text-muted-foreground">
-              No bookings yet. They appear here as soon as a referred customer books.
-            </p>
-          )}
-          {o.bookings.slice(0, 6).map((b) => {
-            const stage = bookingStage(b);
-            return (
-              <Highlight key={b.id} ids={[b.id]}>
-              <Link
-                href={`/business/bookings/${b.id}`}
-                className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card/70 p-4 hover:border-primary/60"
-              >
-                <div>
-                  <div className="font-medium">{b.campaigns?.service_name}</div>
-                  <div className="text-sm text-muted-foreground">
-                    {formatSlot(b.slot_start)} · commission {money(b.commission_minor)}
-                  </div>
-                </div>
-                <StatusBadge status={stage.key} label={stage.label} />
-              </Link>
-              </Highlight>
-            );
-          })}
-        </section>
-
-        <section className="space-y-3">
-          <h2 className="font-semibold">Activity</h2>
-          {o.notifications.length === 0 && <p className="text-sm text-muted-foreground">Nothing yet.</p>}
-          {o.notifications.map((n) => (
-            <Highlight key={n.id} ids={[n.id]}>
-            <div className="rounded-lg border border-border bg-card/50 p-3 text-sm">
-              <div>{n.title}</div>
-              <div className="text-xs text-muted-foreground">{formatDateTime(n.created_at)}</div>
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        {[
+          { icon: CalendarClock, label: "Awaiting service", value: t.awaitingServiceCount },
+          { icon: Users, label: "Promoters", value: o.memberships.length },
+          { icon: Eye, label: "Link visits", value: o.clicks },
+          { icon: Megaphone, label: "Live campaigns", value: o.campaigns.filter((c) => c.status === "published").length },
+        ].map((k) => (
+          <div key={k.label} className="card flex items-center gap-3 p-4">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-secondary text-violet-300">
+              <k.icon className="h-5 w-5" />
+            </span>
+            <div className="min-w-0">
+              <div className="text-2xl font-bold tabular-nums leading-none">{k.value}</div>
+              <div className="mt-1 truncate text-sm text-muted-foreground">{k.label}</div>
             </div>
-            </Highlight>
-          ))}
-        </section>
+          </div>
+        ))}
+      </div>
+
+      <div className="grid gap-8 lg:grid-cols-3">
+        <div className="min-w-0 space-y-8 lg:col-span-2">
+          <section className="min-w-0 space-y-3">
+            <h2 className="text-lg font-semibold">Campaigns</h2>
+            {o.campaigns.length === 0 ? (
+              <EmptyState
+                icon={Megaphone}
+                title="Create your first campaign"
+                body="Pick a service, set a commission, accept the agreement and publish. Promoters see it instantly."
+                action={{ href: "/business/campaigns/new", label: "New campaign" }}
+              />
+            ) : (
+              o.campaigns.map((c) => (
+                <Highlight key={c.id} ids={[c.id]}>
+                  <Link href={`/business/campaigns/${c.id}`} className="card group flex items-center gap-4 p-3 transition hover:border-violet-400/60">
+                    <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl">
+                      <CampaignCover category={business.category} imageUrl={c.image_url} size="sm" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-lg font-semibold">{c.service_name}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {money(c.price_minor)} · promoter earns {money(c.commission_minor)} · {membersByCampaign.get(c.id) ?? 0} promoter
+                        {(membersByCampaign.get(c.id) ?? 0) === 1 ? "" : "s"}
+                      </div>
+                    </div>
+                    <StatusBadge status={c.status} />
+                    <ArrowRight className="hidden h-4 w-4 text-muted-foreground transition group-hover:translate-x-0.5 sm:block" />
+                  </Link>
+                </Highlight>
+              ))
+            )}
+          </section>
+
+          <section className="min-w-0 space-y-3">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold">Recent bookings</h2>
+              <Link href="/business/bookings" className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+                All bookings <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            </div>
+            {o.bookings.length === 0 ? (
+              <EmptyState
+                icon={CalendarDays}
+                title="No bookings yet"
+                body="When a customer books through a promoter's link, it appears here instantly."
+              />
+            ) : (
+              o.bookings.slice(0, 6).map((b) => {
+                const stage = bookingStage(b);
+                return (
+                  <Highlight key={b.id} ids={[b.id]}>
+                    <Link href={`/business/bookings/${b.id}`} className="card flex items-center gap-4 p-4 transition hover:border-violet-400/60">
+                      <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-blue-500/15 text-blue-300">
+                        {stage.key === "pending" ? <CalendarClock className="h-5 w-5" /> : <BadgeCheck className="h-5 w-5" />}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate font-semibold">{b.campaigns?.service_name}</div>
+                        <div className="text-sm text-muted-foreground">
+                          {formatSlot(b.slot_start)} · commission {money(b.commission_minor)}
+                        </div>
+                      </div>
+                      <StatusBadge status={stage.key} label={stage.label} />
+                    </Link>
+                  </Highlight>
+                );
+              })
+            )}
+          </section>
+        </div>
+
+        <ActivityFeed items={o.notifications} emptyText="Joins, bookings and verifications show up here in real time." />
       </div>
     </div>
   );

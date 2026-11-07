@@ -8,10 +8,11 @@ export default async function BusinessLayout({ children }: { children: React.Rea
       home="/business"
       userName={profile.display_name || "Business"}
       roleLabel="Business"
+      role="business"
       nav={[
-        { href: "/business", label: "Dashboard" },
-        { href: "/business/bookings", label: "Bookings" },
-        { href: "/business/campaigns/new", label: "New campaign" },
+        { href: "/business", label: "Dashboard", icon: "dashboard" },
+        { href: "/business/bookings", label: "Bookings", icon: "bookings" },
+        { href: "/business/campaigns/new", label: "New campaign", icon: "new" },
       ]}
     >
       {children}

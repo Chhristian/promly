@@ -5,7 +5,7 @@ import { joinCampaign } from "../../actions";
 
 export function JoinForm({ campaignId, agreementId }: { campaignId: string; agreementId: string }) {
   return (
-    <ActionForm action={joinCampaign} className="space-y-3 rounded-xl border border-border bg-card/70 p-4">
+    <ActionForm action={joinCampaign} className="space-y-3 card p-4">
       <input type="hidden" name="campaign_id" value={campaignId} />
       <input type="hidden" name="agreement_id" value={agreementId} />
       <label className="flex items-start gap-2 text-sm">

@@ -7,12 +7,14 @@ import { siteUrl } from "@/lib/promoter-data";
 import { AgreementView } from "@/components/agreement-view";
 import { ShareTools } from "@/components/share-tools";
 import { JoinForm } from "./join-form";
+import { ArrowLeft, MapPin } from "lucide-react";
+import { CampaignCover, categoryLabel } from "@/components/campaign-cover";
 
 export default async function PromoterCampaignPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const { user, supabase } = await requireRole("promoter");
 
-  const { data: c } = await supabase.from("campaigns").select("*, businesses(name, city, country)").eq("id", id).maybeSingle();
+  const { data: c } = await supabase.from("campaigns").select("*, businesses(name, city, country, category)").eq("id", id).maybeSingle();
   if (!c || !c.businesses) notFound();
 
   const { data: membership } = await supabase
@@ -34,30 +36,38 @@ export default async function PromoterCampaignPage({ params }: { params: Promise
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      <div>
-        <Link href="/promoter/explore" className="text-sm text-muted-foreground hover:text-foreground">← Explore</Link>
-        <h1 className="mt-1 text-2xl font-bold">{c.service_name}</h1>
-        <p className="text-sm text-muted-foreground">
-          {c.businesses.name} · {c.businesses.city}
-        </p>
-      </div>
+      <Link href="/promoter/explore" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+        <ArrowLeft className="h-4 w-4" /> Explore
+      </Link>
 
-      <div className="grid grid-cols-2 gap-3">
-        <div className="rounded-xl border border-border bg-card/70 p-4">
-          <div className="text-xs text-muted-foreground">Customer pays</div>
-          <div className="text-2xl font-bold">{formatMinor(c.price_minor, cur)}</div>
+      <div className="card overflow-hidden">
+        <div className="relative h-44 sm:h-52">
+          <CampaignCover category={c.businesses.category} imageUrl={c.image_url} size="lg" />
+          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-5">
+            <span className="rounded-full bg-black/40 px-2.5 py-1 text-xs font-medium text-white backdrop-blur">{categoryLabel(c.businesses.category)}</span>
+            <h1 className="mt-2 text-3xl font-bold tracking-tight text-white">{c.service_name}</h1>
+            <p className="flex items-center gap-1 text-sm text-white/80">
+              {c.businesses.name} · <MapPin className="h-3.5 w-3.5" /> {c.businesses.city}
+            </p>
+          </div>
         </div>
-        <div className="rounded-xl border border-primary/50 bg-primary/10 p-4">
-          <div className="text-xs text-muted-foreground">You earn per verified booking</div>
-          <div className="text-gradient text-2xl font-bold">{formatMinor(agreement?.commission_minor ?? c.commission_minor, cur)}</div>
+        <div className="grid grid-cols-2 divide-x divide-border">
+          <div className="p-5">
+            <div className="text-sm text-muted-foreground">Customer pays</div>
+            <div className="text-3xl font-bold tabular-nums">{formatMinor(c.price_minor, cur)}</div>
+          </div>
+          <div className="bg-gradient-to-br from-violet-600/20 to-blue-600/10 p-5">
+            <div className="text-sm text-muted-foreground">You earn per verified booking</div>
+            <div className="text-gradient text-3xl font-bold tabular-nums">{formatMinor(agreement?.commission_minor ?? c.commission_minor, cur)}</div>
+          </div>
         </div>
       </div>
 
       {c.description && <p className="text-sm text-muted-foreground">{c.description}</p>}
 
       {link ? (
-        <section className="space-y-2 rounded-xl border border-emerald-500/40 bg-emerald-500/5 p-4">
-          <h2 className="font-semibold">Your personal link</h2>
+        <section className="card space-y-3 border-emerald-500/40 bg-emerald-500/5 p-5">
+          <h2 className="text-lg font-semibold">Your personal link</h2>
           <p className="text-sm text-muted-foreground">Share it anywhere the agreement allows. Bookings through it are credited to you.</p>
           <ShareTools
             url={link}

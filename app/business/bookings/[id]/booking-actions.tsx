@@ -22,7 +22,7 @@ export function BookingActions({
   const canRefund = status === "pending" || (status === "verified" && beforePayout);
 
   return (
-    <section className="space-y-3 rounded-xl border border-border bg-card/70 p-4">
+    <section className="space-y-3 card p-4">
       <h2 className="font-semibold">Actions</h2>
       <p className="rounded-lg bg-secondary/60 px-3 py-2 text-sm" role="status">
         {status === "pending" && "Waiting for the appointment. Verify once the service is done."}

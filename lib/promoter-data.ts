@@ -21,7 +21,7 @@ export async function getPromoterOverview(db: Db, promoterId: string) {
   const [memberships, bookings, ledger, notifications] = await Promise.all([
     db
       .from("campaign_memberships")
-      .select("id, created_at, campaign_id, campaigns(id, service_name, price_minor, currency, status, businesses(name, city)), agreements(commission_minor, payout_days, refund_window_days, allowed_channels, brand_rules), referral_links(id, code)")
+      .select("id, created_at, campaign_id, campaigns(id, service_name, price_minor, currency, status, businesses(name, city, category)), agreements(commission_minor, payout_days, refund_window_days, allowed_channels, brand_rules), referral_links(id, code)")
       .eq("promoter_id", promoterId)
       .order("created_at", { ascending: false }),
     db.from("bookings").select("*, campaigns(service_name)").eq("promoter_id", promoterId).order("created_at", { ascending: false }),

@@ -37,7 +37,7 @@ export default async function BookingDetailPage({ params }: { params: Promise<{ 
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <section className="space-y-2 rounded-xl border border-border bg-card/70 p-4 text-sm">
+        <section className="space-y-2 card p-4 text-sm">
           <h2 className="font-semibold">Customer</h2>
           <div>{contact?.customer_name ?? "—"}</div>
           <div className="text-muted-foreground">{contact?.customer_phone ?? ""}</div>
@@ -46,7 +46,7 @@ export default async function BookingDetailPage({ params }: { params: Promise<{ 
           </div>
         </section>
 
-        <section className="space-y-1 rounded-xl border border-border bg-card/70 p-4 text-sm">
+        <section className="space-y-1 card p-4 text-sm">
           <h2 className="mb-1 font-semibold">Terms (frozen at booking)</h2>
           <Row k="Price" v={money(b.price_minor)} />
           <Row k="Commission to promoter" v={money(b.commission_minor)} />
@@ -57,7 +57,7 @@ export default async function BookingDetailPage({ params }: { params: Promise<{ 
         </section>
       </div>
 
-      <section className="space-y-1 rounded-xl border border-border bg-card/70 p-4 text-sm">
+      <section className="space-y-1 card p-4 text-sm">
         <h2 className="mb-1 font-semibold">Timeline</h2>
         <Row k="Booked" v={formatDateTime(b.created_at)} />
         <Row k="Service verified" v={formatDateTime(b.verified_at)} />
@@ -93,7 +93,7 @@ export default async function BookingDetailPage({ params }: { params: Promise<{ 
         {ledger?.map((e) => {
           const owes = -e.amount_minor; // business rows are negative when the business owes
           return (
-            <div key={e.id} className="flex items-center justify-between gap-3 rounded-lg border border-border bg-card/50 px-3 py-2">
+            <div key={e.id} className="flex items-center justify-between gap-3 card px-3 py-2">
               <span>
                 {ledgerLabel(e.entry_type, e.bucket)}
                 <span className="ml-2 rounded-full bg-secondary px-2 py-0.5 text-xs text-muted-foreground">

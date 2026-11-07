@@ -6,13 +6,14 @@ import { formatDateTime } from "@/lib/format";
 import { StatusBadge } from "@/components/stat";
 import { AgreementView } from "@/components/agreement-view";
 import { AgreementForm, EditCampaignForm, StatusButtons } from "../campaign-forms";
+import { CampaignCover } from "@/components/campaign-cover";
 import { Highlight } from "@/components/live";
 
 export default async function CampaignEditorPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const { supabase } = await requireRole("business");
 
-  const { data: campaign } = await supabase.from("campaigns").select("*, businesses(name, currency)").eq("id", id).maybeSingle();
+  const { data: campaign } = await supabase.from("campaigns").select("*, businesses(name, currency, category)").eq("id", id).maybeSingle();
   if (!campaign || !campaign.businesses) notFound();
 
   const [{ data: agreement }, { data: members }] = await Promise.all([
@@ -33,23 +34,28 @@ export default async function CampaignEditorPage({ params }: { params: Promise<{
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <Link href="/business" className="text-sm text-muted-foreground hover:text-foreground">← Dashboard</Link>
-          <h1 className="mt-1 flex items-center gap-3 text-2xl font-bold">
-            {campaign.service_name} <StatusBadge status={campaign.status} />
-          </h1>
-          <p className="text-sm text-muted-foreground">{campaign.businesses.name}</p>
+        <div className="flex items-center gap-4">
+          <div className="h-20 w-20 shrink-0 overflow-hidden rounded-2xl">
+            <CampaignCover category={campaign.businesses.category} imageUrl={campaign.image_url} size="sm" />
+          </div>
+          <div>
+            <Link href="/business" className="text-sm text-muted-foreground hover:text-foreground">← Dashboard</Link>
+            <h1 className="mt-1 flex flex-wrap items-center gap-3 text-3xl font-bold tracking-tight">
+              {campaign.service_name} <StatusBadge status={campaign.status} />
+            </h1>
+            <p className="text-muted-foreground">{campaign.businesses.name}</p>
+          </div>
         </div>
         <StatusButtons campaignId={campaign.id} status={campaign.status} canPublish={!!agreement} />
       </div>
 
       {agreement && (
         <div className="grid grid-cols-3 gap-3 text-center text-sm">
-          <div className="rounded-xl border border-border bg-card/70 p-3">
+          <div className="card p-3">
             <div className="text-xs text-muted-foreground">Promoter earns</div>
             <div className="text-lg font-bold">{money(agreement.commission_minor)}</div>
           </div>
-          <div className="rounded-xl border border-border bg-card/70 p-3">
+          <div className="card p-3">
             <div className="text-xs text-muted-foreground">Promly fee (2.75% of price)</div>
             <div className="text-lg font-bold">{money(fee)}</div>
           </div>
@@ -61,7 +67,7 @@ export default async function CampaignEditorPage({ params }: { params: Promise<{
       )}
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <section className="space-y-3 rounded-xl border border-border bg-card/70 p-5">
+        <section className="space-y-3 card p-5">
           <h2 className="font-semibold">Campaign details</h2>
           <EditCampaignForm
             campaignId={campaign.id}
@@ -72,7 +78,7 @@ export default async function CampaignEditorPage({ params }: { params: Promise<{
           />
         </section>
 
-        <section className="space-y-3 rounded-xl border border-border bg-card/70 p-5">
+        <section className="space-y-3 card p-5">
           <h2 className="font-semibold">Agreement terms</h2>
           <p className="text-sm text-muted-foreground">
             {agreement
@@ -116,7 +122,7 @@ export default async function CampaignEditorPage({ params }: { params: Promise<{
         {!members?.length && <p className="text-sm text-muted-foreground">No promoters have joined yet.</p>}
         {members?.map((m) => (
           <Highlight key={m.id} ids={[m.id]}>
-          <div className="flex items-center justify-between rounded-lg border border-border bg-card/50 p-3 text-sm">
+          <div className="flex items-center justify-between card p-3 text-sm">
             <span className="font-medium">{m.profiles?.display_name || "Promoter"}</span>
             <span className="text-muted-foreground">
               accepted v{m.agreements?.version} · {formatDateTime(m.promoter_accepted_at)}

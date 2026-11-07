@@ -15,7 +15,7 @@ export function CreateBusinessForm() {
     <div className="mx-auto max-w-lg">
       <h1 className="text-2xl font-bold">Set up your business</h1>
       <p className="mt-1 text-sm text-muted-foreground">Promoters and customers will see this.</p>
-      <ActionForm action={createBusiness} className="mt-6 space-y-4 rounded-xl border border-border bg-card/70 p-5">
+      <ActionForm action={createBusiness} className="mt-6 space-y-4 card p-5">
         <div className="grid gap-2">
           <Label htmlFor="name">Business name</Label>
           <Input id="name" name="name" required maxLength={120} />

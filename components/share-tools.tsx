@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import QRCode from "qrcode";
 import { Button } from "@/components/ui/button";
 import { CopyLink } from "@/components/copy-link";
+import { Download, Maximize2, MessageCircle, QrCode, Share2 } from "lucide-react";
 
 const QR_OPTS = { errorCorrectionLevel: "H" as const, margin: 2, color: { dark: "#0b0e1f", light: "#ffffff" } };
 
@@ -68,29 +69,29 @@ export function ShareTools({
         {whatsappAllowed && (
           <Button asChild variant="secondary" size="sm">
             <a href={waHref} target="_blank" rel="noopener noreferrer">
-              <span aria-hidden>💬</span> WhatsApp
+              <MessageCircle className="h-4 w-4" /> WhatsApp
             </a>
           </Button>
         )}
         {canShare && (
           <Button type="button" variant="secondary" size="sm" onClick={nativeShare}>
-            <span aria-hidden>↗</span> Share…
+            <Share2 className="h-4 w-4" /> Share…
           </Button>
         )}
         {compact && (
           <Button type="button" variant="secondary" size="sm" onClick={() => setShowQr((v) => !v)}>
-            {showQr ? "Hide QR" : "QR code"}
+            <QrCode className="h-4 w-4" /> {showQr ? "Hide QR" : "QR code"}
           </Button>
         )}
         {qrPng && (
           <Button asChild variant="secondary" size="sm">
             <a href={qrPng} download={fileName} data-testid="download-qr">
-              ⬇ Download QR
+              <Download className="h-4 w-4" /> Download QR
             </a>
           </Button>
         )}
         <Button type="button" variant="secondary" size="sm" onClick={() => setFullscreen(true)} disabled={!qrPng}>
-          ⛶ Show QR full screen
+          <Maximize2 className="h-4 w-4" /> Show QR full screen
         </Button>
       </div>
 

@@ -8,7 +8,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       home="/admin/demo"
       userName={profile.display_name || "Admin"}
       roleLabel="Admin"
-      nav={[{ href: "/admin/demo", label: "Demo Control Center" }]}
+      role="admin"
+      nav={[{ href: "/admin/demo", label: "Demo Control Center", icon: "admin" }]}
     >
       {children}
     </AppShell>

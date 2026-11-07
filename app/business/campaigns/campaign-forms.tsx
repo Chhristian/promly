@@ -10,7 +10,7 @@ import { selectClass, textareaClass } from "../create-business-form";
 
 export function NewCampaignForm({ currency }: { currency: string }) {
   return (
-    <ActionForm action={createCampaign} className="mt-6 space-y-4 rounded-xl border border-border bg-card/70 p-5">
+    <ActionForm action={createCampaign} className="mt-6 space-y-4 card p-5">
       <CampaignFields currency={currency} />
       <SubmitButton className="w-full">Create campaign</SubmitButton>
     </ActionForm>
