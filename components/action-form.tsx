@@ -22,8 +22,8 @@ export function ActionForm({
   return (
     <form action={formAction} className={className}>
       {children}
-      {state?.error && <p className="mt-2 text-sm text-red-400" role="alert">{state.error}</p>}
-      {state?.ok && <p className="mt-2 text-sm text-emerald-400">{state.ok}</p>}
+      {state?.error && <p className="mt-2 text-sm text-destructive" role="alert">{state.error}</p>}
+      {state?.ok && <p className="mt-2 text-sm text-paid">{state.ok}</p>}
     </form>
   );
 }
@@ -54,7 +54,7 @@ export function SubmitButton({
       variant={variant}
       name={name}
       value={value}
-      className={cn(!variant && (disabled ? "bg-secondary text-muted-foreground" : "bg-brand text-white"), className)}
+      className={cn(!variant && (disabled ? "bg-secondary text-muted-foreground" : ""), className)}
     >
       {pending ? pendingText : children}
     </Button>

@@ -42,7 +42,7 @@ export default async function ExplorePage() {
                 <Link
                   href={`/promoter/campaigns/${c.id}`}
                   data-campaign-id={c.id}
-                  className="card group flex h-full flex-col overflow-hidden transition [@media(hover:hover)_and_(pointer:fine)]:hover:-translate-y-0.5 hover:border-violet-400/60"
+                  className="card group flex h-full flex-col overflow-hidden transition [@media(hover:hover)_and_(pointer:fine)]:hover:-translate-y-0.5 hover:border-primary/60"
                 >
                   <div className="relative h-36">
                     <CampaignCover category={c.businesses?.category} imageUrl={covers[c.id]} />
@@ -50,7 +50,7 @@ export default async function ExplorePage() {
                       {categoryLabel(c.businesses?.category)}
                     </span>
                     {isJoined && (
-                      <span className="absolute right-3 top-3 flex items-center gap-1 rounded-full bg-emerald-500 px-2.5 py-1 text-xs font-semibold text-emerald-950">
+                      <span className="absolute right-3 top-3 flex items-center gap-1 rounded-full bg-marker px-2.5 py-1 text-xs font-bold text-ink">
                         <Check className="h-3.5 w-3.5" /> Joined
                       </span>
                     )}

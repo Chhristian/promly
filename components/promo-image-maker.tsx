@@ -295,7 +295,7 @@ export function PromoImageMaker({ campaign }: { campaign: PromoImageCampaign }) 
                 onClick={() => setPhoto(i)}
                 aria-label={`Use photo ${i + 1}`}
                 data-testid="promo-photo-option"
-                className={cn("h-20 w-20 overflow-hidden rounded-xl border-2", photo === i ? "border-violet-400" : "border-transparent opacity-70 hover:opacity-100")}
+                className={cn("h-20 w-20 overflow-hidden rounded-xl border-2", photo === i ? "border-primary" : "border-transparent opacity-70 hover:opacity-100")}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={url} alt="" className="h-full w-full object-cover" />
@@ -306,7 +306,7 @@ export function PromoImageMaker({ campaign }: { campaign: PromoImageCampaign }) 
               onClick={() => setPhoto(-1)}
               className={cn(
                 "grid h-20 w-20 place-items-center rounded-xl border-2 bg-secondary text-xs text-muted-foreground",
-                photo === -1 ? "border-violet-400" : "border-transparent hover:bg-secondary/70",
+                photo === -1 ? "border-primary" : "border-transparent hover:bg-secondary/70",
               )}
             >
               <span className="flex flex-col items-center gap-1">
@@ -320,15 +320,15 @@ export function PromoImageMaker({ campaign }: { campaign: PromoImageCampaign }) 
         </div>
 
         {missingMentions.map((m) => (
-          <p key={m.phrase} className="flex items-start gap-2 rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-100">
+          <p key={m.phrase} className="flex items-start gap-2 rounded-xl border border-[hsl(40_80%_72%)] bg-pending-bg p-3 text-sm text-pending">
             <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
             The brand rules say to mention “{m.phrase}”. It isn&apos;t in the business&apos;s description, so it&apos;s not on the image — mention it in your caption.
           </p>
         ))}
-        {notice && <p className="text-sm text-amber-200">{notice}</p>}
+        {notice && <p className="text-sm text-pending">{notice}</p>}
 
         <div className="flex flex-wrap gap-2">
-          <Button asChild className="bg-brand text-white" disabled={!file || rendering}>
+          <Button asChild  disabled={!file || rendering}>
             <a href={file?.url} download={fileName} data-testid="download-promo" aria-disabled={!file || rendering}>
               {rendering ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />} Download PNG
             </a>
@@ -351,7 +351,7 @@ export function PromoImageMaker({ campaign }: { campaign: PromoImageCampaign }) 
           data-rendering={rendering ? "yes" : "no"}
           data-rendered={rendered}
           className={cn(
-            "h-auto max-w-full rounded-2xl border border-border shadow-2xl shadow-violet-950/50",
+            "h-auto max-w-full rounded-2xl border border-border",
             // Fit the whole image on screen (projector 1280×720 and phones).
             format === "story" ? "w-[min(100%,calc((100vh-17rem)*0.5625))]" : "w-[min(100%,calc(100vh-17rem),30rem)]",
           )}

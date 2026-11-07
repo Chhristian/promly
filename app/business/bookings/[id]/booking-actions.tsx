@@ -26,7 +26,7 @@ export function BookingActions({
   const canRefund = status === "pending" || (status === "verified" && beforePayout);
 
   return (
-    <section className="card space-y-4 border-violet-400/30 p-5">
+    <section className="card space-y-4 border-primary/30 p-5">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 className="text-lg font-semibold">Actions</h2>
         <div className="text-sm text-muted-foreground">
@@ -51,9 +51,9 @@ export function BookingActions({
       )}
 
       {status === "verified" && !released && demoMode && (
-        <ActionForm action={simulateEndOfRefundWindow} className="rounded-lg border border-dashed border-amber-500/50 bg-amber-500/5 p-3">
+        <ActionForm action={simulateEndOfRefundWindow} className="rounded-lg border border-dashed border-[hsl(40_80%_62%)] bg-pending-bg/60 p-3">
           {hidden}
-          <div className="mb-2 text-sm font-semibold text-amber-300">Demo Mode · simulated</div>
+          <div className="mb-2 text-sm font-semibold text-pending">Demo Mode · simulated</div>
           <SubmitButton pendingText="Simulating…" className="h-12 w-full px-6 text-base sm:w-auto">Simulate end of refund window</SubmitButton>
           <p className="mt-1 text-xs text-muted-foreground">
             Skips the waiting time so the commission becomes available now. No real money moves.
@@ -75,7 +75,7 @@ export function BookingActions({
       {canRefund && (
         <ActionForm action={refundBooking}>
           {hidden}
-          <SubmitButton variant="outline" pendingText="Refunding…" className="border-red-500/50 text-red-300 hover:bg-red-500/10 hover:text-red-200">
+          <SubmitButton variant="outline" pendingText="Refunding…" className="border-destructive/40 text-destructive hover:bg-[hsl(0_80%_96%)] hover:text-destructive">
             {status === "pending" ? "Cancel / refund booking" : "Refund"}
           </SubmitButton>
           <p className="mt-1 text-xs text-muted-foreground">

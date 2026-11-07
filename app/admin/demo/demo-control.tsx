@@ -37,8 +37,8 @@ async function checkRealtime(): Promise<Check> {
 
 function Result({ c }: { c: Check }) {
   return (
-    <div className={cn("flex items-start gap-3 rounded-lg border p-3 text-sm", c.ok ? "border-emerald-500/40 bg-emerald-500/5" : "border-red-500/50 bg-red-500/10")}>
-      <span className={cn("mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full text-xs font-bold", c.ok ? "bg-emerald-500 text-black" : "bg-red-500 text-white")}>
+    <div className={cn("flex items-start gap-3 rounded-lg border p-3 text-sm", c.ok ? "border-[hsl(155_50%_72%)] bg-[hsl(155_60%_96%)]" : "border-destructive/40 bg-[hsl(0_80%_96%)]")}>
+      <span className={cn("mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full text-xs font-bold", c.ok ? "bg-paid text-white" : "bg-destructive text-white")}>
         {c.ok ? "✓" : "✕"}
       </span>
       <div>
@@ -67,14 +67,14 @@ export function DemoControl() {
           passwords stay the same. Real (non-demo) data is never touched.
         </p>
         <Button
-          className="bg-brand text-white"
+          
           disabled={resetting}
           onClick={() => startReset(async () => setResetResult(await prepareStageDemo()))}
         >
           {resetting ? "Preparing…" : "Prepare Stage Demo"}
         </Button>
         {resetResult && (
-          <div className={cn("rounded-lg border p-3 text-xs", resetResult.ok ? "border-emerald-500/40" : "border-red-500/50 bg-red-500/10")}>
+          <div className={cn("rounded-lg border p-3 text-xs", resetResult.ok ? "border-[hsl(155_50%_72%)]" : "border-destructive/40 bg-[hsl(0_80%_96%)]")}>
             <div className="mb-1 font-semibold">
               {resetResult.ok ? "✓ Demo ready" : "✕ Reset failed"} · {new Date(resetResult.at).toLocaleTimeString("en-GB")}
             </div>
@@ -87,7 +87,7 @@ export function DemoControl() {
         <div className="flex items-center justify-between gap-2">
           <h2 className="font-semibold">Run Demo Health Check</h2>
           {checks && (
-            <span className={cn("rounded-full px-2 py-0.5 text-xs font-semibold", allOk ? "bg-emerald-500/20 text-emerald-300" : "bg-red-500/20 text-red-300")}>
+            <span className={cn("rounded-full px-2 py-0.5 text-xs font-semibold", allOk ? "bg-[hsl(155_60%_92%)] text-paid" : "bg-[hsl(0_80%_96%)] text-destructive")}>
               {allOk ? "All green" : `${checks.list.filter((c) => !c.ok).length} problem(s)`}
             </span>
           )}

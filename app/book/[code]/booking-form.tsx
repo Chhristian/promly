@@ -37,7 +37,7 @@ export function BookingForm({ code, days }: { code: string; days: { day: string;
               }}
               className={cn(
                 "flex w-16 shrink-0 flex-col items-center rounded-2xl border py-2 transition",
-                i === dayIdx ? "border-violet-400 bg-violet-500/20" : "border-border hover:bg-secondary",
+                i === dayIdx ? "border-ink bg-ink text-white" : "border-border hover:bg-secondary",
               )}
             >
               <span className="text-xs text-muted-foreground">{d.day === dayKey(new Date().toISOString()) ? "Today" : weekday(d.slots[0])}</span>
@@ -59,7 +59,7 @@ export function BookingForm({ code, days }: { code: string; days: { day: string;
               aria-pressed={slot === s}
               className={cn(
                 "rounded-xl border py-3 text-base font-semibold tabular-nums transition",
-                slot === s ? "border-transparent bg-violet-500 text-white" : "border-border hover:bg-secondary",
+                slot === s ? "border-ink bg-marker text-ink" : "border-border hover:bg-secondary",
               )}
             >
               {formatTime(s)}
@@ -81,7 +81,7 @@ export function BookingForm({ code, days }: { code: string; days: { day: string;
       </div>
 
       <div className="sticky bottom-3 z-10">
-        <SubmitButton pendingText="Booking…" disabled={!slot} className={cn("h-14 w-full rounded-2xl text-lg", slot && "shadow-xl shadow-violet-900/50")}>
+        <SubmitButton pendingText="Booking…" disabled={!slot} className={cn("h-14 w-full rounded-2xl text-lg", slot && "")}>
           {slot ? `Book ${longDay(slot)} ${formatTime(slot)}` : "Pick a time to book"}
         </SubmitButton>
       </div>

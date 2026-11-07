@@ -109,7 +109,7 @@ export function AgreementForm({
         <div className="flex flex-wrap gap-2">
           {CHANNELS.map((c) => (
             <label key={c.value} className="flex cursor-pointer items-center gap-2 rounded-md border border-border px-3 py-1.5 text-sm has-[:checked]:border-primary has-[:checked]:bg-primary/15">
-              <input type="checkbox" name="allowed_channels" value={c.value} defaultChecked={defaults.allowedChannels.includes(c.value)} className="accent-violet-500" />
+              <input type="checkbox" name="allowed_channels" value={c.value} defaultChecked={defaults.allowedChannels.includes(c.value)} className="accent-[hsl(232_87%_54%)]" />
               {c.label}
             </label>
           ))}
@@ -120,7 +120,7 @@ export function AgreementForm({
         <textarea id="brand_rules" name="brand_rules" maxLength={2000} defaultValue={defaults.brandRules} className={textareaClass} placeholder="e.g. Use only our photos. No discounts that aren't in the campaign." />
       </div>
       <label className="flex items-start gap-2 text-sm">
-        <input type="checkbox" name="accept" required className="mt-1 accent-violet-500" />
+        <input type="checkbox" name="accept" required className="mt-1 accent-[hsl(232_87%_54%)]" />
         <span>I accept this agreement on behalf of the business.</span>
       </label>
       <SubmitButton>Accept agreement</SubmitButton>
@@ -138,7 +138,7 @@ export function StatusButtons({ campaignId, status, canPublish }: { campaignId: 
             name="status"
             value="published"
             pendingText="Publishing…"
-            className={`h-12 px-8 text-base shadow-lg shadow-violet-900/40 ${!canPublish ? "opacity-60" : ""}`}
+            className={`h-12 px-8 text-base ${!canPublish ? "opacity-60" : ""}`}
           >
             Publish
           </SubmitButton>
@@ -148,8 +148,8 @@ export function StatusButtons({ campaignId, status, canPublish }: { campaignId: 
         </>
       ) : (
         <>
-          <span className="flex items-center gap-2 text-sm font-medium text-emerald-300">
-            <span className="h-2 w-2 rounded-full bg-emerald-400" /> Live — promoters can join
+          <span className="flex items-center gap-2 text-sm font-medium text-paid">
+            <span className="h-2 w-2 rounded-full bg-paid" /> Live, promoters can join
           </span>
           <SubmitButton name="status" value="paused" variant="secondary" pendingText="Pausing…">
             Pause campaign

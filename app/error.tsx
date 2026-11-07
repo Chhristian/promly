@@ -16,7 +16,7 @@ export default function GlobalError({ reset }: { error: Error & { digest?: strin
           That didn&apos;t load. It&apos;s usually a short connection hiccup. Try again, and your data will be right where you left it.
         </p>
         <div className="mt-6 flex justify-center gap-2">
-          <Button onClick={reset} className="bg-brand text-white">
+          <Button onClick={reset} >
             <RefreshCw className="h-4 w-4" /> Try again
           </Button>
           <Button asChild variant="secondary">

@@ -123,8 +123,8 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
                 <Label htmlFor="repeat-password">Repeat password</Label>
                 <Input id="repeat-password" type="password" required value={repeatPassword} onChange={(e) => setRepeatPassword(e.target.value)} />
               </div>
-              {error && <p className="text-sm text-red-400">{error}</p>}
-              <Button type="submit" className="bg-brand h-11 w-full text-white" disabled={isLoading}>
+              {error && <p className="text-sm text-destructive">{error}</p>}
+              <Button type="submit" className="h-11 w-full" disabled={isLoading}>
                 {isLoading ? "Creating account..." : "Sign up"}
               </Button>
             </div>

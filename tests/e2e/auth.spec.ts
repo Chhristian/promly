@@ -7,6 +7,7 @@ import { test, expect, type Page } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 import { randomBytes } from "node:crypto";
 import type { Database } from "../../lib/database.types";
+import { allowPreview } from "./preview-access";
 
 function adminDb() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -33,6 +34,7 @@ async function deleteCreatedAccounts() {
 
 test.describe.configure({ mode: "serial" });
 test.afterAll(deleteCreatedAccounts);
+test.beforeEach(async ({ context }) => allowPreview(context));
 
 async function signUp(page: Page, role: "business" | "promoter", name: string, email: string, password: string) {
   await page.goto("/auth/sign-up");

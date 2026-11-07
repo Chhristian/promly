@@ -5,7 +5,7 @@ export function AgreementView({ terms, version, acceptedAt }: { terms: Agreement
     <div className="rounded-xl border border-border bg-background/60 p-4 text-sm">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <div className="font-semibold">Promoter agreement{version ? ` · version ${version}` : ""}</div>
-        <span className="rounded-full border border-amber-500/40 bg-amber-500/10 px-2 py-0.5 text-xs text-amber-200">
+        <span className="rounded-full border border-[hsl(40_80%_72%)] bg-pending-bg px-2 py-0.5 text-xs text-pending">
           {AGREEMENT_LEGAL_LABEL}
         </span>
       </div>

@@ -69,7 +69,7 @@ export default async function PromoterCampaignPage({ params }: { params: Promise
       {c.description && !link && <p className="text-muted-foreground">{c.description}</p>}
 
       {link ? (
-        <section className="card space-y-3 border-emerald-500/40 bg-emerald-500/5 p-5">
+        <section className="card space-y-3 border-[hsl(155_50%_72%)] bg-[hsl(155_60%_96%)] p-5">
           <h2 className="text-lg font-semibold">Your personal link</h2>
           <p className="text-sm text-muted-foreground">Share it anywhere the agreement allows. Bookings through it are credited to you.</p>
           <ShareTools
@@ -80,7 +80,7 @@ export default async function PromoterCampaignPage({ params }: { params: Promise
           />
           <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
             <p className="text-xs text-muted-foreground">You accepted the agreement on {formatDateTime(membership?.promoter_accepted_at)}.</p>
-            <Link href={`/promoter/studio?campaign=${c.id}`} className="text-sm font-medium text-blue-300 hover:underline">
+            <Link href={`/promoter/studio?campaign=${c.id}`} className="text-sm font-medium text-primary hover:underline">
               Create promo text
             </Link>
           </div>

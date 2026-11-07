@@ -146,8 +146,8 @@ function TextStudio({ campaign }: { campaign: StudioCampaign }) {
           </p>
         </div>
 
-        <div className="rounded-xl border border-amber-500/40 bg-amber-500/5 p-3 text-sm">
-          <div className="font-semibold text-amber-200">Brand rules from {campaign.businessName}</div>
+        <div className="rounded-xl border border-[hsl(40_80%_72%)] bg-pending-bg/60 p-3 text-sm">
+          <div className="font-semibold text-pending">Brand rules from {campaign.businessName}</div>
           <p className="text-muted-foreground">{campaign.brandRules || "No extra brand rules."}</p>
           <p className="mt-2 text-xs text-muted-foreground">
             Only say what&apos;s true and in the campaign. Don&apos;t add discounts, reviews or guarantees, and keep the &quot;ad&quot; /
@@ -168,7 +168,7 @@ function TextStudio({ campaign }: { campaign: StudioCampaign }) {
           className="min-h-72 w-full rounded-xl border border-input bg-background p-4 font-mono text-sm leading-relaxed focus:outline-none focus:ring-2 focus:ring-ring"
         />
         <div className="flex flex-wrap gap-2">
-          <Button type="button" onClick={copy} className="bg-brand text-white" disabled={!text}>
+          <Button type="button" onClick={copy}  disabled={!text}>
             {copied ? "Copied!" : "Copy text"}
           </Button>
           <Button

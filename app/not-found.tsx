@@ -9,7 +9,7 @@ export default function NotFound() {
       <div className="card max-w-md p-8">
         <h1 className="text-2xl font-bold">Page not found</h1>
         <p className="mt-2 text-muted-foreground">This page doesn&apos;t exist, or you don&apos;t have access to it.</p>
-        <Button asChild className="bg-brand mt-6 text-white">
+        <Button asChild className="mt-6">
           <Link href="/dashboard">Go to dashboard</Link>
         </Button>
       </div>

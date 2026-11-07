@@ -9,6 +9,7 @@ import { test, expect, devices, type Page } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "../../lib/database.types";
 import { resetDemo } from "../../lib/demo-seed";
+import { allowPreview } from "./preview-access";
 import { readFileSync, writeFileSync, rmSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -89,7 +90,8 @@ test.afterAll(async () => {
   await resetDemo(adminDb());
 });
 
-test("demo health check is all green", async ({ page }) => {
+test("demo health check is all green", async ({ page, context }) => {
+  await allowPreview(context);
   await login(page, "DEMO_ADMIN", "/admin/demo");
   await page.getByRole("button", { name: "Run Demo Health Check" }).click();
   const results = page.getByTestId("health-results");
@@ -111,6 +113,7 @@ test("stage flow: publish → join → book → verify → commission appears li
   const bizCtx = await browser.newContext({ viewport: { width: 1280, height: 900 } });
   const proCtx = await browser.newContext({ viewport: { width: 1280, height: 900 } });
   const cusCtx = await browser.newContext({ ...devices["iPhone 13"] });
+  for (const ctx of [bizCtx, proCtx, cusCtx]) await allowPreview(ctx);
   const biz = await bizCtx.newPage();
   const pro = await proCtx.newPage();
   const cus = await cusCtx.newPage();

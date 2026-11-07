@@ -52,9 +52,9 @@ export default async function BookPage({ params }: { params: Promise<{ code: str
         {campaign.description && <p className="mt-3 leading-relaxed text-muted-foreground">{campaign.description}</p>}
 
         <ul className="mt-5 grid gap-2 text-sm">
-          <li className="flex items-center gap-2"><CreditCard className="h-4 w-4 shrink-0 text-emerald-400" /> Pay at the appointment — nothing to pay now</li>
-          <li className="flex items-center gap-2"><UserRoundX className="h-4 w-4 shrink-0 text-emerald-400" /> No account needed</li>
-          <li className="flex items-center gap-2"><Lock className="h-4 w-4 shrink-0 text-emerald-400" /> Your details go only to {business.name}</li>
+          <li className="flex items-center gap-2"><CreditCard className="h-4 w-4 shrink-0 text-paid" /> Pay at the appointment — nothing to pay now</li>
+          <li className="flex items-center gap-2"><UserRoundX className="h-4 w-4 shrink-0 text-paid" /> No account needed</li>
+          <li className="flex items-center gap-2"><Lock className="h-4 w-4 shrink-0 text-paid" /> Your details go only to {business.name}</li>
         </ul>
 
         {!campaign.open ? (
@@ -72,7 +72,7 @@ export default async function BookPage({ params }: { params: Promise<{ code: str
 function Shell({ children }: { children: React.ReactNode }) {
   return (
     <div className="mx-auto min-h-screen max-w-md px-3 py-4 sm:py-8">
-      <div className="card overflow-hidden shadow-2xl shadow-violet-950/50">{children}</div>
+      <div className="card overflow-hidden">{children}</div>
       <div className="mt-4 flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
         Booking by <PromlyMark className="h-4 w-4" /> <PromlyWordmark className="text-sm" />
       </div>

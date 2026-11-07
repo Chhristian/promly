@@ -150,7 +150,7 @@ export function PhotoManager({ campaignId, photos }: { campaignId: string; photo
                   type="button"
                   onClick={() => remove(p.path)}
                   disabled={!!busy}
-                  className="grid h-7 w-7 place-items-center rounded-full bg-black/60 text-white hover:bg-red-600"
+                  className="grid h-7 w-7 place-items-center rounded-full bg-black/60 text-white hover:bg-destructive"
                   aria-label="Remove photo"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
@@ -160,8 +160,8 @@ export function PhotoManager({ campaignId, photos }: { campaignId: string; photo
           ))}
         </div>
       )}
-      {message?.error && <p className="text-sm text-red-400" role="alert">{message.error}</p>}
-      {message?.ok && <p className="text-sm text-emerald-400">{message.ok}</p>}
+      {message?.error && <p className="text-sm text-destructive" role="alert">{message.error}</p>}
+      {message?.ok && <p className="text-sm text-paid">{message.ok}</p>}
     </section>
   );
 }
