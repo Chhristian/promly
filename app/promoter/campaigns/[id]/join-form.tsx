@@ -1,9 +1,13 @@
 "use client";
 
+import { useEffect } from "react";
 import { ActionForm, SubmitButton } from "@/components/action-form";
 import { joinCampaign } from "../../actions";
 
 export function JoinForm({ campaignId, agreementId }: { campaignId: string; agreementId: string }) {
+  // This form disappears once the promoter has joined: bring them back to the top,
+  // where their personal link and QR code now are.
+  useEffect(() => () => window.scrollTo({ top: 0, behavior: "smooth" }), []);
   return (
     <ActionForm action={joinCampaign} className="space-y-3 card p-4">
       <input type="hidden" name="campaign_id" value={campaignId} />

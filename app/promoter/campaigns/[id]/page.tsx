@@ -44,7 +44,7 @@ export default async function PromoterCampaignPage({ params }: { params: Promise
       </Link>
 
       <div className="card overflow-hidden">
-        <div className="relative h-44 sm:h-52">
+        <div className={link ? "relative h-32 sm:h-36" : "relative h-44 sm:h-52"}>
           <CampaignCover category={c.businesses.category} imageUrl={cover} size="lg" />
           <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-5">
             <span className="rounded-full bg-black/40 px-2.5 py-1 text-xs font-medium text-white backdrop-blur">{categoryLabel(c.businesses.category)}</span>
@@ -66,7 +66,7 @@ export default async function PromoterCampaignPage({ params }: { params: Promise
         </div>
       </div>
 
-      {c.description && <p className="text-sm text-muted-foreground">{c.description}</p>}
+      {c.description && !link && <p className="text-muted-foreground">{c.description}</p>}
 
       {link ? (
         <section className="card space-y-3 border-emerald-500/40 bg-emerald-500/5 p-5">
@@ -81,7 +81,7 @@ export default async function PromoterCampaignPage({ params }: { params: Promise
           <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
             <p className="text-xs text-muted-foreground">You accepted the agreement on {formatDateTime(membership?.promoter_accepted_at)}.</p>
             <Link href={`/promoter/studio?campaign=${c.id}`} className="text-sm font-medium text-blue-300 hover:underline">
-              Create promo text →
+              Create promo text
             </Link>
           </div>
         </section>
@@ -89,7 +89,32 @@ export default async function PromoterCampaignPage({ params }: { params: Promise
         <p className="rounded-xl border border-border p-4 text-sm text-muted-foreground">This campaign isn&apos;t accepting new promoters right now.</p>
       ) : null}
 
-      {agreement && (
+      {agreement && link && (
+        <details className="card group p-0">
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-4 text-sm font-medium [&::-webkit-details-marker]:hidden">
+            <span>Agreement you accepted (version {agreement.version})</span>
+            <span className="text-muted-foreground transition group-open:rotate-180">⌄</span>
+          </summary>
+          <div className="px-4 pb-4">
+            <AgreementView
+              version={agreement.version}
+              terms={{
+                businessName: c.businesses.name,
+                serviceName: c.service_name,
+                currency: cur,
+                priceMinor: c.price_minor,
+                commissionMinor: agreement.commission_minor,
+                payoutDays: agreement.payout_days,
+                refundWindowDays: agreement.refund_window_days,
+                allowedChannels: agreement.allowed_channels,
+                brandRules: agreement.brand_rules,
+              }}
+            />
+          </div>
+        </details>
+      )}
+
+      {agreement && !link && (
         <AgreementView
           version={agreement.version}
           terms={{
