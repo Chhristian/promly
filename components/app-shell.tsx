@@ -42,7 +42,7 @@ export function AppShell({
               <LogoutButton />
             </div>
           </div>
-          <nav className="border-t border-border/40 px-2 py-1.5 md:hidden">
+          <nav className="border-t border-border/40 px-2 py-1.5 [mask-image:linear-gradient(to_right,black_85%,transparent)] md:hidden">
             <NavLinks items={nav} />
           </nav>
         </header>

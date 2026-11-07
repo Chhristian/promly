@@ -28,11 +28,11 @@ export default async function Home() {
         )}
       </header>
 
-      <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col items-center px-4 pb-16 pt-10 text-center sm:pt-16">
+      <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col items-center px-4 pb-16 pt-8 text-center sm:pt-12">
         <p className="mb-6 inline-flex items-center gap-2 rounded-full border border-violet-400/30 bg-violet-500/10 px-4 py-1.5 text-sm text-violet-200">
           <span className="h-1.5 w-1.5 rounded-full bg-violet-300" /> Anyone can be a marketer
         </p>
-        <h1 className="max-w-4xl text-5xl font-extrabold leading-[1.05] tracking-tight sm:text-7xl">
+        <h1 className="max-w-5xl text-[2.6rem] font-extrabold leading-[1.05] tracking-tight sm:text-6xl lg:text-[4.25rem]">
           Businesses get customers.
           <br />
           <span className="text-gradient">People get paid.</span>
