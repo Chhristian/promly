@@ -58,7 +58,7 @@ export default async function BookingDetailPage({ params }: { params: Promise<{ 
           <div className="font-semibold">{contact?.customer_name ?? "—"}</div>
           <div className="text-muted-foreground">{contact?.customer_phone ?? ""}</div>
           <div className="pt-2 text-muted-foreground">
-            Referred by <span className="text-foreground">{b.profiles?.display_name || "promoter"}</span> , agreement v{b.agreements?.version}
+            Referred by <span className="text-foreground">{b.profiles?.display_name || "promoter"}</span>, agreement v{b.agreements?.version}
           </div>
         </section>
 

@@ -117,3 +117,6 @@ Brief: `docs/DESIGN.md`. Product logic, money maths, database/RLS, the stage flo
 
 - Unit tests 19/19, `npm run build` OK after every batch.
 - Full e2e suite 8/8 against the Vercel preview. The tests needed no wording changes. A helper (`tests/e2e/preview-access.ts`) attaches the short-lived local Vercel token only to requests for the preview, so protected previews can be tested without disabling Deployment Protection.
+- Break-UI check on the preview (120-character names, 9 999 999 kr price, 50 bookings, empty states): no horizontal overflow. Fixes: huge amounts step down further on phones, long activity titles and the promoter greeting clamp to two lines.
+- At 1280×720 the booking detail's actions, the joined campaign's link and QR actions, and both dashboards' lists and Activity stay above the fold.
+- Before/after screenshots of all 36 captures were taken on the preview; the old design is on the left.
