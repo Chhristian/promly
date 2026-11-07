@@ -130,19 +130,31 @@ export function AgreementForm({
 
 export function StatusButtons({ campaignId, status, canPublish }: { campaignId: string; status: string; canPublish: boolean }) {
   return (
-    <ActionForm action={setCampaignStatus} className="flex flex-wrap items-center gap-2">
+    <ActionForm action={setCampaignStatus} className="flex flex-col items-stretch gap-2 sm:items-end">
       <input type="hidden" name="campaign_id" value={campaignId} />
       {status !== "published" ? (
-        <SubmitButton name="status" value="published" pendingText="Publishing…" className={!canPublish ? "opacity-60" : ""}>
-          Publish
-        </SubmitButton>
+        <>
+          <SubmitButton
+            name="status"
+            value="published"
+            pendingText="Publishing…"
+            className={`h-12 px-8 text-base shadow-lg shadow-violet-900/40 ${!canPublish ? "opacity-60" : ""}`}
+          >
+            Publish
+          </SubmitButton>
+          <span className="text-sm text-muted-foreground">
+            {canPublish ? "Promoters see it instantly." : "Accept the agreement below first."}
+          </span>
+        </>
       ) : (
-        <SubmitButton name="status" value="paused" variant="secondary" pendingText="Pausing…">
-          Pause campaign
-        </SubmitButton>
-      )}
-      {!canPublish && status !== "published" && (
-        <span className="text-xs text-muted-foreground">Accept the agreement first.</span>
+        <>
+          <span className="flex items-center gap-2 text-sm font-medium text-emerald-300">
+            <span className="h-2 w-2 rounded-full bg-emerald-400" /> Live — promoters can join
+          </span>
+          <SubmitButton name="status" value="paused" variant="secondary" pendingText="Pausing…">
+            Pause campaign
+          </SubmitButton>
+        </>
       )}
     </ActionForm>
   );

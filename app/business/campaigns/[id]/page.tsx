@@ -50,25 +50,30 @@ export default async function CampaignEditorPage({ params }: { params: Promise<{
             <p className="text-muted-foreground">{campaign.businesses.name}</p>
           </div>
         </div>
-        <StatusButtons campaignId={campaign.id} status={campaign.status} canPublish={!!agreement} />
       </div>
 
-      {agreement && (
-        <div className="grid grid-cols-3 gap-3 text-center text-sm">
-          <div className="card p-3">
-            <div className="text-xs text-muted-foreground">Promoter earns</div>
-            <div className="text-lg font-bold">{money(agreement.commission_minor)}</div>
-          </div>
-          <div className="card p-3">
-            <div className="text-xs text-muted-foreground">Promly fee (2.75% of price)</div>
-            <div className="text-lg font-bold">{money(fee)}</div>
-          </div>
-          <div className="rounded-xl border border-primary/50 bg-primary/10 p-3">
-            <div className="text-xs text-muted-foreground">You pay per verified booking</div>
-            <div className="text-gradient text-lg font-bold">{money(agreement.commission_minor + fee)}</div>
-          </div>
-        </div>
-      )}
+      {/* One panel, one primary action: what it costs, and Publish. */}
+      <section className="card flex flex-col gap-5 p-5 sm:flex-row sm:items-center sm:justify-between">
+        {agreement ? (
+          <dl className="grid flex-1 grid-cols-3 gap-4">
+            <div>
+              <dt className="text-sm text-muted-foreground">Promoter earns</dt>
+              <dd className="mt-1 whitespace-nowrap text-2xl font-bold tabular-nums tracking-tight sm:text-3xl">{money(agreement.commission_minor)}</dd>
+            </div>
+            <div>
+              <dt className="text-sm text-muted-foreground">Promly fee (2.75%)</dt>
+              <dd className="mt-1 whitespace-nowrap text-2xl font-bold tabular-nums tracking-tight sm:text-3xl">{money(fee)}</dd>
+            </div>
+            <div>
+              <dt className="text-sm text-muted-foreground">You pay per verified booking</dt>
+              <dd className="text-gradient mt-1 whitespace-nowrap text-2xl font-bold tabular-nums tracking-tight sm:text-3xl">{money(agreement.commission_minor + fee)}</dd>
+            </div>
+          </dl>
+        ) : (
+          <p className="flex-1 text-muted-foreground">Set the commission and accept the agreement below. Then publish.</p>
+        )}
+        <StatusButtons campaignId={campaign.id} status={campaign.status} canPublish={!!agreement} />
+      </section>
 
       <PhotoManager campaignId={campaign.id} photos={photos} />
 
