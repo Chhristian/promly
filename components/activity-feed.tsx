@@ -32,7 +32,7 @@ export function ActivityFeed({ items, emptyText }: { items: Item[]; emptyText: s
                       <Icon className="h-4 w-4" />
                     </span>
                     <div className="min-w-0 pt-0.5">
-                      <div className="text-sm font-semibold leading-snug">{n.title}</div>
+                      <div className="line-clamp-2 text-sm font-semibold leading-snug">{n.title}</div>
                       <div className="text-xs text-muted-foreground">{formatDateTime(n.created_at)}</div>
                     </div>
                   </div>

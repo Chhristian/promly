@@ -28,7 +28,7 @@ export function Stat({
   const veryLong = len > 17;
   const sizes = {
     hero: veryLong ? "text-[clamp(2rem,7vw,2.75rem)]" : long ? "text-[clamp(2.25rem,8vw,3.25rem)]" : "text-[clamp(2.75rem,11vw,4.5rem)]",
-    md: veryLong ? "text-base sm:text-xl" : long ? "text-lg sm:text-2xl" : "text-[clamp(1.4rem,6vw,2.05rem)]",
+    md: veryLong ? "text-[0.95rem] sm:text-xl" : long ? "text-[1.05rem] sm:text-2xl" : "text-[clamp(1.4rem,6vw,2.05rem)]",
     sm: veryLong ? "text-lg" : long ? "text-xl" : "text-2xl",
   };
   return (
