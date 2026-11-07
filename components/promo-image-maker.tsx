@@ -122,11 +122,18 @@ async function draw(canvas: HTMLCanvasElement, c: PromoImageCampaign, format: Pr
   ctx.fillStyle = "#ffffff";
   ctx.fillText("AD", L.pad + 4, 82);
 
-  const markX = W - L.pad - 210;
-  drawMark(ctx, markX, 40, 60);
+  // Logo on an ink pill (mirrors the AD label) so it reads on light artwork and photos alike.
+  ctx.font = font(36, 800);
+  const wordW = ctx.measureText("promly").width;
+  const pillW = 16 + 48 + 10 + wordW + 24;
+  const pillX = W - L.pad + 16 - pillW;
+  ctx.fillStyle = NAVY;
+  ctx.beginPath();
+  ctx.roundRect(pillX, 38, pillW, 66, 33);
+  ctx.fill();
+  drawMark(ctx, pillX + 16, 47, 48);
   ctx.fillStyle = "#ffffff";
-  ctx.font = font(40, 800);
-  ctx.fillText("promly", markX + 74, 84);
+  ctx.fillText("promly", pillX + 16 + 48 + 10, 83);
 
   // Top text block
   let y = L.businessY;
