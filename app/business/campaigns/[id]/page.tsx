@@ -6,6 +6,7 @@ import { formatDateTime } from "@/lib/format";
 import { StatusBadge } from "@/components/stat";
 import { AgreementView } from "@/components/agreement-view";
 import { AgreementForm, EditCampaignForm, StatusButtons } from "../campaign-forms";
+import { Highlight } from "@/components/live";
 
 export default async function CampaignEditorPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -114,12 +115,14 @@ export default async function CampaignEditorPage({ params }: { params: Promise<{
         <h2 className="font-semibold">Promoters ({members?.length ?? 0})</h2>
         {!members?.length && <p className="text-sm text-muted-foreground">No promoters have joined yet.</p>}
         {members?.map((m) => (
-          <div key={m.id} className="flex items-center justify-between rounded-lg border border-border bg-card/50 p-3 text-sm">
+          <Highlight key={m.id} ids={[m.id]}>
+          <div className="flex items-center justify-between rounded-lg border border-border bg-card/50 p-3 text-sm">
             <span className="font-medium">{m.profiles?.display_name || "Promoter"}</span>
             <span className="text-muted-foreground">
               accepted v{m.agreements?.version} · {formatDateTime(m.promoter_accepted_at)}
             </span>
           </div>
+          </Highlight>
         ))}
       </section>
     </div>

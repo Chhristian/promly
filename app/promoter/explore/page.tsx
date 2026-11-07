@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { requireRole } from "@/lib/auth";
 import { formatMinor, type Currency } from "@/lib/money";
+import { Highlight } from "@/components/live";
 
 const CATEGORY: Record<string, string> = {
   barbershop: "Barbershop", beauty: "Beauty", restaurant: "Restaurant", experience: "Experience",
@@ -34,8 +35,8 @@ export default async function ExplorePage() {
         {campaigns?.map((c) => {
           const cur = c.currency as Currency;
           return (
+            <Highlight key={c.id} ids={[c.id]}>
             <Link
-              key={c.id}
               href={`/promoter/campaigns/${c.id}`}
               data-campaign-id={c.id}
               className="flex flex-col rounded-xl border border-border bg-card/70 p-5 transition hover:border-primary/60"
@@ -57,6 +58,7 @@ export default async function ExplorePage() {
                 {joined.has(c.id) ? "Open campaign" : "View & join"}
               </div>
             </Link>
+            </Highlight>
           );
         })}
       </div>

@@ -6,6 +6,7 @@ import { formatDate, formatDateTime, formatSlot } from "@/lib/format";
 import { Stat, StatusBadge, bookingStage } from "@/components/stat";
 import { Button } from "@/components/ui/button";
 import { CreateBusinessForm } from "./create-business-form";
+import { Highlight } from "@/components/live";
 
 export default async function BusinessDashboard() {
   const { user, supabase } = await requireRole("business");
@@ -51,8 +52,8 @@ export default async function BusinessDashboard() {
             </p>
           )}
           {o.campaigns.map((c) => (
+            <Highlight key={c.id} ids={[c.id]}>
             <Link
-              key={c.id}
               href={`/business/campaigns/${c.id}`}
               className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card/70 p-4 hover:border-primary/60"
             >
@@ -64,6 +65,7 @@ export default async function BusinessDashboard() {
               </div>
               <StatusBadge status={c.status} />
             </Link>
+            </Highlight>
           ))}
 
           <div className="flex items-center justify-between pt-4">
@@ -78,8 +80,8 @@ export default async function BusinessDashboard() {
           {o.bookings.slice(0, 6).map((b) => {
             const stage = bookingStage(b);
             return (
+              <Highlight key={b.id} ids={[b.id]}>
               <Link
-                key={b.id}
                 href={`/business/bookings/${b.id}`}
                 className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card/70 p-4 hover:border-primary/60"
               >
@@ -91,6 +93,7 @@ export default async function BusinessDashboard() {
                 </div>
                 <StatusBadge status={stage.key} label={stage.label} />
               </Link>
+              </Highlight>
             );
           })}
         </section>
@@ -99,10 +102,12 @@ export default async function BusinessDashboard() {
           <h2 className="font-semibold">Activity</h2>
           {o.notifications.length === 0 && <p className="text-sm text-muted-foreground">Nothing yet.</p>}
           {o.notifications.map((n) => (
-            <div key={n.id} className="rounded-lg border border-border bg-card/50 p-3 text-sm">
+            <Highlight key={n.id} ids={[n.id]}>
+            <div className="rounded-lg border border-border bg-card/50 p-3 text-sm">
               <div>{n.title}</div>
               <div className="text-xs text-muted-foreground">{formatDateTime(n.created_at)}</div>
             </div>
+            </Highlight>
           ))}
         </section>
       </div>

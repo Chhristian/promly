@@ -4,6 +4,7 @@ import { getMyBusiness } from "@/lib/business-data";
 import { formatMinor, type Currency } from "@/lib/money";
 import { formatDate, formatDateTime, formatSlot } from "@/lib/format";
 import { StatusBadge, bookingStage } from "@/components/stat";
+import { Highlight } from "@/components/live";
 
 export default async function BookingsPage() {
   const { user, supabase } = await requireRole("business");
@@ -27,8 +28,8 @@ export default async function BookingsPage() {
         {bookings?.map((b) => {
           const stage = bookingStage(b);
           return (
+            <Highlight key={b.id} ids={[b.id]}>
             <Link
-              key={b.id}
               href={`/business/bookings/${b.id}`}
               className="grid gap-2 rounded-xl border border-border bg-card/70 p-4 hover:border-primary/60 sm:grid-cols-[1fr_auto] sm:items-center"
             >
@@ -44,6 +45,7 @@ export default async function BookingsPage() {
               </div>
               <StatusBadge status={stage.key} label={stage.label} />
             </Link>
+            </Highlight>
           );
         })}
       </div>

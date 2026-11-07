@@ -6,6 +6,7 @@ import { formatDate, formatDateTime, formatSlot } from "@/lib/format";
 import { Stat, StatusBadge, bookingStage } from "@/components/stat";
 import { CopyLink } from "@/components/copy-link";
 import { Button } from "@/components/ui/button";
+import { Highlight } from "@/components/live";
 
 export default async function PromoterDashboard() {
   const { user, profile, supabase } = await requireRole("promoter");
@@ -62,7 +63,8 @@ export default async function PromoterDashboard() {
             const stage = bookingStage(b);
             const cur = b.currency as Currency;
             return (
-              <div key={b.id} data-booking-id={b.id} className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card/70 p-4">
+              <Highlight key={b.id} ids={[b.id]}>
+              <div data-booking-id={b.id} className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card/70 p-4">
                 <div>
                   <div className="font-medium">{b.campaigns?.service_name}</div>
                   <div className="text-sm text-muted-foreground">
@@ -75,6 +77,7 @@ export default async function PromoterDashboard() {
                   <StatusBadge status={stage.key} label={stage.label} />
                 </div>
               </div>
+              </Highlight>
             );
           })}
 
@@ -112,10 +115,12 @@ export default async function PromoterDashboard() {
           <h2 className="font-semibold">Activity</h2>
           {!o.notifications.length && <p className="text-sm text-muted-foreground">Nothing yet.</p>}
           {o.notifications.map((n) => (
-            <div key={n.id} className="rounded-lg border border-border bg-card/50 p-3 text-sm">
+            <Highlight key={n.id} ids={[n.id]}>
+            <div className="rounded-lg border border-border bg-card/50 p-3 text-sm">
               <div>{n.title}</div>
               <div className="text-xs text-muted-foreground">{formatDateTime(n.created_at)}</div>
             </div>
+            </Highlight>
           ))}
         </section>
       </div>
