@@ -65,11 +65,27 @@ const stats = (page: Page) => page.locator("main section").first();
 
 test.describe.configure({ mode: "serial" });
 
+// Photos this run uploads are removed afterwards, even if a test fails
+// (the demo reset keeps uploaded photos on purpose).
+const runStart = new Date().toISOString();
+async function removePhotosUploadedThisRun() {
+  const db = adminDb();
+  const { data: camps } = await db.from("campaigns").select("id, photo_paths, businesses!inner(is_demo)").eq("businesses.is_demo", true);
+  for (const c of camps ?? []) {
+    const { data: files } = await db.storage.from("campaign-photos").list(c.id);
+    const mine = (files ?? []).filter((f) => f.created_at && f.created_at >= runStart).map((f) => `${c.id}/${f.name}`);
+    if (!mine.length) continue;
+    await db.from("campaigns").update({ photo_paths: c.photo_paths.filter((x) => !mine.includes(x)) }).eq("id", c.id);
+    await db.storage.from("campaign-photos").remove(mine);
+  }
+}
+
 test.beforeAll(async () => {
   await resetDemo(adminDb());
 });
 
 test.afterAll(async () => {
+  await removePhotosUploadedThisRun();
   await resetDemo(adminDb());
 });
 
@@ -112,6 +128,7 @@ test("stage flow: publish → join → book → verify → commission appears li
   await biz.getByRole("link", { name: /Premium Haircut/ }).first().click();
   await biz.waitForURL("**/business/campaigns/**");
   const campaignId = biz.url().split("/").pop()!;
+  await expect(biz.getByRole("heading", { name: "Photos" })).toBeVisible();
   const photosBefore = await biz.getByTestId("campaign-photo").count();
   const testImg = path.join(os.tmpdir(), `promly-e2e-${Date.now()}.png`);
   makeTestPng(testImg);
@@ -191,7 +208,7 @@ test("stage flow: publish → join → book → verify → commission appears li
   await expect(biz.getByText("New booking received — Premium Haircut").first()).toBeVisible();
   await biz.getByRole("link").filter({ hasText: "Awaiting service" }).first().click();
   await biz.waitForURL("**/business/bookings/**");
-  await expect(biz.getByText("Stage Customer")).toBeVisible();
+  await expect(biz.getByText("Stage Customer").first()).toBeVisible();
   await expect(biz.getByText(NOK("113.75")).first()).toBeVisible();
   await biz.getByRole("button", { name: "Verify service completed" }).click();
   await expect(biz.getByText("✓ Service verified")).toBeVisible();
