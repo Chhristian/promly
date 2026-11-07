@@ -335,6 +335,7 @@ export type Database = {
           description: string
           id: string
           image_url: string | null
+          photo_paths: string[]
           price_minor: number
           published_at: string | null
           service_name: string
@@ -350,6 +351,7 @@ export type Database = {
           description?: string
           id?: string
           image_url?: string | null
+          photo_paths?: string[]
           price_minor: number
           published_at?: string | null
           service_name: string
@@ -365,6 +367,7 @@ export type Database = {
           description?: string
           id?: string
           image_url?: string | null
+          photo_paths?: string[]
           price_minor?: number
           published_at?: string | null
           service_name?: string
@@ -675,6 +678,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      campaign_id_from_path: { Args: { p_name: string }; Returns: string }
       can_join_campaign: {
         Args: { p_agreement_id: string; p_campaign_id: string }
         Returns: boolean
@@ -692,6 +696,10 @@ export type Database = {
       current_user_role: { Args: never; Returns: string }
       is_business_owner: { Args: { p_business_id: string }; Returns: boolean }
       is_campaign_member: { Args: { p_campaign_id: string }; Returns: boolean }
+      is_published_campaign: {
+        Args: { p_campaign_id: string }
+        Returns: boolean
+      }
       owns_campaign: { Args: { p_campaign_id: string }; Returns: boolean }
       platform_fee_minor: {
         Args: { p_fee_bps: number; p_price_minor: number }

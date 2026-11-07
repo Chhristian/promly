@@ -11,6 +11,7 @@ import { Highlight, MoneyPulse } from "@/components/live";
 import { ActivityFeed } from "@/components/activity-feed";
 import { CampaignCover } from "@/components/campaign-cover";
 import { EmptyState } from "@/components/empty-state";
+import { coverUrls } from "@/lib/photos";
 
 export default async function PromoterDashboard() {
   const { user, profile, supabase } = await requireRole("promoter");
@@ -20,6 +21,7 @@ export default async function PromoterDashboard() {
   const currencies = Object.keys(o.earnings).length ? (Object.keys(o.earnings) as Currency[]) : (["NOK"] as Currency[]);
   const verified = o.bookings.filter((b) => b.status === "verified");
   const multi = currencies.length > 1;
+  const covers = await coverUrls(o.memberships.flatMap((m) => (m.campaigns ? [m.campaigns] : [])));
 
   return (
     <div className="space-y-8">
@@ -137,7 +139,7 @@ export default async function PromoterDashboard() {
                   <div key={m.id} className="card min-w-0 space-y-4 p-4">
                     <div className="flex items-center gap-4">
                       <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl">
-                        <CampaignCover category={c?.businesses?.category} size="sm" />
+                        <CampaignCover category={c?.businesses?.category} imageUrl={c ? covers[c.id] : undefined} size="sm" />
                       </div>
                       <Link href={`/promoter/campaigns/${m.campaign_id}`} className="min-w-0 flex-1 hover:underline">
                         <div className="truncate text-lg font-semibold">{c?.service_name}</div>

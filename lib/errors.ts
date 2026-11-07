@@ -17,6 +17,8 @@ const MESSAGES: Record<string, string> = {
   refund_window_not_over: "The refund window hasn't ended yet.",
   already_paid_out: "This commission has already been paid out and can't be refunded here.",
   booking_cancelled: "This booking was cancelled.",
+  invalid_photo_path: "That photo doesn't belong to this campaign.",
+  campaigns_max_3_photos: "Up to 3 photos per campaign.",
 };
 
 export function friendlyError(error: { message?: string; code?: string } | null | undefined): string {

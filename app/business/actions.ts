@@ -185,3 +185,20 @@ export async function releaseCommission(_: ActionState, fd: FormData) {
 export async function refundBooking(_: ActionState, fd: FormData) {
   return runBookingFunction(fd, "refund_booking", "Refunded. Any commission was reversed in the ledger.");
 }
+
+// ---------------------------------------------------------------------------
+// Campaign photos (files are uploaded from the browser under RLS; this saves the list)
+// ---------------------------------------------------------------------------
+export async function setCampaignPhotos(campaignId: string, paths: string[]): Promise<ActionState> {
+  const { supabase } = await requireRole("business");
+  const id = z.uuid().safeParse(campaignId);
+  if (!id.success) return { error: "Invalid campaign." };
+  const pathRe = new RegExp(`^${id.data}/[a-z0-9-]+\.(webp|jpg|jpeg|png)$`);
+  const parsed = z.array(z.string().regex(pathRe)).max(3, "Up to 3 photos per campaign").safeParse(paths);
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Invalid photos." };
+  const { data, error } = await supabase.from("campaigns").update({ photo_paths: parsed.data }).eq("id", id.data).select("id");
+  if (error) return { error: friendlyError(error) };
+  if (!data?.length) return { error: "You don't have permission to do that." };
+  revalidatePath(`/business/campaigns/${id.data}`);
+  return { ok: "Photos saved." };
+}

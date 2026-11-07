@@ -181,10 +181,42 @@ export async function seedDemoData(db: Db): Promise<SeedSummary> {
 
 /** "Prepare Stage Demo": delete ALL demo-flagged data, then seed it fresh. */
 export async function resetDemo(db: Db): Promise<SeedSummary> {
+  // Remember uploaded photos of demo campaigns so a reset doesn't lose them.
+  const { data: old } = await db
+    .from("campaigns")
+    .select("service_name, photo_paths, businesses!inner(name, is_demo)")
+    .eq("businesses.is_demo", true);
+  const keep = (old ?? []).filter((c) => c.photo_paths.length);
+
   const { error } = await db.rpc("purge_demo_data");
   if (error) throw new Error("purge_demo_data failed: " + error.message);
   const summary = await seedDemoData(db);
-  return { ...summary, lines: ["purged all demo data", ...summary.lines] };
+
+  // Move the files into the new campaigns' folders and re-attach them.
+  let moved = 0;
+  for (const c of keep) {
+    const { data: fresh } = await db
+      .from("campaigns")
+      .select("id, businesses!inner(name, is_demo)")
+      .eq("service_name", c.service_name)
+      .eq("businesses.name", c.businesses.name)
+      .eq("businesses.is_demo", true)
+      .maybeSingle();
+    if (!fresh) continue;
+    const next: string[] = [];
+    for (const p of c.photo_paths) {
+      const to = `${fresh.id}/${p.split("/").pop()}`;
+      const { error: mvErr } = await db.storage.from("campaign-photos").move(p, to);
+      if (!mvErr) next.push(to);
+    }
+    if (next.length) {
+      await db.from("campaigns").update({ photo_paths: next }).eq("id", fresh.id);
+      moved += next.length;
+    }
+  }
+  const lines = ["purged all demo data", ...summary.lines];
+  if (moved) lines.push(`photos   kept ${moved} uploaded photo(s)`);
+  return { ...summary, lines };
 }
 
 // ---------------------------------------------------------------------------

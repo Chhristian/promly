@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { channelLabel } from "@/lib/agreement-template";
 import { VARIANT_COUNT, allowedPromoTypes, buildPromoText, type PromoType } from "@/lib/promo-templates";
 import { cn } from "@/lib/utils";
+import { ImageIcon, Type } from "lucide-react";
+import { PromoImageMaker } from "@/components/promo-image-maker";
 
 export type StudioCampaign = {
   id: string;
@@ -16,11 +18,67 @@ export type StudioCampaign = {
   link: string;
   allowedChannels: string[];
   brandRules: string;
+  category: string;
+  photos: string[];
+  mustMentions: { phrase: string; sentence: string | null }[];
 };
 
 export function Studio({ campaigns, initialCampaignId }: { campaigns: StudioCampaign[]; initialCampaignId: string }) {
+  const [tab, setTab] = useState<"texts" | "image">("texts");
   const [campaignId, setCampaignId] = useState(initialCampaignId);
   const campaign = campaigns.find((c) => c.id === campaignId) ?? campaigns[0];
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="inline-flex rounded-full border border-border bg-card/60 p-1" role="tablist">
+          {([["texts", "Texts", Type], ["image", "Promo image", ImageIcon]] as const).map(([k, label, Icon]) => (
+            <button
+              key={k}
+              type="button"
+              role="tab"
+              aria-selected={tab === k}
+              onClick={() => setTab(k)}
+              className={cn("flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-medium", tab === k ? "bg-brand text-white" : "text-muted-foreground hover:text-foreground")}
+            >
+              <Icon className="h-4 w-4" /> {label}
+            </button>
+          ))}
+        </div>
+        <select
+          aria-label="Campaign"
+          value={campaign.id}
+          onChange={(e) => setCampaignId(e.target.value)}
+          className="h-10 rounded-full border border-input bg-background px-4 text-sm"
+        >
+          {campaigns.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.serviceName} — {c.businessName}
+            </option>
+          ))}
+        </select>
+      </div>
+      {tab === "texts" ? (
+        <TextStudio key={campaign.id} campaign={campaign} />
+      ) : (
+        <PromoImageMaker
+          campaign={{
+            id: campaign.id,
+            serviceName: campaign.serviceName,
+            businessName: campaign.businessName,
+            city: campaign.city,
+            price: campaign.price,
+            link: campaign.link,
+            category: campaign.category,
+            photos: campaign.photos,
+            mustMentions: campaign.mustMentions,
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+function TextStudio({ campaign }: { campaign: StudioCampaign }) {
   const types = useMemo(() => allowedPromoTypes(campaign.allowedChannels), [campaign]);
   const [type, setType] = useState<PromoType | null>(types[0]?.type ?? null);
   const [variant, setVariant] = useState(0);
@@ -57,27 +115,7 @@ export function Studio({ campaigns, initialCampaignId }: { campaigns: StudioCamp
     <div className="grid gap-6 lg:grid-cols-[1fr_1.4fr]">
       <div className="space-y-5">
         <div className="space-y-2">
-          <label htmlFor="studio-campaign" className="text-sm font-medium">1. Campaign</label>
-          <select
-            id="studio-campaign"
-            value={campaign.id}
-            onChange={(e) => {
-              setCampaignId(e.target.value);
-              setVariant(0);
-              reset();
-            }}
-            className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
-          >
-            {campaigns.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.serviceName} — {c.businessName}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="space-y-2">
-          <div className="text-sm font-medium">2. Type</div>
+          <div className="text-sm font-medium">1. Type</div>
           {types.length === 0 ? (
             <p className="text-sm text-muted-foreground">This agreement doesn&apos;t allow any of the text channels.</p>
           ) : (
@@ -120,7 +158,7 @@ export function Studio({ campaigns, initialCampaignId }: { campaigns: StudioCamp
 
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <label htmlFor="studio-text" className="text-sm font-medium">3. Your text (editable)</label>
+          <label htmlFor="studio-text" className="text-sm font-medium">2. Your text (editable)</label>
           <span className="text-xs text-muted-foreground">{text.length} characters</span>
         </div>
         <textarea

@@ -13,6 +13,12 @@ const CATEGORY: Record<string, { icon: LucideIcon; from: string; to: string; lab
   other: { icon: Store, from: "#6366f1", to: "#1e1b4b", label: "Other" },
 };
 
+/** Gradient colours of the category artwork (also used by the promo image). */
+export function categoryColors(category?: string | null): { from: string; to: string } {
+  const c = CATEGORY[category ?? "other"] ?? CATEGORY.other;
+  return { from: c.from, to: c.to };
+}
+
 export function categoryLabel(category?: string | null) {
   return (CATEGORY[category ?? "other"] ?? CATEGORY.other).label;
 }
@@ -38,7 +44,7 @@ export function CampaignCover({
   if (imageUrl) {
     return (
       // eslint-disable-next-line @next/next/no-img-element
-      <img src={imageUrl} alt="" className={cn("h-full w-full object-cover", className)} />
+      <img src={imageUrl} alt="" className={cn("h-full w-full object-cover", className)} data-testid="cover-photo" />
     );
   }
   return (

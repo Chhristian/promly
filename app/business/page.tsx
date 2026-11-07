@@ -11,6 +11,7 @@ import { ActivityFeed } from "@/components/activity-feed";
 import { CampaignCover } from "@/components/campaign-cover";
 import { EmptyState } from "@/components/empty-state";
 import { CreateBusinessForm } from "./create-business-form";
+import { coverUrls } from "@/lib/photos";
 
 export default async function BusinessDashboard() {
   const { user, supabase } = await requireRole("business");
@@ -21,6 +22,7 @@ export default async function BusinessDashboard() {
   const cur = business.currency as Currency;
   const money = (m: number) => formatMinor(m, cur);
   const t = moneyTotals(o.bookings);
+  const covers = await coverUrls(o.campaigns);
   const membersByCampaign = new Map<string, number>();
   for (const m of o.memberships) membersByCampaign.set(m.campaign_id, (membersByCampaign.get(m.campaign_id) ?? 0) + 1);
 
@@ -81,7 +83,7 @@ export default async function BusinessDashboard() {
                 <Highlight key={c.id} ids={[c.id]}>
                   <Link href={`/business/campaigns/${c.id}`} className="card group flex items-center gap-4 p-3 transition hover:border-violet-400/60">
                     <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl">
-                      <CampaignCover category={business.category} imageUrl={c.image_url} size="sm" />
+                      <CampaignCover category={business.category} imageUrl={covers[c.id]} size="sm" />
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="truncate text-lg font-semibold">{c.service_name}</div>

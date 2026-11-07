@@ -27,7 +27,7 @@ export default async function BookPage({ params }: { params: Promise<{ code: str
     );
   }
 
-  const { campaign, business, freeSlots } = data;
+  const { campaign, business, freeSlots, coverUrl } = data;
   const cur = campaign.currency as Currency;
 
   const days = new Map<string, { startsAt: string; minutes: number }[]>();
@@ -38,8 +38,8 @@ export default async function BookPage({ params }: { params: Promise<{ code: str
 
   return (
     <Shell>
-      <div className="relative h-40">
-        <CampaignCover category={business.category} size="lg" />
+      <div className="relative h-48">
+        <CampaignCover category={business.category} imageUrl={coverUrl} size="lg" />
         <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-card to-transparent" />
       </div>
       <div className="px-5 pb-6">

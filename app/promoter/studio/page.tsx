@@ -3,6 +3,8 @@ import { requireRole } from "@/lib/auth";
 import { siteUrl } from "@/lib/promoter-data";
 import { formatMinor, type Currency } from "@/lib/money";
 import { Studio, type StudioCampaign } from "./studio";
+import { signedPhotoUrls } from "@/lib/photos";
+import { mustMentions } from "@/lib/promo-image-layout";
 
 export default async function StudioPage({ searchParams }: { searchParams: Promise<{ campaign?: string }> }) {
   const { campaign: preselect } = await searchParams;
@@ -11,9 +13,13 @@ export default async function StudioPage({ searchParams }: { searchParams: Promi
 
   const { data: memberships } = await supabase
     .from("campaign_memberships")
-    .select("campaign_id, campaigns(service_name, description, price_minor, currency, businesses(name, city)), agreements(allowed_channels, brand_rules), referral_links(code)")
+    .select("campaign_id, campaigns(service_name, description, price_minor, currency, photo_paths, businesses(name, city, category)), agreements(allowed_channels, brand_rules), referral_links(code)")
     .eq("promoter_id", user.id)
     .order("created_at", { ascending: false });
+
+  // Photos of campaigns the promoter has joined (the business's own, approved photos).
+  const allPaths = (memberships ?? []).flatMap((m) => m.campaigns?.photo_paths ?? []);
+  const signed = allPaths.length ? await signedPhotoUrls(allPaths) : {};
 
   const campaigns: StudioCampaign[] = (memberships ?? []).flatMap((m) =>
     m.campaigns && m.referral_links && m.agreements
@@ -27,6 +33,9 @@ export default async function StudioPage({ searchParams }: { searchParams: Promi
           link: `${base}/r/${m.referral_links.code}`,
           allowedChannels: m.agreements.allowed_channels,
           brandRules: m.agreements.brand_rules,
+          category: m.campaigns.businesses?.category ?? "other",
+          photos: m.campaigns.photo_paths.flatMap((p) => (signed[p] ? [signed[p]] : [])),
+          mustMentions: mustMentions(m.agreements.brand_rules, m.campaigns.description),
         }]
       : [],
   );

@@ -9,6 +9,7 @@ import { ShareTools } from "@/components/share-tools";
 import { JoinForm } from "./join-form";
 import { ArrowLeft, MapPin } from "lucide-react";
 import { CampaignCover, categoryLabel } from "@/components/campaign-cover";
+import { signedPhotoUrls } from "@/lib/photos";
 
 export default async function PromoterCampaignPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -30,6 +31,8 @@ export default async function PromoterCampaignPage({ params }: { params: Promise
     ? await supabase.from("agreements").select("*").eq("id", agreementId).maybeSingle()
     : { data: null };
 
+  const signed = c.photo_paths.length ? await signedPhotoUrls(c.photo_paths.slice(0, 1)) : {};
+  const cover = c.photo_paths[0] ? signed[c.photo_paths[0]] : undefined;
   const cur = c.currency as Currency;
   const base = await siteUrl();
   const link = membership?.referral_links?.code ? `${base}/r/${membership.referral_links.code}` : null;
@@ -42,7 +45,7 @@ export default async function PromoterCampaignPage({ params }: { params: Promise
 
       <div className="card overflow-hidden">
         <div className="relative h-44 sm:h-52">
-          <CampaignCover category={c.businesses.category} imageUrl={c.image_url} size="lg" />
+          <CampaignCover category={c.businesses.category} imageUrl={cover} size="lg" />
           <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-5">
             <span className="rounded-full bg-black/40 px-2.5 py-1 text-xs font-medium text-white backdrop-blur">{categoryLabel(c.businesses.category)}</span>
             <h1 className="mt-2 text-3xl font-bold tracking-tight text-white">{c.service_name}</h1>

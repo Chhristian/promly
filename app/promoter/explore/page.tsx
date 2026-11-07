@@ -5,18 +5,20 @@ import { formatMinor, type Currency } from "@/lib/money";
 import { Highlight } from "@/components/live";
 import { CampaignCover, categoryLabel } from "@/components/campaign-cover";
 import { EmptyState } from "@/components/empty-state";
+import { coverUrls } from "@/lib/photos";
 
 export default async function ExplorePage() {
   const { user, supabase } = await requireRole("promoter");
   const [{ data: campaigns }, { data: mine }] = await Promise.all([
     supabase
       .from("campaigns")
-      .select("id, service_name, description, image_url, price_minor, commission_minor, currency, published_at, businesses(name, city, country, category)")
+      .select("id, service_name, description, photo_paths, price_minor, commission_minor, currency, published_at, businesses(name, city, country, category)")
       .eq("status", "published")
       .order("published_at", { ascending: false }),
     supabase.from("campaign_memberships").select("campaign_id").eq("promoter_id", user.id),
   ]);
   const joined = new Set((mine ?? []).map((m) => m.campaign_id));
+  const covers = await coverUrls(campaigns ?? []);
 
   return (
     <div className="space-y-6">
@@ -44,7 +46,7 @@ export default async function ExplorePage() {
                   className="card group flex h-full flex-col overflow-hidden transition hover:-translate-y-0.5 hover:border-violet-400/60"
                 >
                   <div className="relative h-36">
-                    <CampaignCover category={c.businesses?.category} imageUrl={c.image_url} />
+                    <CampaignCover category={c.businesses?.category} imageUrl={covers[c.id]} />
                     <span className="absolute left-3 top-3 rounded-full bg-black/40 px-2.5 py-1 text-xs font-medium text-white backdrop-blur">
                       {categoryLabel(c.businesses?.category)}
                     </span>

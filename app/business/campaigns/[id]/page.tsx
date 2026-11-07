@@ -7,6 +7,8 @@ import { StatusBadge } from "@/components/stat";
 import { AgreementView } from "@/components/agreement-view";
 import { AgreementForm, EditCampaignForm, StatusButtons } from "../campaign-forms";
 import { CampaignCover } from "@/components/campaign-cover";
+import { signedPhotoUrls } from "@/lib/photos";
+import { PhotoManager } from "./photo-manager";
 import { Highlight } from "@/components/live";
 
 export default async function CampaignEditorPage({ params }: { params: Promise<{ id: string }> }) {
@@ -27,6 +29,8 @@ export default async function CampaignEditorPage({ params }: { params: Promise<{
       .order("created_at", { ascending: false }),
   ]);
 
+  const signed = campaign.photo_paths.length ? await signedPhotoUrls(campaign.photo_paths) : {};
+  const photos = campaign.photo_paths.filter((p) => signed[p]).map((p) => ({ path: p, url: signed[p] }));
   const cur = campaign.businesses.currency as Currency;
   const money = (m: number) => formatMinor(m, cur);
   const fee = platformFeeMinor(campaign.price_minor);
@@ -36,7 +40,7 @@ export default async function CampaignEditorPage({ params }: { params: Promise<{
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex items-center gap-4">
           <div className="h-20 w-20 shrink-0 overflow-hidden rounded-2xl">
-            <CampaignCover category={campaign.businesses.category} imageUrl={campaign.image_url} size="sm" />
+            <CampaignCover category={campaign.businesses.category} imageUrl={photos[0]?.url} size="sm" />
           </div>
           <div>
             <Link href="/business" className="text-sm text-muted-foreground hover:text-foreground">← Dashboard</Link>
@@ -65,6 +69,8 @@ export default async function CampaignEditorPage({ params }: { params: Promise<{
           </div>
         </div>
       )}
+
+      <PhotoManager campaignId={campaign.id} photos={photos} />
 
       <div className="grid gap-6 lg:grid-cols-2">
         <section className="space-y-3 card p-5">

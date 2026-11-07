@@ -9,7 +9,23 @@ import { test, expect, devices, type Page } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "../../lib/database.types";
 import { resetDemo } from "../../lib/demo-seed";
-import { readFileSync } from "node:fs";
+import { readFileSync, writeFileSync, rmSync } from "node:fs";
+import os from "node:os";
+import path from "node:path";
+
+/** A small, real PNG photo stand-in (800×600 gradient) for the upload test. */
+function makeTestPng(file: string) {
+  const png = new PNG({ width: 800, height: 600 });
+  for (let y = 0; y < 600; y++)
+    for (let x = 0; x < 800; x++) {
+      const i = (y * 800 + x) * 4;
+      png.data[i] = Math.round((x / 800) * 200) + 30;
+      png.data[i + 1] = 60;
+      png.data[i + 2] = Math.round((y / 600) * 200) + 40;
+      png.data[i + 3] = 255;
+    }
+  writeFileSync(file, PNG.sync.write(png));
+}
 import { PNG } from "pngjs";
 import jsQR from "jsqr";
 
@@ -92,16 +108,25 @@ test("stage flow: publish → join → book → verify → commission appears li
   await waitForLive(pro);
   await expect(pro.getByText("Premium Haircut")).toHaveCount(0);
 
-  // Business publishes.
+  // Business publishes (after uploading a photo).
   await biz.getByRole("link", { name: /Premium Haircut/ }).first().click();
   await biz.waitForURL("**/business/campaigns/**");
+  const campaignId = biz.url().split("/").pop()!;
+  const photosBefore = await biz.getByTestId("campaign-photo").count();
+  const testImg = path.join(os.tmpdir(), `promly-e2e-${Date.now()}.png`);
+  makeTestPng(testImg);
+  await biz.getByTestId("photo-input").setInputFiles(testImg);
+  await expect(biz.getByText("Photo added.")).toBeVisible();
+  await expect(biz.getByTestId("campaign-photo")).toHaveCount(photosBefore + 1);
+  rmSync(testImg, { force: true });
   await expect(biz.getByText(NOK("13.75")).first()).toBeVisible(); // fee preview
   await expect(biz.getByText(NOK("113.75")).first()).toBeVisible(); // business pays per booking
   await biz.getByRole("button", { name: "Publish" }).click();
   await expect(biz.getByText("Published!")).toBeVisible();
 
-  // → appears on the promoter's Explore page without a reload.
+  // → appears on the promoter's Explore page without a reload, with the photo as cover.
   await expect(pro.getByText("Premium Haircut").first()).toBeVisible();
+  await expect(pro.getByTestId("cover-photo").first()).toBeVisible();
 
   // Business goes to its dashboard and waits for activity.
   await biz.goto("/business");
@@ -127,6 +152,20 @@ test("stage flow: publish → join → book → verify → commission appears li
   const qrUrl = decodeQrPng(await download.path());
   expect(qrUrl).toBe(link);
 
+  // Marketing Studio promo images: right size, and the QR on them opens the promoter's link.
+  await pro.goto(`/promoter/studio?campaign=${campaignId}`);
+  await pro.getByRole("tab", { name: /Promo image/ }).click();
+  for (const [label, key, w, h] of [["Post 1080×1080", "post", 1080, 1080], ["Story 1080×1920", "story", 1080, 1920]] as const) {
+    await pro.getByRole("button", { name: new RegExp(label) }).click();
+    await pro.getByTestId("promo-photo-option").first().click();
+    await expect(pro.getByTestId("promo-canvas")).toHaveAttribute("data-rendered", `${key}-0`);
+    const [png] = await Promise.all([pro.waitForEvent("download"), pro.getByTestId("download-promo").click()]);
+    expect(png.suggestedFilename()).toBe(`promly-${key}-premium-haircut.png`);
+    const file = PNG.sync.read(readFileSync(await png.path()));
+    expect([file.width, file.height]).toEqual([w, h]);
+    expect(jsQR(new Uint8ClampedArray(file.data), file.width, file.height)?.data).toBe(link);
+  }
+
   // → business sees the join live.
   await expect(biz.getByText("Alex joined your campaign.").first()).toBeVisible();
 
@@ -141,6 +180,7 @@ test("stage flow: publish → join → book → verify → commission appears li
   await expect(cus.getByRole("heading", { name: "Premium Haircut" })).toBeVisible();
   await expect(cus.getByText(NOK("500.00")).first()).toBeVisible();
   await expect(cus.getByText(/commission/i)).toHaveCount(0); // customers never see the commission
+  await expect(cus.getByTestId("cover-photo")).toBeVisible(); // the business's photo as cover
   await cus.locator("button[aria-pressed]").first().click();
   await cus.fill("#customer_name", "Stage Customer");
   await cus.fill("#customer_phone", "+47 400 00 000");
@@ -179,6 +219,14 @@ test("stage flow: publish → join → book → verify → commission appears li
   await expect(stats(biz)).toContainText(/commission available\s*100,00\s*kr/i);
   await expect(stats(biz)).toContainText(/platform fees \(2\.75%\)\s*13,75\s*kr/i);
   await expect(stats(biz)).toContainText(/total cost 113,75\s*kr/i);
+
+  // Clean up the test photo with the app's own Remove button, and check Storage.
+  await biz.goto(`/business/campaigns/${campaignId}`);
+  await biz.getByTestId("campaign-photo").last().getByRole("button", { name: "Remove photo" }).click();
+  await expect(biz.getByText("Photo removed.")).toBeVisible();
+  await expect(biz.getByTestId("campaign-photo")).toHaveCount(photosBefore);
+  const { data: left } = await adminDb().storage.from("campaign-photos").list(campaignId);
+  expect((left ?? []).filter((f) => f.name !== ".emptyFolderPlaceholder")).toHaveLength(photosBefore);
 
   await Promise.all([bizCtx.close(), proCtx.close(), cusCtx.close()]);
 });

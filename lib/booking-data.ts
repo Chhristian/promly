@@ -1,6 +1,7 @@
 import "server-only";
 
 import { createAdminClient } from "@/lib/supabase/admin";
+import { signedPhotoUrls } from "@/lib/photos";
 
 export const REFERRAL_CODE = /^[a-z0-9]{10}$/;
 
@@ -18,7 +19,7 @@ export async function getBookingPageData(code: string) {
 
   const { data: c } = await admin
     .from("campaigns")
-    .select("id, service_name, description, price_minor, currency, status, business_id, businesses(name, city, country, description, category)")
+    .select("id, service_name, description, price_minor, currency, status, business_id, photo_paths, businesses(name, city, country, description, category)")
     .eq("id", link.campaign_id)
     .single();
   if (!c || !c.businesses) return null;
@@ -31,7 +32,11 @@ export async function getBookingPageData(code: string) {
   const takenSet = new Set((taken ?? []).map((t) => new Date(t.slot_start).getTime()));
   const free = (slots ?? []).filter((s) => !takenSet.has(new Date(s.starts_at).getTime()));
 
+  const coverPath = c.status === "published" ? c.photo_paths[0] : undefined;
+  const coverUrl = coverPath ? (await signedPhotoUrls([coverPath]))[coverPath] : undefined;
+
   return {
+    coverUrl,
     campaign: {
       serviceName: c.service_name,
       description: c.description,
