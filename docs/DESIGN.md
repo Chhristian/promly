@@ -1,73 +1,69 @@
-# Promly — Design brief
+# Promly design: "Payout slip"
 
-**Refine, don't redesign.** Same product, same flows, same brand. The goal is that Promly reads instantly on a projector at 1280×720 and on a phone, and feels calm, fast and trustworthy, like a real fintech product rather than a template.
+A full redesign on the `redesign` branch. Product logic, money maths, database/RLS, the stage flow and realtime behaviour are unchanged. Every animation still answers a real database event.
 
-Sources: our own brief, plus the `frontend-design` and `apple-design` skills (installed at user level, not in this repo).
+## The concept in five lines
 
-## Fixed (don't change)
-
-- Dark navy background, purple → electric-blue gradient, white text, the current Promly logo. No light theme.
-- No new features. No changes to the money logic, the database or the stage flow.
-- Money figures stay the biggest, most readable thing on every dashboard.
-
-## Principles
-
-1. **One obvious primary action per screen.** It is the only gradient button on the screen. Everything else is secondary (solid surface) or ghost.
-2. **The gradient is an accent, not a wash.** Use it for the one primary action, the hero money figure and the logo. Don't use it for every number, badge or price.
-3. **Hierarchy comes from size + weight + spacing**, not from more boxes. Fewer borders and nested cards, more air.
-4. **Crisp type scale.** Tighten large text (negative tracking), keep body text at 0. Use sentence-case labels. All-caps tracked eyebrows are a template tell, so keep them to a minimum.
-5. **Calm, fast, purposeful motion.** 150–300 ms, ease-out, transform and opacity only. Motion responds to *real* database events or to the user's own action, never to timers or fake activity. Respect `prefers-reduced-motion`: use a short cross-fade instead of movement.
-6. **Feedback where it matters.** There are four kinds: status, completion, warning and error. An empty screen invites the next action, and an error says what happened and what to do.
-7. **Stage-readable.** At 1280×720, body text ≥ 16 px, labels ≥ 14 px and the hero money ≥ 48 px. On phones, nothing overflows horizontally and tap targets are ≥ 44 px.
+1. **Daylight, not night mode.** A cool paper-white app in Oslo daylight. Light themes stay readable on a washed-out projector, and dark navy didn't.
+2. **Money is printed, not glowing.** Amounts are set big, black and tabular, like a receipt or payout slip. The one loud colour is a **highlighter yellow** that marks money that just became yours.
+3. **Cobalt is the brand.** One saturated cobalt for the brand and the single primary action per screen. Nothing else is blue.
+4. **Lists are ledgers.** Bookings, campaigns and activity are rows in one panel with hairline dividers, not stacks of floating cards.
+5. **Made in Oslo.** Type is Schibsted Grotesk, drawn for the Oslo media house Schibsted. It's sturdy and newsy, with strong numerals.
 
 ## Tokens
 
-| Token | Value | Use |
+| Token | Hex | Use |
 |---|---|---|
-| `--background` | `#0b0e1f` (hsl 232 47% 7%) | Page |
-| `--card` | `hsl 232 40% 11%` at ~70% | Surfaces |
-| `--border` | `hsl 232 30% 22%` | Hairlines |
-| Text | `#f3f5fb` / muted `hsl 226 22% 70%` | Body / secondary |
-| Brand gradient | `#8b5cf6 → #3b82f6` | Primary action, hero money, logo |
-| Success | `#34d399` | Money available, verified |
-| Warning | `#fbbf24` | Pending, Demo Mode |
+| `paper` | `#F2F4F7` | Page background |
+| `surface` | `#FFFFFF` | Panels, inputs |
+| `ink` | `#0D1B2A` | Text, the dark "slip" hero panel |
+| `ink-muted` | `#566476` | Secondary text (5.6:1 on white) |
+| `line` | `#DDE3EA` | Hairlines and borders |
+| `cobalt` | `#2440F0` | Brand, primary action, links, focus ring |
+| `marker` | `#FFE14D` | Highlighter: fresh money, "New" rows, selected time slot |
+| `paid` | `#0A7F4F` | Available / paid / verified-positive |
+| `pending` | `#9A5B00` on `#FFF1D6` | Pending / awaiting service |
+| `danger` | `#C62828` | Refund, errors |
 
-**Type** (Geist, one family):
+- **Radius by hierarchy:** hero panels 24 px, panels 16 px, rows and inputs 10 px, chips are fully rounded. No single radius on everything.
+- **Shadows:** almost none. Panels sit on hairlines. Only floating things (toasts, the sticky header) get a shadow.
+- **Type scale (1.25):** 13 / 15 / 17 / 21 / 26 / 33 / 41 / 52 / 72 px. Headings use weight 800 with tracking from −0.03em (display) to −0.01em (h3). Body is 15–17 px at weight 400 with 1.5 leading. Money is always `tabular-nums`, weight 800.
+- **No all-caps labels, no eyebrows, no `→` on buttons, no gradient text.**
 
-| Role | Size | Weight | Tracking |
-|---|---|---|---|
-| Hero money | 48–60 px | 800 | −0.03em |
-| Page title | 30–36 px | 700 | −0.02em |
-| Section title | 18–20 px | 600 | −0.01em |
-| Body | 16–17 px | 400 | 0 |
-| Label | 14 px | 500 | 0, sentence case |
+## Logo
 
-**Motion:**
+- **The mark** is a cobalt rounded tile with a white lowercase **p**. A small yellow dot sits where the bowl closes: the "punched" coin of a payout slip.
+- **The wordmark** is `promly` in Schibsted Grotesk ExtraBold, lowercase and tightly tracked, in ink.
 
-| Token | Value |
+## Layout
+
+- **Shell:**
+  - A white top bar with a hairline: the logo, a segmented nav (ink pill for the active page), the live dot and the account.
+  - On phones the nav is a scrollable segmented row under the bar.
+  - Content is left-aligned on a 6xl grid.
+- **Promoter dashboard:**
+  - One **ink "slip" panel** is the hero: Available as a 72 px white figure with its payout date. Pending, clicks and bookings are quiet figures in the same slip, separated by hairlines.
+  - The commissions ledger and the campaigns ledger sit below, with Activity as a timeline on the right.
+- **Business dashboard:**
+  - A white **statement panel** with four figures divided by hairlines, plus one row of small counts.
+  - The campaign ledger, the bookings ledger, and Activity on the right.
+- **Landing page:**
+  - A typographic hero: "Share a link. Get paid when they show up."
+  - Beside it, a static example payout slip computed with the real money function (500 kr booking → 100 kr to the promoter, 113,75 kr paid by the business). It's labelled as an example, so it's never a fake live event.
+
+## Motion (150–300 ms, ease-out, transform/opacity only)
+
+Token: `--ease-out: cubic-bezier(0.23, 1, 0.32, 1)`; durations 150 / 220 / 300 ms.
+
+| Real event | Motion |
 |---|---|
-| `--ease-out` | `cubic-bezier(0.23, 1, 0.32, 1)` |
-| `--dur-fast` | 150 ms (press, hover) |
-| `--dur-base` | 220 ms (enter, toast) |
-| `--dur-slow` | 300 ms (the money moment's scale) |
+| Row arrives from the database (new campaign, join, booking, verified) | 220 ms rise + fade. The yellow marker band sweeps in behind the row's left edge (scaleX), then fades out over 2.4 s (opacity only) |
+| Commission becomes available | The Available figure pops once (300 ms, scale 1.03). The marker swipe draws under the amount (scaleX 0→1, 300 ms) and stays for the session |
+| Toast | 220 ms rise in, 150 ms fade out |
+| Press | Buttons scale to 0.97 in 150 ms |
 
-The highlight glow fades over ≤ 2.5 s, which is a colour change, not movement.
+`prefers-reduced-motion`: there's no movement and no scale, only short opacity fades, and the marker appears without sweeping.
 
-## Live moments (in priority order)
+## Avoid
 
-These are the only animations triggered by data. Each fires only when the real database change arrives.
-
-1. **New campaign appears** on Explore: the card enters (opacity + 8 px rise, 220 ms) with a brief ring.
-2. **"Alex joined"**: toast, and the activity row enters.
-3. **New booking**: toast, and the booking row enters.
-4. **Verified**: toast, and the status badge changes colour.
-5. **"+100,00 kr available"**: the money toast, and the Available figure pulses once (scale 1 → 1.03 → 1, 300 ms) with a green ring that fades.
-
-Under reduced motion, all of these become opacity-only, with no scale and no movement.
-
-## Avoid (generic template tells we currently have)
-
-- Uppercase tracked eyebrow labels above every heading ("BUSINESS DASHBOARD").
-- Gradient text on every money figure and price.
-- Every piece of content in an identical bordered card.
-- Long `·`-joined meta strings that wrap badly on phones.
+Gradients as decoration, glowing shadows, purple, dark navy, cards inside cards, all-caps tracked labels, decorative numbering, fake activity or counters, and animation that isn't answering a real event.

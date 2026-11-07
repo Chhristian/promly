@@ -41,6 +41,10 @@ export default {
           DEFAULT: "hsl(var(--destructive))",
           foreground: "hsl(var(--destructive-foreground))",
         },
+        ink: "hsl(var(--ink))",
+        marker: "hsl(var(--marker))",
+        paid: "hsl(var(--paid))",
+        pending: { DEFAULT: "hsl(var(--pending))", bg: "hsl(var(--pending-bg))" },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
@@ -51,6 +55,9 @@ export default {
           "4": "hsl(var(--chart-4))",
           "5": "hsl(var(--chart-5))",
         },
+      },
+      fontFamily: {
+        sans: ["var(--font-schibsted)", "ui-sans-serif", "system-ui", "sans-serif"],
       },
       borderRadius: {
         lg: "var(--radius)",

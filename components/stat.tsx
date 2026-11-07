@@ -1,63 +1,56 @@
-import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+/**
+ * A printed figure: small label, big tabular amount, optional hint.
+ * Used inside a panel (statement) or the dark payout slip. Label comes first in the DOM.
+ */
 export function Stat({
   label,
   value,
   hint,
-  accent,
-  icon: Icon,
   size = "md",
+  onSlip = false,
+  className,
+  mark,
 }: {
   label: string;
   value: React.ReactNode;
   hint?: React.ReactNode;
-  accent?: boolean;
-  icon?: LucideIcon;
-  size?: "md" | "lg" | "quiet";
+  size?: "hero" | "md" | "sm";
+  onSlip?: boolean;
+  className?: string;
+  /** Highlighter stroke under the amount (money that is yours). */
+  mark?: boolean;
 }) {
-  // Long amounts (e.g. 25 000 000,00 kr) step down in size so they always fit the card.
+  // Long amounts (e.g. 25 000 000,00 kr) step down in size so they always fit.
   const len = typeof value === "string" ? value.length : 0;
   const long = len > 14;
   const veryLong = len > 17;
+  const sizes = {
+    hero: veryLong ? "text-[clamp(2rem,7vw,2.75rem)]" : long ? "text-[clamp(2.25rem,8vw,3.25rem)]" : "text-[clamp(2.75rem,11vw,4.5rem)]",
+    md: veryLong ? "text-xl sm:text-2xl" : long ? "text-2xl" : "text-[clamp(1.6rem,6vw,2.05rem)]",
+    sm: veryLong ? "text-lg" : long ? "text-xl" : "text-2xl",
+  };
   return (
-    <div
-      className={cn(
-        "card h-full min-w-0 p-4 sm:p-5",
-        accent && "border-violet-400/50 bg-gradient-to-br from-violet-600/25 via-card/80 to-blue-600/15",
-      )}
-    >
-      <div className="flex items-center justify-between gap-2">
-        <div className="text-sm font-medium text-muted-foreground">{label}</div>
-        {Icon && <Icon className={cn("h-5 w-5 shrink-0", accent ? "text-violet-300" : "text-muted-foreground/70")} />}
+    <div className={cn("min-w-0", className)}>
+      <div className={cn("text-sm font-medium", onSlip ? "text-white/65" : "text-muted-foreground")}>{label}</div>
+      <div className={cn("money mt-1 leading-[1.05]", sizes[size], size === "hero" && "tracking-[-0.04em]")}>
+        {mark ? <span className={cn("money-mark marked", onSlip && "marked-full ml-[0.16em]")}>{value}</span> : value}
       </div>
-      <div
-        className={cn(
-          "mt-2 whitespace-nowrap font-bold tabular-nums tracking-tight",
-          size === "lg"
-            ? veryLong ? "text-[clamp(1.75rem,7vw,2.5rem)]" : long ? "text-[clamp(2rem,8vw,3rem)]" : "text-[clamp(2.25rem,10vw,3.75rem)] tracking-[-0.03em]"
-            : size === "quiet"
-              ? veryLong ? "text-xl font-semibold text-foreground/90" : long ? "text-2xl font-semibold text-foreground/90" : "text-[clamp(1.6rem,7vw,1.875rem)] font-semibold text-foreground/90"
-              : veryLong ? "text-xl sm:text-2xl" : long ? "text-2xl sm:text-[1.65rem]" : "text-[clamp(1.6rem,7vw,2.25rem)]",
-          accent && "text-gradient",
-        )}
-      >
-        {value}
-      </div>
-      {hint && <div className="mt-1.5 text-sm text-muted-foreground">{hint}</div>}
+      {hint && <div className={cn("mt-1.5 text-sm", onSlip ? "text-white/65" : "text-muted-foreground")}>{hint}</div>}
     </div>
   );
 }
 
 const STATUS_STYLES: Record<string, string> = {
-  draft: "bg-secondary text-muted-foreground ring-border",
-  published: "bg-emerald-500/15 text-emerald-300 ring-emerald-500/30",
-  paused: "bg-amber-500/15 text-amber-300 ring-amber-500/30",
-  pending: "bg-amber-500/15 text-amber-300 ring-amber-500/30",
-  verified: "bg-blue-500/15 text-blue-300 ring-blue-500/30",
-  available: "bg-emerald-500/15 text-emerald-300 ring-emerald-500/30",
-  refunded: "bg-red-500/15 text-red-300 ring-red-500/30",
-  cancelled: "bg-secondary text-muted-foreground ring-border",
+  draft: "bg-secondary text-muted-foreground",
+  published: "bg-[hsl(155_60%_92%)] text-paid",
+  paused: "bg-pending-bg text-pending",
+  pending: "bg-pending-bg text-pending",
+  verified: "bg-[hsl(232_90%_95%)] text-primary",
+  available: "bg-marker text-ink",
+  refunded: "bg-[hsl(0_80%_95%)] text-destructive",
+  cancelled: "bg-secondary text-muted-foreground",
 };
 
 const STATUS_LABEL: Record<string, string> = { draft: "Draft", published: "Live", paused: "Paused" };
@@ -66,11 +59,11 @@ export function StatusBadge({ status, label }: { status: string; label?: string 
   return (
     <span
       className={cn(
-        "inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-semibold tracking-normal ring-1 ring-inset transition-colors duration-200",
+        "inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-semibold transition-colors duration-200",
         STATUS_STYLES[status] ?? STATUS_STYLES.draft,
       )}
     >
-      {status === "published" && <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />}
+      {status === "published" && <span className="h-1.5 w-1.5 rounded-full bg-paid" />}
       {label ?? STATUS_LABEL[status] ?? status}
     </span>
   );

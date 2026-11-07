@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Geist } from "next/font/google";
+import { Schibsted_Grotesk } from "next/font/google";
 import "./globals.css";
 
 const defaultUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL
@@ -8,18 +8,18 @@ const defaultUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL
 
 export const metadata: Metadata = {
   metadataBase: new URL(defaultUrl),
-  title: "Promly — Businesses get customers. People get paid.",
+  title: "Promly: share a link, get paid when they show up",
   description: "Performance-based marketing marketplace: promote local businesses and earn commission on verified bookings.",
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0b0e1f",
+  themeColor: "#f2f4f7",
   width: "device-width",
   initialScale: 1,
 };
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const schibsted = Schibsted_Grotesk({
+  variable: "--font-schibsted",
   display: "swap",
   subsets: ["latin"],
 });
@@ -27,7 +27,7 @@ const geistSans = Geist({
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
-      <body className={`${geistSans.className} antialiased`}>{children}</body>
+      <body className={`${schibsted.variable} font-sans antialiased`}>{children}</body>
     </html>
   );
 }

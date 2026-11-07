@@ -23,8 +23,8 @@ export function CopyLink({ url, primary = false }: { url: string; primary?: bool
   };
   return (
     <div className="flex w-full items-center gap-2">
-      <code className="min-w-0 flex-1 truncate rounded-xl border border-border bg-background/80 px-3 py-2.5 text-sm">{url}</code>
-      <Button type="button" onClick={copy} variant={primary ? "default" : "secondary"} className={primary ? "bg-brand shrink-0 text-white" : "shrink-0"}>
+      <code className="min-w-0 flex-1 truncate rounded-[10px] bg-secondary px-3.5 py-2.5 text-sm font-medium">{url}</code>
+      <Button type="button" onClick={copy} variant={primary ? "default" : "secondary"} className="shrink-0">
         {copied ? <><Check className="h-4 w-4" /> Copied!</> : <><Copy className="h-4 w-4" /> Copy link</>}
       </Button>
     </div>

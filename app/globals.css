@@ -2,31 +2,36 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Promly theme: dark navy, purple → electric blue accents. One theme only. */
+/* Promly "Payout slip" theme (docs/DESIGN.md): daylight paper, ink, cobalt, highlighter yellow. */
 @layer base {
   :root {
-    --background: 232 47% 7%;
-    --foreground: 220 30% 97%;
-    --card: 232 40% 11%;
-    --card-foreground: 220 30% 97%;
-    --popover: 232 40% 11%;
-    --popover-foreground: 220 30% 97%;
-    --primary: 262 83% 66%;
+    --background: 216 23% 96%; /* paper #F2F4F7 */
+    --foreground: 211 53% 11%; /* ink #0D1B2A */
+    --card: 0 0% 100%;
+    --card-foreground: 211 53% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 211 53% 11%;
+    --primary: 232 87% 54%; /* cobalt #2440F0 */
     --primary-foreground: 0 0% 100%;
-    --secondary: 232 32% 18%;
-    --secondary-foreground: 220 30% 97%;
-    --muted: 232 32% 16%;
-    --muted-foreground: 226 22% 70%;
-    --accent: 217 91% 60%;
-    --accent-foreground: 0 0% 100%;
-    --destructive: 0 72% 55%;
+    --secondary: 214 27% 93%;
+    --secondary-foreground: 211 53% 11%;
+    --muted: 214 27% 93%;
+    --muted-foreground: 214 16% 40%; /* #566476 */
+    --accent: 214 27% 93%;
+    --accent-foreground: 211 53% 11%;
+    --destructive: 0 66% 47%;
     --destructive-foreground: 0 0% 100%;
-    --border: 232 30% 22%;
-    --input: 232 30% 24%;
-    --ring: 262 83% 66%;
-    --radius: 0.75rem;
-    color-scheme: dark;
-    /* Motion tokens (docs/DESIGN.md) */
+    --border: 212 24% 89%; /* line #DDE3EA */
+    --input: 212 20% 82%;
+    --ring: 232 87% 54%;
+    --radius: 0.625rem;
+    --marker: 50 100% 65%; /* #FFE14D */
+    --paid: 155 85% 27%; /* #0A7F4F */
+    --pending: 35 100% 30%;
+    --pending-bg: 40 100% 92%;
+    --ink: 211 53% 11%;
+    color-scheme: light;
+    /* Motion tokens */
     --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
     --dur-fast: 150ms;
     --dur-base: 220ms;
@@ -35,10 +40,10 @@
 }
 
 @layer base {
-  /* Slightly larger type on laptops/projectors so it reads from the back of a room */
   html {
     font-size: 16px;
   }
+  /* Slightly larger type on laptops/projectors so it reads from the back of a room */
   @media (min-width: 1024px) {
     html {
       font-size: 17px;
@@ -47,40 +52,104 @@
   * {
     @apply border-border;
   }
-  /* Size-specific tracking: tighten large text, keep body at 0 */
+  h1,
+  h2,
+  h3 {
+    font-weight: 800;
+    text-wrap: balance;
+  }
   h1 {
-    letter-spacing: -0.025em;
+    letter-spacing: -0.03em;
+    line-height: 1.05;
   }
   h2 {
-    letter-spacing: -0.012em;
+    letter-spacing: -0.018em;
+  }
+  h3 {
+    letter-spacing: -0.01em;
   }
   body {
-    @apply bg-background text-foreground min-h-screen;
-    background-image: radial-gradient(ellipse 80% 50% at 50% -10%, hsl(262 83% 66% / 0.18), transparent),
-      radial-gradient(ellipse 60% 40% at 100% 0%, hsl(217 91% 60% / 0.12), transparent);
-    background-attachment: fixed;
+    @apply min-h-screen bg-background text-foreground;
+    font-feature-settings: "ss01";
+  }
+  :focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+  }
+  ::selection {
+    background: hsl(var(--marker));
+    color: hsl(var(--ink));
   }
 }
 
 @layer components {
+  /* Compatibility names from the old theme: no gradients any more */
   .text-gradient {
-    @apply bg-gradient-to-r from-violet-400 to-blue-400 bg-clip-text text-transparent;
+    color: hsl(var(--primary));
   }
   .bg-brand {
-    @apply bg-gradient-to-r from-violet-500 to-blue-500;
+    background-color: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
   }
+  /* A white panel on a hairline. Radius follows hierarchy (see DESIGN.md). */
   .card {
-    @apply rounded-2xl border border-border/80 bg-card/70 shadow-[0_1px_0_0_hsl(0_0%_100%/0.04)_inset] backdrop-blur-sm;
+    @apply rounded-2xl border border-border bg-card;
+  }
+  /* The ink payout slip: the one dark hero element per screen */
+  .slip {
+    @apply rounded-3xl bg-[hsl(var(--ink))] text-white;
+  }
+  /* A list rendered as a ledger: one panel, hairline rows */
+  .ledger {
+    @apply overflow-hidden rounded-2xl border border-border bg-card;
+  }
+  .ledger > * + * {
+    @apply border-t border-border;
+  }
+  .money {
+    font-variant-numeric: tabular-nums;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    white-space: nowrap;
+  }
+  /* Highlighter stroke behind a word or figure */
+  .marked {
+    position: relative;
+    isolation: isolate;
+  }
+  .marked::before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    left: -0.12em;
+    right: -0.12em;
+    bottom: 0.06em;
+    height: 0.42em;
+    border-radius: 0.12em;
+    background: hsl(var(--marker));
+    transform-origin: left center;
+  }
+  /* On the dark slip: a full highlighter block with ink figures */
+  .marked-full {
+    color: hsl(var(--ink));
+  }
+  .marked-full::before {
+    top: 0.06em;
+    bottom: 0;
+    height: auto;
+    left: -0.16em;
+    right: -0.16em;
+    border-radius: 0.12em;
   }
   .skeleton {
-    @apply relative overflow-hidden rounded-xl bg-secondary/60;
+    @apply relative overflow-hidden rounded-xl bg-secondary;
   }
   .skeleton::after {
     content: "";
     position: absolute;
     inset: 0;
     transform: translateX(-100%);
-    background: linear-gradient(90deg, transparent, hsl(0 0% 100% / 0.06), transparent);
+    background: linear-gradient(90deg, transparent, hsl(0 0% 100% / 0.7), transparent);
     animation: shimmer 1.4s infinite;
   }
   @keyframes shimmer {
@@ -88,20 +157,14 @@
       transform: translateX(100%);
     }
   }
-  /* The money moment: big, smooth glow when commission becomes available */
-  /* The money moment: one quick pop, then a glow that only fades (opacity) */
+
+  /* The money moment: one quick pop, and the marker draws under the amount */
   .money-pop {
-    position: relative;
     animation: money-scale var(--dur-slow) var(--ease-out);
   }
-  .money-pop::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    pointer-events: none;
-    box-shadow: 0 0 0 3px hsl(152 76% 50% / 0.9), 0 0 60px 8px hsl(152 76% 50% / 0.45);
-    animation: money-glow 1.8s ease-out both;
+  .money-pop .marked::before,
+  .money-pop .money-mark::before {
+    animation: marker-draw var(--dur-slow) var(--ease-out) 120ms both;
   }
   @keyframes money-scale {
     0% {
@@ -114,15 +177,15 @@
       transform: scale(1);
     }
   }
-  @keyframes money-glow {
-    0%,
-    25% {
-      opacity: 1;
+  @keyframes marker-draw {
+    from {
+      transform: scaleX(0);
     }
-    100% {
-      opacity: 0;
+    to {
+      transform: scaleX(1);
     }
   }
+
   .toast-in {
     animation: toast-in var(--dur-base) var(--ease-out) both;
   }
@@ -145,19 +208,29 @@
       transform: translateY(6px) scale(0.98);
     }
   }
-  /* A row that just arrived from the database: quick entrance, then a ring that fades */
+
+  /* A row that just arrived from the database: quick entrance, a marker band that fades */
   .live-new {
     position: relative;
     animation: live-enter var(--dur-base) var(--ease-out) both;
   }
-  .live-new::after {
+  .live-new::before {
     content: "";
     position: absolute;
     inset: 0;
-    border-radius: inherit;
+    z-index: 0;
     pointer-events: none;
-    box-shadow: 0 0 0 2px hsl(217 91% 60% / 0.9), 0 0 24px hsl(262 83% 66% / 0.45);
-    animation: live-ring 2.4s ease-out both;
+    border-radius: inherit;
+    background: hsl(var(--marker) / 0.45);
+    box-shadow: inset 4px 0 0 hsl(var(--marker));
+    transform-origin: left center;
+    animation:
+      marker-draw var(--dur-slow) var(--ease-out) both,
+      live-fade 2.4s ease-out 0.4s both;
+  }
+  .live-new > * {
+    position: relative;
+    z-index: 1;
   }
   @keyframes live-enter {
     from {
@@ -169,12 +242,11 @@
       transform: none;
     }
   }
-  @keyframes live-ring {
-    0%,
-    35% {
+  @keyframes live-fade {
+    from {
       opacity: 1;
     }
-    100% {
+    to {
       opacity: 0;
     }
   }
@@ -190,9 +262,13 @@
     animation-duration: 200ms !important;
     transform: none !important;
   }
-  .live-new::after,
-  .money-pop::after {
-    animation-duration: 1.2s !important;
+  .live-new::before {
+    animation: live-fade 1.2s ease-out 0.4s both !important;
+    transform: none !important;
+  }
+  .money-pop .marked::before,
+  .money-pop .money-mark::before {
+    animation: none !important;
   }
   .skeleton::after {
     animation: none;

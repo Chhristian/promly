@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { CopyLink } from "@/components/copy-link";
 import { Download, Maximize2, MessageCircle, QrCode, Share2 } from "lucide-react";
 
-const QR_OPTS = { errorCorrectionLevel: "H" as const, margin: 2, color: { dark: "#0b0e1f", light: "#ffffff" } };
+const QR_OPTS = { errorCorrectionLevel: "H" as const, margin: 2, color: { dark: "#0d1b2a", light: "#ffffff" } };
 
 function useQr(url: string, width: number) {
   const [dataUrl, setDataUrl] = useState<string | null>(null);
@@ -96,7 +96,6 @@ export function ShareTools({
           size="sm"
           onClick={() => setFullscreen(true)}
           disabled={!qrPng}
-          className={compact ? undefined : "bg-brand text-white"}
         >
           <Maximize2 className="h-4 w-4" /> Show QR full screen
         </Button>
@@ -106,7 +105,7 @@ export function ShareTools({
         <div className="flex items-center gap-4">
           {qrSmall ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={qrSmall} alt={`QR code for ${url}`} width={280} height={280} className="rounded-xl bg-white p-2" data-testid="qr-image" />
+            <img src={qrSmall} alt={`QR code for ${url}`} width={280} height={280} className="rounded-2xl border border-border bg-white p-2" data-testid="qr-image" />
           ) : (
             <div className="h-[280px] w-[280px] animate-pulse rounded-xl bg-secondary" />
           )}
@@ -118,14 +117,14 @@ export function ShareTools({
         <button
           type="button"
           onClick={() => setFullscreen(false)}
-          className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-6 bg-[#0b0e1f]/95 p-6"
+          className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-6 bg-background p-6"
           aria-label="Close full-screen QR code"
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={qrPng} alt="QR code" className="aspect-square w-[min(80vh,90vw)] rounded-2xl bg-white p-4" />
+          <img src={qrPng} alt="QR code" className="aspect-square w-[min(78vh,90vw)] rounded-3xl border border-border bg-white p-4" />
           <div className="text-center">
-            <div className="text-2xl font-bold">{serviceName}</div>
-            <div className="text-muted-foreground">{businessName} · scan to book · tap anywhere to close</div>
+            <div className="text-3xl font-extrabold tracking-[-0.02em]">{serviceName}</div>
+            <div className="text-muted-foreground">{businessName}. Scan to book. Tap anywhere to close.</div>
           </div>
         </button>
       )}

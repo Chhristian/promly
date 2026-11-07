@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, BadgeCheck, CalendarClock, CalendarDays, Clock, Coins, Eye, Megaphone, Plus, Receipt, Users, Wallet } from "lucide-react";
+import { ArrowRight, BadgeCheck, CalendarClock, CalendarDays, Megaphone, Plus } from "lucide-react";
 import { requireRole } from "@/lib/auth";
 import { getBusinessOverview, getMyBusiness, moneyTotals } from "@/lib/business-data";
 import { formatMinor, type Currency } from "@/lib/money";
@@ -29,44 +29,44 @@ export default async function BusinessDashboard() {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="line-clamp-2 text-3xl font-bold tracking-tight sm:text-4xl">{business.name}</h1>
-          <p className="mt-1 text-muted-foreground">{business.city}{business.country === "ES" ? ", Spain" : ", Norway"}</p>
+        <div className="min-w-0">
+          <h1 className="line-clamp-2 text-[clamp(2rem,5vw,2.75rem)]">{business.name}</h1>
+          <p className="mt-1.5 text-muted-foreground">{business.city}{business.country === "ES" ? ", Spain" : ", Norway"}</p>
         </div>
-        <Button asChild className="bg-brand text-white shadow-lg shadow-violet-900/40">
+        <Button asChild>
           <Link href="/business/campaigns/new">
             <Plus className="h-4 w-4" /> New campaign
           </Link>
         </Button>
       </div>
 
-      <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <Stat label="Verified sales" value={money(t.salesMinor)} hint={`${t.salesCount} booking${t.salesCount === 1 ? "" : "s"}`} accent icon={Receipt} />
-        <Stat label="Commission pending" value={money(t.commissionPendingMinor)} hint="Until refund window ends" icon={Clock} />
-        <Stat label="Commission available" value={money(t.commissionAvailableMinor)} hint={t.nextPayoutAt ? `Next payout ${formatDate(t.nextPayoutAt)}` : "Owed to promoters"} icon={Wallet} />
-        <Stat label="Platform fees (2.75%)" value={money(t.feesMinor)} hint={`Total cost ${money(t.totalCostMinor)}`} icon={Coins} />
+      {/* The statement: four figures in one panel, small counts underneath. Labels come before amounts. */}
+      <section className="ledger">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 [&>*]:border-border max-sm:[&>*+*]:border-t sm:max-lg:[&>*:nth-child(n+3)]:border-t sm:[&>*:nth-child(even)]:border-l lg:[&>*+*]:border-l">
+          <Stat className="p-5" label="Verified sales" value={money(t.salesMinor)} hint={`${t.salesCount} booking${t.salesCount === 1 ? "" : "s"}`} />
+          <Stat className="p-5" label="Commission pending" value={money(t.commissionPendingMinor)} hint="Until the refund window ends" />
+          <Stat className="p-5" label="Commission available" value={money(t.commissionAvailableMinor)} hint={t.nextPayoutAt ? `Next payout ${formatDate(t.nextPayoutAt)}` : "Owed to promoters"} />
+          <Stat className="p-5" label="Platform fees (2.75%)" value={money(t.feesMinor)} hint={`Total cost ${money(t.totalCostMinor)}`} />
+        </div>
+        <div className="grid grid-cols-2 bg-secondary/60 sm:grid-cols-4">
+          {[
+            { label: "Awaiting service", value: t.awaitingServiceCount },
+            { label: "Promoters", value: o.memberships.length },
+            { label: "Link visits", value: o.clicks },
+            { label: "Live campaigns", value: o.campaigns.filter((c) => c.status === "published").length },
+          ].map((k) => (
+            <div key={k.label} className="flex items-baseline gap-2 px-5 py-3">
+              <span className="money text-lg">{k.value}</span>
+              <span className="min-w-0 truncate text-sm text-muted-foreground">{k.label}</span>
+            </div>
+          ))}
+        </div>
       </section>
-
-      {/* Secondary numbers: one quiet strip, so bookings and activity stay above the fold on a projector */}
-      <div className="card grid grid-cols-2 divide-border sm:grid-cols-4 sm:divide-x">
-        {[
-          { icon: CalendarClock, label: "Awaiting service", value: t.awaitingServiceCount },
-          { icon: Users, label: "Promoters", value: o.memberships.length },
-          { icon: Eye, label: "Link visits", value: o.clicks },
-          { icon: Megaphone, label: "Live campaigns", value: o.campaigns.filter((c) => c.status === "published").length },
-        ].map((k) => (
-          <div key={k.label} className="flex items-center gap-3 px-4 py-3">
-            <k.icon className="h-5 w-5 shrink-0 text-violet-300" />
-            <div className="text-2xl font-bold tabular-nums leading-none">{k.value}</div>
-            <div className="min-w-0 truncate text-sm text-muted-foreground">{k.label}</div>
-          </div>
-        ))}
-      </div>
 
       <div className="grid gap-8 lg:grid-cols-3">
         <div className="min-w-0 space-y-6 lg:col-span-2">
           <section className="min-w-0 space-y-3">
-            <h2 className="text-lg font-semibold">Campaigns</h2>
+            <h2 className="text-lg">Campaigns</h2>
             {o.campaigns.length === 0 ? (
               <EmptyState
                 icon={Megaphone}
@@ -75,30 +75,32 @@ export default async function BusinessDashboard() {
                 action={{ href: "/business/campaigns/new", label: "New campaign" }}
               />
             ) : (
-              o.campaigns.map((c) => (
+              <div className="ledger">
+              {o.campaigns.map((c) => (
                 <Highlight key={c.id} ids={[c.id]}>
-                  <Link href={`/business/campaigns/${c.id}`} className="card group flex items-center gap-4 p-3 transition hover:border-violet-400/60">
-                    <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl">
+                  <Link href={`/business/campaigns/${c.id}`} className="group flex items-center gap-4 px-4 py-3 transition-colors hover:bg-secondary/60 sm:px-5">
+                    <div className="h-14 w-14 shrink-0 overflow-hidden rounded-[10px]">
                       <CampaignCover category={business.category} imageUrl={covers[c.id]} size="sm" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <div className="truncate text-lg font-semibold">{c.service_name}</div>
+                      <div className="truncate text-lg font-bold">{c.service_name}</div>
                       <div className="text-sm text-muted-foreground">
-                        {money(c.price_minor)} · promoter earns {money(c.commission_minor)} · {membersByCampaign.get(c.id) ?? 0} promoter
-                        {(membersByCampaign.get(c.id) ?? 0) === 1 ? "" : "s"}
+                        {money(c.price_minor)}, promoter earns <span className="font-semibold text-foreground">{money(c.commission_minor)}</span>,{" "}
+                        {membersByCampaign.get(c.id) ?? 0} promoter{(membersByCampaign.get(c.id) ?? 0) === 1 ? "" : "s"}
                       </div>
                     </div>
                     <StatusBadge status={c.status} />
                     <ArrowRight className="hidden h-4 w-4 text-muted-foreground transition group-hover:translate-x-0.5 sm:block" />
                   </Link>
                 </Highlight>
-              ))
+              ))}
+              </div>
             )}
           </section>
 
           <section className="min-w-0 space-y-3">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold">Recent bookings</h2>
+              <h2 className="text-lg">Recent bookings</h2>
               <Link href="/business/bookings" className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
                 All bookings <ArrowRight className="h-3.5 w-3.5" />
               </Link>
@@ -110,25 +112,27 @@ export default async function BusinessDashboard() {
                 body="When a customer books through a promoter's link, it appears here instantly."
               />
             ) : (
-              o.bookings.slice(0, 6).map((b) => {
+              <div className="ledger">
+              {o.bookings.slice(0, 6).map((b) => {
                 const stage = bookingStage(b);
                 return (
                   <Highlight key={b.id} ids={[b.id]}>
-                    <Link href={`/business/bookings/${b.id}`} className="card flex items-center gap-4 p-4 transition hover:border-violet-400/60">
-                      <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-blue-500/15 text-blue-300">
+                    <Link href={`/business/bookings/${b.id}`} className="flex items-center gap-4 px-4 py-3.5 transition-colors hover:bg-secondary/60 sm:px-5">
+                      <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-full ${stage.key === "pending" ? "bg-pending-bg text-pending" : stage.key === "available" ? "bg-marker text-ink" : "bg-[hsl(232_90%_95%)] text-primary"}`}>
                         {stage.key === "pending" ? <CalendarClock className="h-5 w-5" /> : <BadgeCheck className="h-5 w-5" />}
                       </span>
                       <div className="min-w-0 flex-1">
                         <div className="truncate font-semibold">{b.campaigns?.service_name}</div>
                         <div className="text-sm text-muted-foreground">
-                          {formatSlot(b.slot_start)} · commission {money(b.commission_minor)}
+                          {formatSlot(b.slot_start)}, commission {money(b.commission_minor)}
                         </div>
                       </div>
                       <StatusBadge status={stage.key} label={stage.label} />
                     </Link>
                   </Highlight>
                 );
-              })
+              })}
+              </div>
             )}
           </section>
         </div>

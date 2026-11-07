@@ -176,27 +176,27 @@ function Toasts({ toasts, onClose }: { toasts: Toast[]; onClose: (id: string) =>
             data-testid={t.tone === "money" ? "money-toast" : "toast"}
             className={cn(
               t.leaving ? "toast-out" : "toast-in",
-              "pointer-events-auto flex items-start gap-3 rounded-2xl border p-4 shadow-2xl backdrop-blur",
+              "pointer-events-auto flex items-start gap-3 rounded-2xl p-4 shadow-[0_12px_40px_-12px_hsl(211_53%_11%/0.45)]",
               t.tone === "money"
-                ? "border-emerald-400/60 bg-gradient-to-br from-emerald-500/30 via-[#0f1430]/95 to-violet-600/30 shadow-emerald-500/20"
+                ? "bg-ink text-white"
                 : t.tone === "warn"
-                  ? "border-red-400/40 bg-[#1a1020]/95"
-                  : "border-violet-400/40 bg-[#121733]/95 shadow-violet-900/40",
+                  ? "border border-destructive/30 bg-card"
+                  : "border border-border bg-card",
             )}
           >
             <span
               className={cn(
                 "grid shrink-0 place-items-center rounded-xl",
-                t.tone === "money" ? "h-12 w-12 bg-emerald-400 text-[#05210f]" : "h-10 w-10 bg-white/10 text-white",
+                t.tone === "money" ? "h-12 w-12 bg-marker text-ink" : t.tone === "warn" ? "h-10 w-10 bg-[hsl(0_80%_95%)] text-destructive" : "h-10 w-10 bg-[hsl(232_90%_95%)] text-primary",
               )}
             >
               <Icon className={t.tone === "money" ? "h-6 w-6" : "h-5 w-5"} />
             </span>
             <div className="min-w-0 flex-1">
-              <div className={cn("font-bold leading-tight", t.tone === "money" ? "text-2xl tabular-nums text-emerald-200" : "text-base")}>{t.title}</div>
-              {t.body && <div className="mt-0.5 text-sm text-muted-foreground">{t.body}</div>}
+              <div className={cn("font-extrabold leading-tight", t.tone === "money" ? "money text-2xl" : "text-base")}>{t.title}</div>
+              {t.body && <div className={cn("mt-0.5 text-sm", t.tone === "money" ? "text-white/70" : "text-muted-foreground")}>{t.body}</div>}
             </div>
-            <button type="button" onClick={() => onClose(t.id)} className="text-muted-foreground hover:text-foreground" aria-label="Dismiss">
+            <button type="button" onClick={() => onClose(t.id)} className={cn("rounded-full p-1", t.tone === "money" ? "text-white/60 hover:text-white" : "text-muted-foreground hover:text-foreground")} aria-label="Dismiss">
               <X className="h-4 w-4" />
             </button>
           </div>
@@ -213,13 +213,13 @@ export function LiveStatus() {
   const label = status === "live" ? "Live" : status === "connecting" ? "Connecting" : "Offline";
   return (
     <div className="flex items-center gap-1.5 text-xs">
-      <span className="flex items-center gap-1.5 rounded-full border border-border px-2.5 py-1 text-muted-foreground" title={`Real-time updates: ${label}`}>
+      <span className="flex items-center gap-1.5 rounded-full bg-secondary px-2.5 py-1 font-semibold text-muted-foreground" title={`Real-time updates: ${label}`}>
         <span
           className={cn(
             "h-2 w-2 rounded-full",
-            status === "live" && "bg-emerald-400 shadow-[0_0_8px] shadow-emerald-400",
-            status === "connecting" && "animate-pulse bg-amber-400",
-            status === "offline" && "bg-red-500",
+            status === "live" && "bg-paid ring-4 ring-[hsl(155_60%_85%)]",
+            status === "connecting" && "bg-[hsl(40_95%_55%)]",
+            status === "offline" && "bg-destructive",
           )}
         />
         <span className="hidden sm:inline">{label}</span>
@@ -230,7 +230,7 @@ export function LiveStatus() {
           refresh();
           router.refresh();
         }}
-        className="grid h-7 w-7 place-items-center rounded-full border border-border text-muted-foreground hover:bg-secondary hover:text-foreground"
+        className="grid h-7 w-7 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
         aria-label="Refresh"
         title="Refresh"
       >
@@ -245,11 +245,9 @@ export function Highlight({ ids, children, className }: { ids: (string | number 
   const { recent } = useContext(LiveContext);
   const isNew = ids.some((i) => i !== null && i !== undefined && recent.has(String(i)));
   return (
-    <div className={cn("relative rounded-2xl", isNew && "live-new", className)}>
+    <div className={cn("relative", isNew && "live-new", className)}>
       {isNew && (
-        <span className="bg-brand absolute -right-1 -top-2 z-10 rounded-full px-2 py-0.5 text-[11px] font-semibold text-white shadow">
-          New
-        </span>
+        <span className="absolute right-3 top-2 z-10 rounded-full bg-ink px-2 py-0.5 text-[11px] font-bold text-marker">New</span>
       )}
       {children}
     </div>
