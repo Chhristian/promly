@@ -10,8 +10,13 @@ export function LogoutButton() {
   const logout = async () => {
     const supabase = createClient();
     await supabase.auth.signOut();
-    router.push("/auth/login");
+    router.push("/");
+    router.refresh();
   };
 
-  return <Button onClick={logout}>Logout</Button>;
+  return (
+    <Button variant="secondary" size="sm" onClick={logout}>
+      Log out
+    </Button>
+  );
 }
