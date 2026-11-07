@@ -22,26 +22,26 @@ export default async function BookingsPage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-3xl font-bold tracking-tight">Bookings</h1>
+      <h1 className="text-[clamp(2rem,5vw,2.75rem)]">Bookings</h1>
       {!bookings?.length && (
         <EmptyState icon={CalendarDays} title="No bookings yet" body="When a customer books through a promoter's link, it shows up here instantly." />
       )}
-      <div className="space-y-2">
+      <div className={bookings?.length ? "ledger" : ""}>
         {bookings?.map((b) => {
           const stage = bookingStage(b);
           return (
             <Highlight key={b.id} ids={[b.id]}>
             <Link
               href={`/business/bookings/${b.id}`}
-              className="grid gap-2 card p-4 hover:border-primary/60 sm:grid-cols-[1fr_auto] sm:items-center"
+              className="grid gap-2 px-4 py-3.5 transition-colors hover:bg-secondary/60 sm:grid-cols-[1fr_auto] sm:items-center sm:px-5"
             >
               <div>
-                <div className="line-clamp-2 font-medium">{b.campaigns?.service_name}</div>
+                <div className="line-clamp-2 font-bold">{b.campaigns?.service_name}</div>
                 <div className="font-medium tabular-nums">{formatSlot(b.slot_start)}</div>
                 <div className="text-sm text-muted-foreground">
-                  via {b.profiles?.display_name || "promoter"} · booked {formatDateTime(b.created_at)} · commission{" "}
+                  via {b.profiles?.display_name || "promoter"}, booked {formatDateTime(b.created_at)}, commission{" "}
                   {formatMinor(b.commission_minor, cur)}
-                  {b.payout_at && b.status === "verified" ? ` · payout ${formatDate(b.payout_at)}` : ""}
+                  {b.payout_at && b.status === "verified" ? `, payout ${formatDate(b.payout_at)}` : ""}
                 </div>
               </div>
               <span className="justify-self-start sm:justify-self-end">

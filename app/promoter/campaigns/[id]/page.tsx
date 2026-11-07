@@ -7,7 +7,7 @@ import { siteUrl } from "@/lib/promoter-data";
 import { AgreementView } from "@/components/agreement-view";
 import { ShareTools } from "@/components/share-tools";
 import { JoinForm } from "./join-form";
-import { ArrowLeft, MapPin } from "lucide-react";
+import { ArrowLeft, ChevronDown, MapPin } from "lucide-react";
 import { CampaignCover, categoryLabel } from "@/components/campaign-cover";
 import { signedPhotoUrls } from "@/lib/photos";
 
@@ -43,25 +43,26 @@ export default async function PromoterCampaignPage({ params }: { params: Promise
         <ArrowLeft className="h-4 w-4" /> Explore
       </Link>
 
-      <div className="card overflow-hidden">
-        <div className={link ? "relative h-32 sm:h-36" : "relative h-44 sm:h-52"}>
+      <div className="space-y-5">
+        <div className={link ? "relative h-32 overflow-hidden rounded-3xl sm:h-40" : "relative h-48 overflow-hidden rounded-3xl sm:h-60"}>
           <CampaignCover category={c.businesses.category} imageUrl={cover} size="lg" />
-          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-5">
-            <span className="rounded-full bg-black/40 px-2.5 py-1 text-xs font-medium text-white backdrop-blur">{categoryLabel(c.businesses.category)}</span>
-            <h1 className="mt-2 line-clamp-2 text-2xl font-bold tracking-tight text-white sm:text-3xl">{c.service_name}</h1>
-            <p className="flex items-center gap-1 text-sm text-white/80">
-              {c.businesses.name} · <MapPin className="h-3.5 w-3.5" /> {c.businesses.city}
-            </p>
-          </div>
+          <span className="absolute left-4 top-4 rounded-full bg-card px-2.5 py-1 text-xs font-semibold text-ink">{categoryLabel(c.businesses.category)}</span>
         </div>
-        <div className="grid grid-cols-2 divide-x divide-border">
-          <div className="p-5">
+        <div>
+          <h1 className="line-clamp-3 text-[clamp(1.75rem,5vw,2.6rem)]">{c.service_name}</h1>
+          <p className="mt-1 flex flex-wrap items-center gap-x-1.5 text-muted-foreground">
+            <span className="font-medium text-foreground">{c.businesses.name}</span>
+            <span className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5" /> {c.businesses.city}</span>
+          </p>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="card p-5">
             <div className="text-sm text-muted-foreground">Customer pays</div>
-            <div className="text-3xl font-bold tabular-nums">{formatMinor(c.price_minor, cur)}</div>
+            <div className="money mt-1 text-[clamp(1.5rem,5vw,2rem)]">{formatMinor(c.price_minor, cur)}</div>
           </div>
-          <div className="bg-gradient-to-br from-violet-600/20 to-blue-600/10 p-5">
-            <div className="text-sm text-muted-foreground">You earn per verified booking</div>
-            <div className="text-gradient text-3xl font-bold tabular-nums">{formatMinor(agreement?.commission_minor ?? c.commission_minor, cur)}</div>
+          <div className="slip p-5">
+            <div className="text-sm text-white/65">You earn per verified booking</div>
+            <div className="money mt-1 text-[clamp(1.5rem,5vw,2rem)]">{formatMinor(agreement?.commission_minor ?? c.commission_minor, cur)}</div>
           </div>
         </div>
       </div>
@@ -69,8 +70,8 @@ export default async function PromoterCampaignPage({ params }: { params: Promise
       {c.description && !link && <p className="text-muted-foreground">{c.description}</p>}
 
       {link ? (
-        <section className="card space-y-3 border-[hsl(155_50%_72%)] bg-[hsl(155_60%_96%)] p-5">
-          <h2 className="text-lg font-semibold">Your personal link</h2>
+        <section className="card space-y-3 border-2 border-ink p-5 sm:p-6">
+          <h2 className="text-xl">Your personal link</h2>
           <p className="text-sm text-muted-foreground">Share it anywhere the agreement allows. Bookings through it are credited to you.</p>
           <ShareTools
             url={link}
@@ -86,14 +87,14 @@ export default async function PromoterCampaignPage({ params }: { params: Promise
           </div>
         </section>
       ) : c.status !== "published" ? (
-        <p className="rounded-xl border border-border p-4 text-sm text-muted-foreground">This campaign isn&apos;t accepting new promoters right now.</p>
+        <p className="rounded-2xl border border-dashed border-input p-4 text-sm text-muted-foreground">This campaign isn&apos;t accepting new promoters right now.</p>
       ) : null}
 
       {agreement && link && (
         <details className="card group p-0">
           <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-4 text-sm font-medium [&::-webkit-details-marker]:hidden">
             <span>Agreement you accepted (version {agreement.version})</span>
-            <span className="text-muted-foreground transition group-open:rotate-180">⌄</span>
+            <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-200 group-open:rotate-180" />
           </summary>
           <div className="px-4 pb-4">
             <AgreementView

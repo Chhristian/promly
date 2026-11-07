@@ -1,6 +1,19 @@
 import { Dumbbell, Lamp, Sailboat, Scissors, Sparkles, Store, UtensilsCrossed, Waves, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+// Flat daylight tints for covers without a photo (the promo image keeps from/to).
+const TINT: Record<string, string> = {
+  barbershop: "#DCE3FF",
+  beauty: "#FBE0EC",
+  restaurant: "#FFE6D2",
+  experience: "#E4E0FA",
+  water_sports: "#D6EEFA",
+  jet_ski: "#D3F2F4",
+  boat_tour: "#DAEBFB",
+  fitness: "#DDF3E4",
+  other: "#E6EAF0",
+};
+
 const CATEGORY: Record<string, { icon: LucideIcon; from: string; to: string; label: string }> = {
   barbershop: { icon: Scissors, from: "#7c3aed", to: "#1e3a8a", label: "Barbershop" },
   beauty: { icon: Sparkles, from: "#db2777", to: "#6d28d9", label: "Beauty" },
@@ -25,7 +38,7 @@ export function categoryLabel(category?: string | null) {
 
 /**
  * Campaign "image": the business's photo when it has one, otherwise a
- * category artwork (gradient + icon). Never a fake photo.
+ * flat category artwork (tint + icon). Never a fake photo.
  */
 export function CampaignCover({
   category,
@@ -47,23 +60,14 @@ export function CampaignCover({
       <img src={imageUrl} alt="" className={cn("h-full w-full object-cover", className)} data-testid="cover-photo" />
     );
   }
+  const tint = TINT[category ?? "other"] ?? TINT.other;
   return (
     <div
       className={cn("relative grid h-full w-full place-items-center overflow-hidden", className)}
-      style={{ background: `linear-gradient(135deg, ${c.from}, ${c.to})` }}
+      style={{ backgroundColor: tint }}
       aria-hidden
     >
-      <div
-        className="absolute inset-0 opacity-25"
-        style={{
-          backgroundImage:
-            "radial-gradient(circle at 20% 20%, rgba(255,255,255,.35) 0 2px, transparent 3px), radial-gradient(circle at 80% 60%, rgba(255,255,255,.25) 0 1.5px, transparent 2.5px)",
-          backgroundSize: "28px 28px, 36px 36px",
-        }}
-      />
-      <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-white/10 blur-2xl" />
-      <Icon className={cn("relative text-white/90 drop-shadow-lg", iconSize)} strokeWidth={1.6} />
+      <Icon className={cn("relative text-ink", iconSize)} strokeWidth={1.5} />
     </div>
   );
 }
-

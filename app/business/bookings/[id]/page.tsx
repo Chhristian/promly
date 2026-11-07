@@ -1,3 +1,4 @@
+import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireRole } from "@/lib/auth";
@@ -29,13 +30,13 @@ export default async function BookingDetailPage({ params }: { params: Promise<{ 
   return (
     <div className="mx-auto max-w-3xl space-y-5">
       <div>
-        <Link href="/business/bookings" className="text-sm text-muted-foreground hover:text-foreground">← Bookings</Link>
+        <Link href="/business/bookings" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"><ArrowLeft className="h-4 w-4" /> Bookings</Link>
         <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-2">
-          <h1 className="line-clamp-3 text-2xl font-bold tracking-tight sm:text-3xl">{b.campaigns?.service_name}</h1>
+          <h1 className="line-clamp-3 text-[clamp(1.6rem,4.5vw,2.25rem)]">{b.campaigns?.service_name}</h1>
           <StatusBadge status={stage.key} label={stage.label} />
         </div>
         <p className="mt-1 line-clamp-2 text-muted-foreground">
-          {formatSlot(b.slot_start)} · {contact?.customer_name ?? "Customer"} · via {b.profiles?.display_name || "promoter"}
+          {formatSlot(b.slot_start)}, {contact?.customer_name ?? "Customer"}, via {b.profiles?.display_name || "promoter"}
         </p>
       </div>
 
@@ -53,27 +54,28 @@ export default async function BookingDetailPage({ params }: { params: Promise<{ 
 
       <div className="grid gap-4 sm:grid-cols-2">
         <section className="space-y-2 card p-4 text-sm">
-          <h2 className="font-semibold">Customer</h2>
-          <div>{contact?.customer_name ?? "—"}</div>
+          <h2 className="text-base">Customer</h2>
+          <div className="font-semibold">{contact?.customer_name ?? "—"}</div>
           <div className="text-muted-foreground">{contact?.customer_phone ?? ""}</div>
           <div className="pt-2 text-muted-foreground">
-            Referred by <span className="text-foreground">{b.profiles?.display_name || "promoter"}</span> · agreement v{b.agreements?.version}
+            Referred by <span className="text-foreground">{b.profiles?.display_name || "promoter"}</span> , agreement v{b.agreements?.version}
           </div>
         </section>
 
         <section className="space-y-1 card p-4 text-sm">
-          <h2 className="mb-1 font-semibold">Terms (frozen at booking)</h2>
+          <h2 className="mb-1 text-base">Terms (frozen at booking)</h2>
           <Row k="Price" v={money(b.price_minor)} />
           <Row k="Commission to promoter" v={money(b.commission_minor)} />
           <Row k={`Promly fee (${(b.fee_bps / 100).toFixed(2)}%)`} v={money(b.fee_minor)} />
-          <Row k="You pay" v={<strong>{money(b.business_total_minor)}</strong>} />
+          <div className="!my-2 border-t border-dashed border-input" />
+          <Row k="You pay" v={<span className="money">{money(b.business_total_minor)}</span>} />
           <Row k="Refund window" v={`${b.refund_window_days} days`} />
           <Row k="Payout" v={`${b.payout_days} days after verification`} />
         </section>
       </div>
 
       <section className="space-y-1 card p-4 text-sm">
-        <h2 className="mb-1 font-semibold">Timeline</h2>
+        <h2 className="mb-1 text-base">Timeline</h2>
         <Row k="Booked" v={formatDateTime(b.created_at)} />
         <Row k="Service verified" v={formatDateTime(b.verified_at)} />
         <Row k="Refund window ends" v={formatDateTime(b.refund_window_ends_at)} />
@@ -84,10 +86,10 @@ export default async function BookingDetailPage({ params }: { params: Promise<{ 
 
       <section className="space-y-2 text-sm">
         <div className="flex flex-wrap items-end justify-between gap-2">
-          <h2 className="font-semibold">Money log for this booking</h2>
+          <h2 className="text-base">Money log for this booking</h2>
           {!!ledger?.length && (
             <div className="text-xs text-muted-foreground">
-              You owe now: <span className="text-foreground">{money(owed.pending)} pending</span> ·{" "}
+              You owe now: <span className="text-foreground">{money(owed.pending)} pending</span>,{" "}
               <span className="text-foreground">{money(owed.available)} due</span>
             </div>
           )}
@@ -96,23 +98,23 @@ export default async function BookingDetailPage({ params }: { params: Promise<{ 
           Append-only: entries are never changed. A refund adds new entries that cancel the old ones.
         </p>
         {!ledger?.length && <p className="text-muted-foreground">Nothing yet. Entries appear when you verify the service.</p>}
-        {ledger?.map((e) => {
+        {!!ledger?.length && <div className="ledger">{ledger.map((e) => {
           const owes = -e.amount_minor; // business rows are negative when the business owes
           return (
-            <div key={e.id} className="flex items-center justify-between gap-3 card px-3 py-2">
+            <div key={e.id} className="flex items-center justify-between gap-3 px-4 py-2.5">
               <span>
                 {ledgerLabel(e.entry_type, e.bucket)}
                 <span className="ml-2 rounded-full bg-secondary px-2 py-0.5 text-xs text-muted-foreground">
                   {e.bucket === "pending" ? "pending" : "due"}
                 </span>
               </span>
-              <span className="shrink-0 whitespace-nowrap tabular-nums">
+              <span className="money shrink-0 font-bold">
                 {owes > 0 ? "+" : "−"}
                 {money(Math.abs(owes))} owed
               </span>
             </div>
           );
-        })}
+        })}</div>}
       </section>
     </div>
   );
@@ -121,8 +123,8 @@ export default async function BookingDetailPage({ params }: { params: Promise<{ 
 /** Plain-language description of a business ledger entry. */
 function ledgerLabel(type: string, bucket: string): string {
   if (type === "business_charge") return "Booking charge (commission + Promly fee)";
-  if (type === "release") return bucket === "pending" ? "Refund window ended → moved out of pending" : "Refund window ended → now due";
-  if (type === "reversal") return bucket === "pending" ? "Refund → pending charge cancelled" : "Refund → due charge cancelled";
+  if (type === "release") return bucket === "pending" ? "Refund window ended, moved out of pending" : "Refund window ended, now due";
+  if (type === "reversal") return bucket === "pending" ? "Refund, pending charge cancelled" : "Refund, due charge cancelled";
   return type;
 }
 

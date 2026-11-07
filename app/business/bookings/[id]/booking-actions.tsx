@@ -26,19 +26,19 @@ export function BookingActions({
   const canRefund = status === "pending" || (status === "verified" && beforePayout);
 
   return (
-    <section className="card space-y-4 border-primary/30 p-5">
+    <section className="card space-y-4 border-2 border-ink p-5 sm:p-6">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 className="text-lg font-semibold">Actions</h2>
+        <h2 className="text-xl">Actions</h2>
         <div className="text-sm text-muted-foreground">
-          Commission <span className="whitespace-nowrap font-semibold text-foreground">{commission}</span> · You pay{" "}
-          <span className="whitespace-nowrap font-semibold text-foreground">{total}</span>
+          Commission <span className="money text-foreground">{commission}</span>, you pay{" "}
+          <span className="money text-foreground">{total}</span>
         </div>
       </div>
-      <p className="rounded-lg bg-secondary/60 px-3 py-2 text-sm" role="status">
+      <p className={`rounded-[10px] px-3.5 py-2.5 text-sm font-medium ${status === "verified" && released ? "bg-marker text-ink" : "bg-secondary"}`} role="status">
         {status === "pending" && "Waiting for the appointment. Verify once the service is done."}
-        {status === "verified" && !released && "✓ Service verified — commission pending until the refund window ends."}
+        {status === "verified" && !released && "✓ Service verified. The commission is pending until the refund window ends."}
         {status === "verified" && released && "✓ Commission available to the promoter."}
-        {status === "refunded" && "Refunded — any commission was reversed."}
+        {status === "refunded" && "Refunded. Any commission was reversed."}
         {status === "cancelled" && "Cancelled."}
       </p>
 
@@ -51,7 +51,7 @@ export function BookingActions({
       )}
 
       {status === "verified" && !released && demoMode && (
-        <ActionForm action={simulateEndOfRefundWindow} className="rounded-lg border border-dashed border-[hsl(40_80%_62%)] bg-pending-bg/60 p-3">
+        <ActionForm action={simulateEndOfRefundWindow} className="rounded-2xl border border-dashed border-[hsl(40_80%_62%)] bg-pending-bg/60 p-4">
           {hidden}
           <div className="mb-2 text-sm font-semibold text-pending">Demo Mode · simulated</div>
           <SubmitButton pendingText="Simulating…" className="h-12 w-full px-6 text-base sm:w-auto">Simulate end of refund window</SubmitButton>
