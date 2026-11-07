@@ -27,7 +27,7 @@ export default async function BusinessDashboard() {
   for (const m of o.memberships) membersByCampaign.set(m.campaign_id, (membersByCampaign.get(m.campaign_id) ?? 0) + 1);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="eyebrow">Business dashboard</p>
@@ -48,27 +48,24 @@ export default async function BusinessDashboard() {
         <Stat label="Platform fees (2.75%)" value={money(t.feesMinor)} hint={`Total cost ${money(t.totalCostMinor)}`} icon={Coins} />
       </section>
 
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      {/* Secondary numbers: one quiet strip, so bookings and activity stay above the fold on a projector */}
+      <div className="card grid grid-cols-2 divide-border sm:grid-cols-4 sm:divide-x">
         {[
           { icon: CalendarClock, label: "Awaiting service", value: t.awaitingServiceCount },
           { icon: Users, label: "Promoters", value: o.memberships.length },
           { icon: Eye, label: "Link visits", value: o.clicks },
           { icon: Megaphone, label: "Live campaigns", value: o.campaigns.filter((c) => c.status === "published").length },
         ].map((k) => (
-          <div key={k.label} className="card flex items-center gap-3 p-4">
-            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-secondary text-violet-300">
-              <k.icon className="h-5 w-5" />
-            </span>
-            <div className="min-w-0">
-              <div className="text-2xl font-bold tabular-nums leading-none">{k.value}</div>
-              <div className="mt-1 truncate text-sm text-muted-foreground">{k.label}</div>
-            </div>
+          <div key={k.label} className="flex items-center gap-3 px-4 py-3">
+            <k.icon className="h-5 w-5 shrink-0 text-violet-300" />
+            <div className="text-2xl font-bold tabular-nums leading-none">{k.value}</div>
+            <div className="min-w-0 truncate text-sm text-muted-foreground">{k.label}</div>
           </div>
         ))}
       </div>
 
       <div className="grid gap-8 lg:grid-cols-3">
-        <div className="min-w-0 space-y-8 lg:col-span-2">
+        <div className="min-w-0 space-y-6 lg:col-span-2">
           <section className="min-w-0 space-y-3">
             <h2 className="text-lg font-semibold">Campaigns</h2>
             {o.campaigns.length === 0 ? (
