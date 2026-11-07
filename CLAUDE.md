@@ -48,7 +48,7 @@ Skip all of P2.
 ## Rules
 
 1. **Explain each command first.** Before running any command, say in one plain sentence what it does and why.
-2. **Hosted Supabase only, no Docker.** Never run `supabase start` or anything with `--local`.
+2. **Hosted Supabase only, no Docker.** Never run `supabase start` or anything with `--local`. **Always pass `--remote`** to `supabase db …` / `migration …` / `gen types` commands: this CLI version targets a local database by default, and another project's local Supabase may be running on this machine.
 3. **Never print secrets.** Don't show keys, tokens or passwords in chat or logs.
 4. **`.env.local` is never committed.** `.gitignore` covers `.env*.local`; keep it that way.
 5. **Commit and push after every working step.**

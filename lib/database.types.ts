@@ -64,7 +64,7 @@ export type Database = {
           payout_days: number
           refund_window_days: number
           template_version?: string
-          version: number
+          version?: number
         }
         Update: {
           allowed_channels?: string[]
@@ -345,7 +345,7 @@ export type Database = {
           business_id: string
           commission_minor?: number
           created_at?: string
-          currency: string
+          currency?: string
           current_agreement_id?: string | null
           description?: string
           id?: string
@@ -568,6 +568,38 @@ export type Database = {
             columns: ["promoter_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      time_slots: {
+        Row: {
+          business_id: string
+          created_at: string
+          duration_minutes: number
+          id: string
+          starts_at: string
+        }
+        Insert: {
+          business_id: string
+          created_at?: string
+          duration_minutes?: number
+          id?: string
+          starts_at: string
+        }
+        Update: {
+          business_id?: string
+          created_at?: string
+          duration_minutes?: number
+          id?: string
+          starts_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "time_slots_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
             referencedColumns: ["id"]
           },
         ]
