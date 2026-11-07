@@ -90,7 +90,14 @@ export function ShareTools({
             </a>
           </Button>
         )}
-        <Button type="button" variant="secondary" size="sm" onClick={() => setFullscreen(true)} disabled={!qrPng}>
+        <Button
+          type="button"
+          variant={compact ? "secondary" : "default"}
+          size="sm"
+          onClick={() => setFullscreen(true)}
+          disabled={!qrPng}
+          className={compact ? undefined : "bg-brand text-white"}
+        >
           <Maximize2 className="h-4 w-4" /> Show QR full screen
         </Button>
       </div>

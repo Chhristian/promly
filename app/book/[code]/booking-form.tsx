@@ -59,7 +59,7 @@ export function BookingForm({ code, days }: { code: string; days: { day: string;
               aria-pressed={slot === s}
               className={cn(
                 "rounded-xl border py-3 text-base font-semibold tabular-nums transition",
-                slot === s ? "bg-brand border-transparent text-white shadow-lg shadow-violet-900/40" : "border-border hover:bg-secondary",
+                slot === s ? "border-transparent bg-violet-500 text-white" : "border-border hover:bg-secondary",
               )}
             >
               {formatTime(s)}

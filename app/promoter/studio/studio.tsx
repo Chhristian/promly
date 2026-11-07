@@ -38,7 +38,7 @@ export function Studio({ campaigns, initialCampaignId }: { campaigns: StudioCamp
               role="tab"
               aria-selected={tab === k}
               onClick={() => setTab(k)}
-              className={cn("flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-medium", tab === k ? "bg-brand text-white" : "text-muted-foreground hover:text-foreground")}
+              className={cn("flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-medium transition-colors", tab === k ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground")}
             >
               <Icon className="h-4 w-4" /> {label}
             </button>

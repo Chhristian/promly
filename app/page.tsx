@@ -21,7 +21,7 @@ export default async function Home() {
             <Button asChild size="sm" variant="ghost" className="rounded-full">
               <Link href="/auth/login">Log in</Link>
             </Button>
-            <Button asChild size="sm" className="bg-brand rounded-full text-white">
+            <Button asChild size="sm" variant="secondary" className="rounded-full">
               <Link href="/auth/sign-up">Get started</Link>
             </Button>
           </div>
