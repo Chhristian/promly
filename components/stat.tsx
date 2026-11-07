@@ -14,7 +14,7 @@ export function Stat({
   hint?: React.ReactNode;
   accent?: boolean;
   icon?: LucideIcon;
-  size?: "md" | "lg";
+  size?: "md" | "lg" | "quiet";
 }) {
   return (
     <div
@@ -30,7 +30,7 @@ export function Stat({
       <div
         className={cn(
           "mt-2 font-bold tabular-nums tracking-tight",
-          size === "lg" ? "text-4xl sm:text-5xl" : "text-3xl sm:text-4xl",
+          size === "lg" ? "text-5xl tracking-[-0.03em] lg:text-6xl" : size === "quiet" ? "text-3xl font-semibold text-foreground/90" : "text-3xl sm:text-4xl",
           accent && "text-gradient",
         )}
       >

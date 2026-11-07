@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { BadgeCheck, CalendarClock, Compass, Hourglass, MousePointerClick, Sparkles, Ticket, Wallet } from "lucide-react";
+import { BadgeCheck, CalendarClock, Compass, MousePointerClick, Sparkles, Ticket, Wallet } from "lucide-react";
 import { requireRole } from "@/lib/auth";
 import { getPromoterOverview, siteUrl } from "@/lib/promoter-data";
 import { formatMinor, type Currency } from "@/lib/money";
@@ -21,6 +21,11 @@ export default async function PromoterDashboard() {
   const currencies = Object.keys(o.earnings).length ? (Object.keys(o.earnings) as Currency[]) : (["NOK"] as Currency[]);
   const verified = o.bookings.filter((b) => b.status === "verified");
   const multi = currencies.length > 1;
+  // Next real payout date among commissions that are already available.
+  const nextPayout = o.bookings
+    .filter((b) => b.status === "verified" && b.released_at && b.payout_at && new Date(b.payout_at).getTime() > Date.now())
+    .map((b) => b.payout_at!)
+    .sort()[0];
   const covers = await coverUrls(o.memberships.flatMap((m) => (m.campaigns ? [m.campaigns] : [])));
 
   return (
@@ -47,7 +52,7 @@ export default async function PromoterDashboard() {
               <Stat
                 label={`Available${multi ? ` (${cur})` : ""}`}
                 value={formatMinor(o.earnings[cur]?.available ?? 0, cur)}
-                hint="Ready for payout"
+                hint={nextPayout ? `Ready for payout · paid out ${formatDate(nextPayout)}` : "Ready for payout"}
                 accent
                 icon={Wallet}
                 size="lg"
@@ -61,7 +66,7 @@ export default async function PromoterDashboard() {
             label={`Pending${multi ? ` (${cur})` : ""}`}
             value={formatMinor(o.earnings[cur]?.pending ?? 0, cur)}
             hint="Verified, refund window open"
-            icon={Hourglass}
+            size="quiet"
           />
         ))}
         <div className="grid grid-cols-2 gap-3 sm:col-span-2 lg:col-span-1 lg:grid-cols-1">
