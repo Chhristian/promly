@@ -72,3 +72,48 @@ Side-by-side screenshots of all 36 captures (1280×720 and phone) were taken on 
 | Promoter dashboard | All-caps eyebrow, 48 px Available | ≈60 px hero Available with the payout date; Pending quieter |
 | Customer booking | Gradient "Pick a time" looked clickable | Disabled until a time is chosen |
 | Everywhere | Many gradients, all-caps labels, wrapping amounts | One primary action per screen, sentence case, tighter headings, amounts on one line |
+
+---
+
+# Full redesign ("Payout slip"), branch `redesign`
+
+Brief: `docs/DESIGN.md`. Product logic, money maths, database/RLS, the stage flow and realtime behaviour are unchanged. Every animation still answers a real database event.
+
+## What changed
+
+- **Theme:** dark navy with purple→blue gradients became a light, cool paper background with ink text. It reads better on a projector.
+- **Brand colours:**
+  - one cobalt for the brand and the primary action
+  - highlighter yellow only for money that is yours, fresh rows and the selected time
+  - green for paid, amber for pending
+- **Type:** Geist became **Schibsted Grotesk**, drawn for the Oslo media house Schibsted. Headings are ExtraBold with tight tracking, and money is big and black.
+- **Logo:** a cobalt tile with a lowercase **p** and a yellow "punched coin" dot, and the lowercase `promly` wordmark in ink (no gradient).
+- **Layout:**
+  - **Lists:** bookings, campaigns, the money log and promoters are *ledgers* (one panel with hairline rows) instead of stacks of floating cards.
+  - **Activity:** a timeline with a rail.
+  - **Hero element:** each screen has one dark "payout slip".
+- **Screens:**
+  - **Landing:** a typographic hero, "Share a link. Get paid when they show up." Next to it is an *example* payout slip computed with the real money functions (500 kr booking → you earn 100 kr; the business pays 113,75 kr). Below are three steps and the two sides.
+  - **Promoter dashboard:** the payout slip shows Available as a 72 px figure on a highlighter block, with Pending, clicks and bookings in the same slip.
+  - **Business dashboard:** a statement panel with four figures divided by hairlines, plus a row of counts.
+  - **Explore:** ticket-stub cards with a perforation and "You earn" as the big figure.
+  - **Promoter campaign page:** joined campaigns get a compact header, so the link and QR actions stay above the fold. Otherwise the cover, price and an ink "You earn" panel show.
+  - **Booking detail and campaign editor:** the action panel has an ink border (Verify / Simulate / Publish), terms look like a receipt, and the money log is a ledger.
+  - **Customer booking:** the day picker is ink, the selected time is highlighter yellow, and the big Book button is disabled until a time is chosen. The confirmation shows the time on an ink ticket.
+  - **Studio and the promo image PNG:**
+    - the ink background replaces navy with a violet glow
+    - the price sits on a highlighter block
+    - the new mark appears
+    - covers without a photo are flat tints
+    - the business line is no longer in capitals
+- **Motion:**
+  - A live row now draws a yellow marker band in from the left (scaleX, 300 ms) that fades over 2.4 s.
+  - On the money moment, the Available figure pops once and its highlighter draws in.
+  - Toasts are white (the money toast is ink with a yellow icon).
+  - With reduced motion there's no movement, only fades.
+- **Removed:** gradient text, glowing shadows, purple, monospace link text, "→" in copy, and "·"-joined meta lines (now commas).
+
+## Checks
+
+- Unit tests 19/19, `npm run build` OK after every batch.
+- Full e2e suite 8/8 against the Vercel preview. The tests needed no wording changes. A helper (`tests/e2e/preview-access.ts`) attaches the short-lived local Vercel token only to requests for the preview, so protected previews can be tested without disabling Deployment Protection.

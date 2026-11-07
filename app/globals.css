@@ -165,7 +165,7 @@
   }
   .money-pop .marked::before,
   .money-pop .money-mark::before {
-    animation: marker-draw var(--dur-slow) var(--ease-out) 120ms both;
+    animation: marker-draw var(--dur-slow) var(--ease-out) both;
   }
   @keyframes money-scale {
     0% {

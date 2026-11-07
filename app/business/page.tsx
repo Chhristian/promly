@@ -42,11 +42,11 @@ export default async function BusinessDashboard() {
 
       {/* The statement: four figures in one panel, small counts underneath. Labels come before amounts. */}
       <section className="ledger">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 [&>*]:border-border max-sm:[&>*+*]:border-t sm:max-lg:[&>*:nth-child(n+3)]:border-t sm:[&>*:nth-child(even)]:border-l lg:[&>*+*]:border-l">
-          <Stat className="p-5" label="Verified sales" value={money(t.salesMinor)} hint={`${t.salesCount} booking${t.salesCount === 1 ? "" : "s"}`} />
-          <Stat className="p-5" label="Commission pending" value={money(t.commissionPendingMinor)} hint="Until the refund window ends" />
-          <Stat className="p-5" label="Commission available" value={money(t.commissionAvailableMinor)} hint={t.nextPayoutAt ? `Next payout ${formatDate(t.nextPayoutAt)}` : "Owed to promoters"} />
-          <Stat className="p-5" label="Platform fees (2.75%)" value={money(t.feesMinor)} hint={`Total cost ${money(t.totalCostMinor)}`} />
+        <div className="grid grid-cols-2 lg:grid-cols-4 [&>*]:border-border [&>*:nth-child(even)]:border-l max-lg:[&>*:nth-child(n+3)]:border-t lg:[&>*+*]:border-l">
+          <Stat className="p-4 sm:p-5" label="Verified sales" value={money(t.salesMinor)} hint={`${t.salesCount} booking${t.salesCount === 1 ? "" : "s"}`} />
+          <Stat className="p-4 sm:p-5" label="Commission pending" value={money(t.commissionPendingMinor)} hint="Until the refund window ends" />
+          <Stat className="p-4 sm:p-5" label="Commission available" value={money(t.commissionAvailableMinor)} hint={t.nextPayoutAt ? `Next payout ${formatDate(t.nextPayoutAt)}` : "Owed to promoters"} />
+          <Stat className="p-4 sm:p-5" label="Platform fees (2.75%)" value={money(t.feesMinor)} hint={`Total cost ${money(t.totalCostMinor)}`} />
         </div>
         <div className="grid grid-cols-2 bg-secondary/60 sm:grid-cols-4">
           {[
@@ -126,8 +126,9 @@ export default async function BusinessDashboard() {
                         <div className="text-sm text-muted-foreground">
                           {formatSlot(b.slot_start)}, commission {money(b.commission_minor)}
                         </div>
+                        <div className="mt-1.5 sm:hidden"><StatusBadge status={stage.key} label={stage.label} /></div>
                       </div>
-                      <StatusBadge status={stage.key} label={stage.label} />
+                      <span className="hidden sm:inline-flex"><StatusBadge status={stage.key} label={stage.label} /></span>
                     </Link>
                   </Highlight>
                 );
