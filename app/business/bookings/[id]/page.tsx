@@ -27,14 +27,28 @@ export default async function BookingDetailPage({ params }: { params: Promise<{ 
   const beforePayout = !b.payout_at || new Date(b.payout_at).getTime() > now;
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
+    <div className="mx-auto max-w-3xl space-y-5">
       <div>
         <Link href="/business/bookings" className="text-sm text-muted-foreground hover:text-foreground">← Bookings</Link>
-        <h1 className="mt-1 flex flex-wrap items-center gap-3 text-2xl font-bold">
+        <h1 className="mt-1 flex flex-wrap items-center gap-3 text-3xl font-bold tracking-tight">
           {b.campaigns?.service_name} <StatusBadge status={stage.key} label={stage.label} />
         </h1>
-        <p className="text-sm text-muted-foreground">{formatSlot(b.slot_start)}</p>
+        <p className="mt-1 text-muted-foreground">
+          {formatSlot(b.slot_start)} · {contact?.customer_name ?? "Customer"} · via {b.profiles?.display_name || "promoter"}
+        </p>
       </div>
+
+      {/* The action is the point of this screen: keep it above the fold. */}
+      <BookingActions
+        bookingId={b.id}
+        status={b.status}
+        released={!!b.released_at}
+        windowOver={windowOver}
+        beforePayout={beforePayout}
+        demoMode={process.env.DEMO_MODE === "true"}
+        commission={money(b.commission_minor)}
+        total={money(b.business_total_minor)}
+      />
 
       <div className="grid gap-4 sm:grid-cols-2">
         <section className="space-y-2 card p-4 text-sm">
@@ -67,15 +81,6 @@ export default async function BookingDetailPage({ params }: { params: Promise<{ 
         {b.refunded_at && <Row k="Refunded" v={formatDateTime(b.refunded_at)} />}
       </section>
 
-      <BookingActions
-        bookingId={b.id}
-        status={b.status}
-        released={!!b.released_at}
-        windowOver={windowOver}
-        beforePayout={beforePayout}
-        demoMode={process.env.DEMO_MODE === "true"}
-      />
-
       <section className="space-y-2 text-sm">
         <div className="flex flex-wrap items-end justify-between gap-2">
           <h2 className="font-semibold">Money log for this booking</h2>
@@ -100,7 +105,7 @@ export default async function BookingDetailPage({ params }: { params: Promise<{ 
                   {e.bucket === "pending" ? "pending" : "due"}
                 </span>
               </span>
-              <span className="tabular-nums">
+              <span className="shrink-0 whitespace-nowrap tabular-nums">
                 {owes > 0 ? "+" : "−"}
                 {money(Math.abs(owes))} owed
               </span>
@@ -124,7 +129,7 @@ function Row({ k, v }: { k: string; v: React.ReactNode }) {
   return (
     <div className="flex justify-between gap-4">
       <span className="text-muted-foreground">{k}</span>
-      <span className="text-right">{v}</span>
+      <span className="whitespace-nowrap text-right tabular-nums">{v}</span>
     </div>
   );
 }
