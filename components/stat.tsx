@@ -62,7 +62,7 @@ export function StatusBadge({ status, label }: { status: string; label?: string 
   return (
     <span
       className={cn(
-        "inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset",
+        "inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-semibold tracking-normal ring-1 ring-inset",
         STATUS_STYLES[status] ?? STATUS_STYLES.draft,
       )}
     >
