@@ -42,6 +42,13 @@
   * {
     @apply border-border;
   }
+  /* Size-specific tracking: tighten large text, keep body at 0 */
+  h1 {
+    letter-spacing: -0.025em;
+  }
+  h2 {
+    letter-spacing: -0.012em;
+  }
   body {
     @apply bg-background text-foreground min-h-screen;
     background-image: radial-gradient(ellipse 80% 50% at 50% -10%, hsl(262 83% 66% / 0.18), transparent),
@@ -59,9 +66,6 @@
   }
   .card {
     @apply rounded-2xl border border-border/80 bg-card/70 shadow-[0_1px_0_0_hsl(0_0%_100%/0.04)_inset] backdrop-blur-sm;
-  }
-  .eyebrow {
-    @apply text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground;
   }
   .skeleton {
     @apply relative overflow-hidden rounded-xl bg-secondary/60;

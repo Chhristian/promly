@@ -23,8 +23,7 @@ export default async function ExplorePage() {
   return (
     <div className="space-y-6">
       <div>
-        <p className="eyebrow">Marketplace</p>
-        <h1 className="mt-1 text-3xl font-bold tracking-tight sm:text-4xl">Explore campaigns</h1>
+        <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">Explore campaigns</h1>
         <p className="mt-1 text-muted-foreground">Local businesses looking for customers. Join one, share your link, earn on every verified booking.</p>
       </div>
       {!campaigns?.length ? (
@@ -65,7 +64,7 @@ export default async function ExplorePage() {
                     <div className="mt-5 flex items-end justify-between gap-3">
                       <div className="text-sm text-muted-foreground">Price {formatMinor(c.price_minor, cur)}</div>
                       <div className="text-right">
-                        <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">You earn</div>
+                        <div className="text-sm text-muted-foreground">You earn</div>
                         <div className="text-gradient text-3xl font-bold tabular-nums">{formatMinor(c.commission_minor, cur)}</div>
                       </div>
                     </div>

@@ -27,8 +27,7 @@ export default async function PromoterDashboard() {
     <div className="space-y-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="eyebrow">Promoter dashboard</p>
-          <h1 className="mt-1 text-3xl font-bold tracking-tight sm:text-4xl">Hi {profile.display_name || "there"}</h1>
+          <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">Hi {profile.display_name || "there"}</h1>
           <p className="mt-1 text-muted-foreground">Share your links. Every verified booking earns you the full commission.</p>
         </div>
         <div className="flex gap-2">

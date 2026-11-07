@@ -53,7 +53,7 @@ export function BookingActions({
       {status === "verified" && !released && demoMode && (
         <ActionForm action={simulateEndOfRefundWindow} className="rounded-lg border border-dashed border-amber-500/50 bg-amber-500/5 p-3">
           {hidden}
-          <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-amber-300">Demo Mode · simulated</div>
+          <div className="mb-2 text-sm font-semibold text-amber-300">Demo Mode · simulated</div>
           <SubmitButton pendingText="Simulating…" className="h-12 w-full px-6 text-base sm:w-auto">Simulate end of refund window</SubmitButton>
           <p className="mt-1 text-xs text-muted-foreground">
             Skips the waiting time so the commission becomes available now. No real money moves.

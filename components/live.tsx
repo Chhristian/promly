@@ -238,8 +238,8 @@ export function Highlight({ ids, children, className }: { ids: (string | number 
   return (
     <div className={cn("relative rounded-2xl", isNew && "live-new", className)}>
       {isNew && (
-        <span className="bg-brand absolute -right-1 -top-2 z-10 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white shadow">
-          new
+        <span className="bg-brand absolute -right-1 -top-2 z-10 rounded-full px-2 py-0.5 text-[11px] font-semibold text-white shadow">
+          New
         </span>
       )}
       {children}
