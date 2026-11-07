@@ -13,7 +13,7 @@ Built for the **Oslo Sprint hackathon**. Deadline: **Sunday 8 Nov 2026, 14:00**.
 - Next.js (App Router) + TypeScript
 - Tailwind CSS + shadcn/ui (`components/ui`, config in `components.json`)
 - Zod for validating input
-- Supabase, **hosted project only**
+- Supabase, **hosted project only**: project `promly`, ref `hycenbylmiaxsvcrtdsh`, region `eu-central-1` (Frankfurt), org `Promly`. Auth settings live in `supabase/config.toml` and are applied with `npx supabase config push`.
 - Vercel for hosting and deploys
 - GitHub for the code: https://github.com/Chhristian/promly
 
