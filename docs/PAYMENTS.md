@@ -13,6 +13,8 @@ feature flag `PAYMENTS_ENABLED`. With the flag off, the app behaves exactly as b
    - **After** 14 days the promoter keeps the commission and Promly keeps the fee. Later refunds or claims are between
      the business and its customer.
    - Only exception: an **admin-only fraud clawback** with a required written reason, recorded in the ledger.
+     The promoter's commission is reversed (netted against later payouts if already paid out), and the 2.75% fee is
+     credited back to the business on its next invoice.
 3. **Statuses, each with a date:** Pending (inside the 14 days) → Final → Invoiced → Paid by business → Paid out.
 4. **One Stripe invoice per business per month.** A line per booking: the commission that became final, plus Promly's
    2.75% fee on the booking price. Stripe-hosted invoice page, due in 14 days, **bank transfer first, card as a
@@ -27,9 +29,27 @@ feature flag `PAYMENTS_ENABLED`. With the flag off, the app behaves exactly as b
    - Every Stripe call carries an idempotency key.
    - Minimum payout 300 NOK / 30 EUR: Promly transfers every month (so it never holds promoter money past the
      run), and the minimum applies only to the payout from the promoter's Stripe balance to their bank.
-6. **Payouts are 18+** (Stripe requires it). Promoters confirm their date of birth at sign-up and before payout setup.
+6. **Age.** Promoters confirm an age band at sign-up: **16-17** or **18+** (under 16 can't use Promly). No birth dates
+   are stored; Stripe verifies age during onboarding.
+   - 18+ promoters are paid to **their own** Stripe account.
+   - 16-17 promoters can join only **16+ campaigns**, and only after a **parent or guardian** has completed Stripe
+     onboarding as the payout account holder and confirmed consent (timestamp stored). Promly never holds money for
+     someone it can't pay.
+   - Enforced in the database (visibility rules + the join trigger), not just in the UI.
 7. **Agreement template:** these terms are added as template version `promly-standard-v2`. The label
    "Agreement template, to be reviewed by a lawyer before real use" stays.
+
+## Campaign age ratings
+
+- Each campaign is **16+** or **18+**, chosen by the business. Default **18+**; every campaign created before this
+  change is 18+.
+- Age-restricted campaigns are **always 18+** and can't be lowered: businesses in the nightlife, club or alcohol
+  categories, and any campaign the business marks as age-restricted (that mark can't be removed).
+- A campaign can't be raised from 16+ to 18+ while 16-17 promoters have joined it, and a business with 16+ campaigns
+  can't switch to an age-restricted category.
+- 16-17 promoters don't see 18+ campaigns (or their photos) and can't join them.
+- Existing promoter accounts have no age band yet; they keep seeing and joining what they did before. Payout setup
+  asks for the age band first.
 
 ## How the money moves
 
@@ -85,4 +105,14 @@ Stripe calls this a marketplace with **separate charges and transfers**:
 - VAT (MVA) on Promly's 2.75% fee.
 - Is the commission line Promly's own revenue, or money collected on the promoter's behalf?
 - Reporting payments to individual promoters to Skatteetaten.
-- Storing promoters' date of birth (we keep it in an owner-only table; a "confirmed 18+" flag would be less data).
+- Can a parent or guardian receive payouts for a minor (16-17)? Who is taxed on that income, and what consent wording
+  is needed?
+- Fraud clawback: the commission the business paid for a fraudulent booking is reversed from the promoter but not yet
+  returned to the business (only the fee is credited). Should it be?
+
+## Phase 2 (app code, after the migration)
+
+- Business campaign editor: 16+ / 18+ choice and an "age-restricted" tick (locked to 18+ where required).
+- Promoter sign-up: age band (16-17 / 18+). Payout setup: own account (18+) or guardian onboarding + consent (16-17).
+- Fraud clawback admin action; the fee credit appears on the business's next invoice automatically.
+- Billing tab, Earnings statuses, webhook, Demo Control Center test-mode buttons, tests (see the morning report).

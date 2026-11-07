@@ -1,9 +1,14 @@
 -- Payments and settlement (docs/PAYMENTS.md). Stripe TEST MODE, behind PAYMENTS_ENABLED.
 --
--- ADDITIVE: new tables, new server-only functions, one new nullable column
--- (bookings.final_at) and one new trigger that only acts when an invoice is
--- overdue. Existing functions keep their behaviour:
---   * ledger_entries / notifications checks: same values plus new ones.
+-- ADDITIVE: new tables, new server-only functions, new columns
+-- (bookings.final_at; campaigns.age_rating default '18+' and age_restricted)
+-- and new triggers that only act on overdue invoices or age rules.
+-- Existing behaviour is unchanged for everyone who isn't a 16-17 promoter:
+--   * ledger_entries / notifications / business category checks: same values plus new ones.
+--   * every existing campaign becomes 18+; promoters without an age band (all
+--     existing accounts) see and join exactly what they did before.
+--   * campaigns visibility policy, is_published_campaign, memberships_before_insert:
+--     same rules plus "16-17 promoters: 16+ campaigns only (and a guardian payout account to join)".
 --   * agreements_before_write: still forces 'promly-standard-v1' unless the
 --     server explicitly asks for 'promly-standard-v2'.
 --   * purge_demo_data: first clears demo invoices/payouts (none exist today),
@@ -39,21 +44,27 @@ alter table public.bookings add column final_at timestamptz;
 -- 2. Tables
 -- ===========================================================================
 
--- Date of birth, readable only by its owner (profiles are readable by every
--- logged-in user, so it can't live there). Written only by set_date_of_birth.
-create table public.profile_private (
-  profile_id    uuid primary key references public.profiles (id) on delete cascade,
-  date_of_birth date not null check (date_of_birth > date '1900-01-01'),
-  confirmed_at  timestamptz not null default now()
+-- Promoter age band (no birth dates: Stripe verifies age during onboarding).
+-- Readable only by its owner. Written only by set_age_band.
+-- A promoter without a row is a legacy account and is treated like 18+ for visibility.
+create table public.promoter_age (
+  profile_id   uuid primary key references public.profiles (id) on delete cascade,
+  age_band     text not null check (age_band in ('16-17', '18+')),
+  confirmed_at timestamptz not null default now()
 );
 
--- Promoter payout account. ONLY the Stripe account id and payouts status.
+-- Promoter payout account. Only the Stripe account id, payouts status, and who
+-- holds it: the promoter (18+), or a parent/guardian for a 16-17 promoter,
+-- with the time the guardian confirmed consent. Never bank details or ID.
 create table public.stripe_accounts (
-  profile_id        uuid primary key references public.profiles (id) on delete cascade,
-  stripe_account_id text not null unique check (stripe_account_id ~ '^acct_[A-Za-z0-9]+$'),
-  payouts_enabled   boolean not null default false,
-  created_at        timestamptz not null default now(),
-  updated_at        timestamptz not null default now()
+  profile_id          uuid primary key references public.profiles (id) on delete cascade,
+  stripe_account_id   text not null unique check (stripe_account_id ~ '^acct_[A-Za-z0-9]+$'),
+  payouts_enabled     boolean not null default false,
+  holder              text not null default 'self' check (holder in ('self', 'guardian')),
+  guardian_consent_at timestamptz,
+  created_at          timestamptz not null default now(),
+  updated_at          timestamptz not null default now(),
+  constraint stripe_accounts_guardian_consent check ((holder = 'guardian') = (guardian_consent_at is not null))
 );
 
 -- Business billing: the Stripe Customer that receives Promly's invoices.
@@ -70,7 +81,7 @@ create table public.business_invoices (
   period_month       date not null check (extract(day from period_month) = 1),
   currency           text not null check (currency in ('NOK', 'EUR')),
   commission_minor   bigint not null check (commission_minor >= 0),
-  fee_minor          bigint not null check (fee_minor >= 0),
+  fee_minor          bigint not null, -- net of fee credits from fraud clawbacks
   total_minor        bigint not null check (total_minor > 0),
   status             text not null default 'draft'
                        check (status in ('draft', 'open', 'paid', 'void', 'uncollectible')),
@@ -90,21 +101,27 @@ create unique index business_invoices_one_per_month
   on public.business_invoices (business_id, period_month) where status <> 'void';
 create index business_invoices_business_idx on public.business_invoices (business_id);
 
--- A line per booking. `active` turns false only if the invoice is voided,
--- so the booking can go on a later invoice; a booking is on at most one active line.
+-- A line per booking ('booking': commission + fee), plus 'fee_credit' lines that
+-- give a business back the fee of a booking reversed by a fraud clawback.
+-- `active` turns false only if the invoice is voided, so the line can go on a
+-- later invoice; at most one active line of each kind per booking.
 create table public.invoice_lines (
   id               bigint generated always as identity primary key,
   invoice_id       uuid not null references public.business_invoices (id) on delete cascade,
   business_id      uuid not null references public.businesses (id) on delete restrict,
   booking_id       uuid not null references public.bookings (id) on delete restrict,
   promoter_id      uuid not null references public.profiles (id) on delete restrict,
-  commission_minor bigint not null check (commission_minor >= 0),
-  fee_minor        bigint not null check (fee_minor >= 0),
+  kind             text not null default 'booking' check (kind in ('booking', 'fee_credit')),
+  commission_minor bigint not null,
+  fee_minor        bigint not null,
   currency         text not null check (currency in ('NOK', 'EUR')),
   active           boolean not null default true,
-  created_at       timestamptz not null default now()
+  created_at       timestamptz not null default now(),
+  constraint invoice_lines_amounts check (
+    (kind = 'booking' and commission_minor >= 0 and fee_minor >= 0)
+    or (kind = 'fee_credit' and commission_minor = 0 and fee_minor < 0))
 );
-create unique index invoice_lines_one_active_per_booking on public.invoice_lines (booking_id) where active;
+create unique index invoice_lines_one_active_per_booking on public.invoice_lines (booking_id, kind) where active;
 create index invoice_lines_invoice_idx on public.invoice_lines (invoice_id);
 create index invoice_lines_promoter_idx on public.invoice_lines (promoter_id);
 
@@ -122,6 +139,8 @@ create table public.clawbacks (
   admin_id     uuid not null references public.profiles (id) on delete restrict,
   reason       text not null check (char_length(btrim(reason)) between 10 and 1000),
   amount_minor bigint not null check (amount_minor > 0),
+  -- The 2.75% fee to credit back on the business's next invoice (0 if the booking was never invoiced).
+  fee_credit_minor bigint not null default 0 check (fee_credit_minor >= 0),
   currency     text not null check (currency in ('NOK', 'EUR')),
   created_at   timestamptz not null default now()
 );
@@ -175,18 +194,18 @@ create table public.stripe_events (
 -- ===========================================================================
 -- 3. Privileges and RLS (read through policies; all writes are server-only)
 -- ===========================================================================
-revoke all on public.profile_private, public.stripe_accounts, public.stripe_customers,
+revoke all on public.promoter_age, public.stripe_accounts, public.stripe_customers,
   public.business_invoices, public.invoice_lines, public.billing_paused_campaigns,
   public.clawbacks, public.payouts, public.payout_items, public.stripe_events
   from anon, authenticated;
 
-grant select on public.profile_private, public.stripe_accounts, public.stripe_customers,
+grant select on public.promoter_age, public.stripe_accounts, public.stripe_customers,
   public.business_invoices, public.invoice_lines, public.billing_paused_campaigns,
   public.clawbacks, public.payouts, public.payout_items
   to authenticated;
 -- stripe_events: no access for anyone but the server.
 
-alter table public.profile_private          enable row level security;
+alter table public.promoter_age             enable row level security;
 alter table public.stripe_accounts          enable row level security;
 alter table public.stripe_customers         enable row level security;
 alter table public.business_invoices        enable row level security;
@@ -197,7 +216,7 @@ alter table public.payouts                  enable row level security;
 alter table public.payout_items             enable row level security;
 alter table public.stripe_events            enable row level security;
 
-create policy "profile_private: own" on public.profile_private
+create policy "promoter_age: own" on public.promoter_age
   for select to authenticated using (profile_id = (select auth.uid()));
 create policy "stripe_accounts: own" on public.stripe_accounts
   for select to authenticated using (profile_id = (select auth.uid()));
@@ -267,43 +286,172 @@ create trigger campaigns_billing_hold
   execute function public.campaigns_billing_hold();
 
 -- ===========================================================================
+-- 5b. Age ratings: campaigns are 16+ or 18+ (default 18+, so every existing
+--     campaign becomes 18+). Age-restricted categories and campaigns are always 18+.
+--     16-17 promoters only see and join 16+ campaigns (RLS + join trigger).
+-- ===========================================================================
+alter table public.businesses
+  drop constraint businesses_category_check,
+  add constraint businesses_category_check check (category in (
+    'barbershop', 'beauty', 'restaurant', 'experience', 'water_sports',
+    'jet_ski', 'boat_tour', 'fitness', 'other',
+    'nightlife', 'club', 'alcohol'));
+
+create function public.is_age_restricted_category(p_category text)
+returns boolean language sql immutable set search_path = '' as $$
+  select p_category in ('nightlife', 'club', 'alcohol');
+$$;
+
+alter table public.campaigns
+  add column age_rating     text not null default '18+' check (age_rating in ('16+', '18+')),
+  add column age_restricted boolean not null default false;
+
+grant insert (age_rating, age_restricted) on public.campaigns to authenticated;
+grant update (age_rating, age_restricted) on public.campaigns to authenticated;
+
+create function public.promoter_is_minor(p_profile_id uuid)
+returns boolean language sql stable security definer set search_path = '' as $$
+  select exists (select 1 from public.promoter_age pa
+                 where pa.profile_id = p_profile_id and pa.age_band = '16-17');
+$$;
+
+-- Can the logged-in user see a campaign with this rating? Only 16-17 promoters are limited.
+create function public.can_see_age_rating(p_age_rating text)
+returns boolean language sql stable security definer set search_path = '' as $$
+  select p_age_rating = '16+' or not public.promoter_is_minor((select auth.uid()));
+$$;
+
+create function public.campaigns_age_rating()
+returns trigger language plpgsql security definer set search_path = '' as $$
+declare
+  v_category text;
+begin
+  if tg_op = 'UPDATE' and old.age_restricted and not new.age_restricted then
+    raise exception 'age_restriction_cannot_be_removed';
+  end if;
+  select b.category into v_category from public.businesses b where b.id = new.business_id;
+  if (new.age_restricted or public.is_age_restricted_category(v_category)) and new.age_rating <> '18+' then
+    raise exception 'age_restricted_campaign_is_18_plus';
+  end if;
+  if tg_op = 'UPDATE' and old.age_rating = '16+' and new.age_rating = '18+'
+     and exists (select 1 from public.campaign_memberships m
+                 join public.promoter_age pa on pa.profile_id = m.promoter_id
+                 where m.campaign_id = new.id and pa.age_band = '16-17') then
+    raise exception 'minor_promoters_joined';
+  end if;
+  return new;
+end $$;
+
+create trigger campaigns_age_rating
+  before insert or update of age_rating, age_restricted on public.campaigns
+  for each row execute function public.campaigns_age_rating();
+
+-- A business can't move to an age-restricted category while it has 16+ campaigns.
+create function public.businesses_age_category()
+returns trigger language plpgsql security definer set search_path = '' as $$
+begin
+  if public.is_age_restricted_category(new.category)
+     and exists (select 1 from public.campaigns c where c.business_id = new.id and c.age_rating = '16+') then
+    raise exception 'campaigns_rated_16_plus';
+  end if;
+  return new;
+end $$;
+
+create trigger businesses_age_category
+  before update of category on public.businesses
+  for each row execute function public.businesses_age_category();
+
+-- Visibility: same rule as before, except 16-17 promoters don't see 18+ campaigns.
+alter policy "campaigns: published, own, or joined" on public.campaigns
+  using ((status = 'published' and public.can_see_age_rating(age_rating))
+         or public.is_business_owner(business_id)
+         or public.is_campaign_member(id));
+
+-- Campaign photos follow the same rule (unchanged for everyone except 16-17 promoters).
+create or replace function public.is_published_campaign(p_campaign_id uuid)
+returns boolean language sql stable security definer set search_path = '' as $$
+  select exists (select 1 from public.campaigns c
+                 where c.id = p_campaign_id and c.status = 'published'
+                   and public.can_see_age_rating(c.age_rating));
+$$;
+
+-- Joining: same as before (Jakob's version), plus the age rules for 16-17 promoters:
+-- 16+ campaigns only, and only once a parent/guardian holds the payout account and consented.
+create or replace function public.memberships_before_insert()
+returns trigger language plpgsql security definer set search_path = '' as $$
+begin
+  if not exists (select 1 from public.agreements a
+                 where a.id = new.agreement_id and a.campaign_id = new.campaign_id
+                   and a.business_accepted_at is not null) then
+    raise exception 'invalid_agreement_for_campaign';
+  end if;
+  if exists (select 1 from public.campaigns c join public.businesses b on b.id = c.business_id
+             where c.id = new.campaign_id and b.owner_id = new.promoter_id) then
+    raise exception 'cannot_promote_own_business';
+  end if;
+  if public.promoter_is_minor(new.promoter_id) then
+    if (select c.age_rating from public.campaigns c where c.id = new.campaign_id) <> '16+' then
+      raise exception 'campaign_is_18_plus';
+    end if;
+    if not exists (select 1 from public.stripe_accounts s
+                   where s.profile_id = new.promoter_id and s.holder = 'guardian'
+                     and s.guardian_consent_at is not null and s.payouts_enabled) then
+      raise exception 'guardian_payout_account_required';
+    end if;
+  end if;
+  new.promoter_accepted_at := now();
+  return new;
+end $$;
+
+-- ===========================================================================
 -- 6. Server-only money functions
 -- ===========================================================================
 
--- 18+ check (rule 6). Stores the date of birth for the acting user only.
-create function public.set_date_of_birth(p_actor_id uuid, p_date_of_birth date)
+-- Age band (rule 6). The acting promoter confirms "16-17" or "18+". Under 16 can't use Promly.
+-- It can go up (a 16-17 promoter turns 18), never down.
+create function public.set_age_band(p_actor_id uuid, p_age_band text)
 returns void language plpgsql set search_path = '' as $$
 begin
-  if p_date_of_birth is null or p_date_of_birth > (current_date - interval '18 years')::date then
-    raise exception 'under_18';
+  if p_age_band is null or p_age_band not in ('16-17', '18+') then
+    raise exception 'invalid_age_band';
   end if;
-  insert into public.profile_private (profile_id, date_of_birth)
-  values (p_actor_id, p_date_of_birth)
-  on conflict (profile_id) do update
-    set date_of_birth = excluded.date_of_birth, confirmed_at = now();
+  if not exists (select 1 from public.profiles p where p.id = p_actor_id and p.role = 'promoter') then
+    raise exception 'not_a_promoter';
+  end if;
+  if p_age_band = '16-17' and exists (select 1 from public.promoter_age pa
+                                      where pa.profile_id = p_actor_id and pa.age_band = '18+') then
+    raise exception 'age_band_cannot_go_down';
+  end if;
+  insert into public.promoter_age (profile_id, age_band) values (p_actor_id, p_age_band)
+  on conflict (profile_id) do update set age_band = excluded.age_band, confirmed_at = now();
 end $$;
 
-create function public.is_adult(p_profile_id uuid)
-returns boolean language sql stable set search_path = '' as $$
-  select exists (select 1 from public.profile_private pp
-                 where pp.profile_id = p_profile_id
-                   and pp.date_of_birth <= (current_date - interval '18 years')::date);
-$$;
-
--- Promoter payout account: created only for an adult promoter; status from account.updated.
-create function public.save_stripe_account(p_profile_id uuid, p_stripe_account_id text, p_payouts_enabled boolean)
+-- Payout account (rules 5 + 6): 18+ promoters use their own Stripe account; a 16-17
+-- promoter's account is held by a parent/guardian who confirmed consent.
+-- Status updates come from account.updated.
+create function public.save_stripe_account(p_profile_id uuid, p_stripe_account_id text, p_payouts_enabled boolean,
+                                           p_holder text, p_guardian_consent_at timestamptz)
 returns public.stripe_accounts language plpgsql set search_path = '' as $$
 declare
-  v public.stripe_accounts;
+  v      public.stripe_accounts;
+  v_band text;
 begin
   if not exists (select 1 from public.profiles p where p.id = p_profile_id and p.role = 'promoter') then
     raise exception 'not_a_promoter';
   end if;
-  if not public.is_adult(p_profile_id) then
-    raise exception 'under_18';
+  select pa.age_band into v_band from public.promoter_age pa where pa.profile_id = p_profile_id;
+  if v_band is null then
+    raise exception 'age_band_required';
   end if;
-  insert into public.stripe_accounts (profile_id, stripe_account_id, payouts_enabled)
-  values (p_profile_id, p_stripe_account_id, coalesce(p_payouts_enabled, false))
+  if v_band = '18+' and p_holder is distinct from 'self' then
+    raise exception 'adult_uses_own_account';
+  end if;
+  if v_band = '16-17' and (p_holder is distinct from 'guardian' or p_guardian_consent_at is null) then
+    raise exception 'guardian_consent_required';
+  end if;
+  insert into public.stripe_accounts (profile_id, stripe_account_id, payouts_enabled, holder, guardian_consent_at)
+  values (p_profile_id, p_stripe_account_id, coalesce(p_payouts_enabled, false), p_holder,
+          case when p_holder = 'guardian' then p_guardian_consent_at end)
   on conflict (profile_id) do update
     set payouts_enabled = excluded.payouts_enabled, updated_at = now()
     where public.stripe_accounts.stripe_account_id = excluded.stripe_account_id
@@ -470,26 +618,38 @@ begin
     raise exception 'business_not_found';
   end if;
 
+  -- Charges: final, not yet invoiced, not clawed back.
   select coalesce(sum(b.commission_minor), 0), coalesce(sum(b.fee_minor), 0)
   into v_comm, v_fee
   from public.bookings b
   where b.business_id = p_business_id and b.status = 'verified' and b.final_at is not null
-    and not exists (select 1 from public.invoice_lines l where l.booking_id = b.id and l.active)
+    and not exists (select 1 from public.invoice_lines l where l.booking_id = b.id and l.kind = 'booking' and l.active)
     and not exists (select 1 from public.clawbacks c where c.booking_id = b.id);
-  if v_comm + v_fee = 0 then
-    return null;
+  -- Credits: the fee of clawed-back bookings that were invoiced before (not yet credited).
+  select v_fee - coalesce(sum(c.fee_credit_minor), 0) into v_fee
+  from public.clawbacks c join public.bookings b on b.id = c.booking_id
+  where b.business_id = p_business_id and c.fee_credit_minor > 0
+    and not exists (select 1 from public.invoice_lines l where l.booking_id = c.booking_id and l.kind = 'fee_credit' and l.active);
+  if v_comm + v_fee <= 0 then
+    return null; -- nothing to charge (or credits exceed charges): carry over to a later month
   end if;
 
   insert into public.business_invoices (business_id, period_month, currency, commission_minor, fee_minor, total_minor)
   values (p_business_id, p_period_month, v_currency, v_comm, v_fee, v_comm + v_fee)
   returning id into v_id;
 
-  insert into public.invoice_lines (invoice_id, business_id, booking_id, promoter_id, commission_minor, fee_minor, currency)
-  select v_id, b.business_id, b.id, b.promoter_id, b.commission_minor, b.fee_minor, b.currency
+  insert into public.invoice_lines (invoice_id, business_id, booking_id, promoter_id, kind, commission_minor, fee_minor, currency)
+  select v_id, b.business_id, b.id, b.promoter_id, 'booking', b.commission_minor, b.fee_minor, b.currency
   from public.bookings b
   where b.business_id = p_business_id and b.status = 'verified' and b.final_at is not null
-    and not exists (select 1 from public.invoice_lines l where l.booking_id = b.id and l.active)
+    and not exists (select 1 from public.invoice_lines l where l.booking_id = b.id and l.kind = 'booking' and l.active)
     and not exists (select 1 from public.clawbacks c where c.booking_id = b.id);
+
+  insert into public.invoice_lines (invoice_id, business_id, booking_id, promoter_id, kind, commission_minor, fee_minor, currency)
+  select v_id, b.business_id, b.id, b.promoter_id, 'fee_credit', 0, -c.fee_credit_minor, c.currency
+  from public.clawbacks c join public.bookings b on b.id = c.booking_id
+  where b.business_id = p_business_id and c.fee_credit_minor > 0
+    and not exists (select 1 from public.invoice_lines l where l.booking_id = c.booking_id and l.kind = 'fee_credit' and l.active);
 
   return v_id;
 end $$;
@@ -688,8 +848,15 @@ begin
            (v.id, 'business', v.business_id, r.bucket, 'clawback',  r.balance, v.currency);
   end loop;
 
-  insert into public.clawbacks (booking_id, admin_id, reason, amount_minor, currency)
-  values (v.id, p_admin_id, btrim(p_reason), v.commission_minor, v.currency)
+  -- If the booking was already invoiced, its 2.75% fee is credited on the business's next invoice.
+  insert into public.clawbacks (booking_id, admin_id, reason, amount_minor, fee_credit_minor, currency)
+  values (v.id, p_admin_id, btrim(p_reason), v.commission_minor,
+          case when exists (select 1 from public.invoice_lines l
+                            join public.business_invoices i on i.id = l.invoice_id
+                            where l.booking_id = v.id and l.kind = 'booking' and l.active
+                              and i.status in ('open', 'paid', 'uncollectible'))
+               then v.fee_minor else 0 end,
+          v.currency)
   returning * into c;
 
   insert into public.notifications (user_id, type, title, payload)
@@ -707,7 +874,7 @@ language sql stable set search_path = '' as $$
   select l.booking_id, l.id, 'commission'::text, l.commission_minor
   from public.invoice_lines l
   join public.business_invoices i on i.id = l.invoice_id
-  where l.promoter_id = p_promoter_id and l.currency = p_currency and l.active
+  where l.promoter_id = p_promoter_id and l.currency = p_currency and l.active and l.kind = 'booking'
     and i.status = 'paid' and l.commission_minor > 0
     and not exists (select 1 from public.payout_items pi
                     where pi.booking_id = l.booking_id and pi.kind = 'commission' and pi.active)
@@ -843,7 +1010,7 @@ select
     else 'not_verified'
   end as settlement_status
 from public.bookings b
-left join public.invoice_lines l on l.booking_id = b.id and l.active
+left join public.invoice_lines l on l.booking_id = b.id and l.kind = 'booking' and l.active
 left join public.business_invoices i on i.id = l.invoice_id
 left join lateral (
   select p.id, p.transferred_at
@@ -894,9 +1061,10 @@ end $$;
 -- ===========================================================================
 revoke execute on function
   public.final_after_days(),
-  public.set_date_of_birth(uuid, date),
-  public.is_adult(uuid),
-  public.save_stripe_account(uuid, text, boolean),
+  public.set_age_band(uuid, text),
+  public.promoter_is_minor(uuid),
+  public.is_age_restricted_category(text),
+  public.save_stripe_account(uuid, text, boolean, text, timestamptz),
   public.update_stripe_account_status(text, boolean),
   public.save_stripe_customer(uuid, text),
   public._finalize_booking(public.bookings),
@@ -919,14 +1087,17 @@ revoke execute on function
   public.mark_payout_transferred(uuid, text),
   public.mark_payout_failed(uuid, text),
   public.mark_payout_reversed(text),
-  public.campaigns_billing_hold()
+  public.campaigns_billing_hold(),
+  public.campaigns_age_rating(),
+  public.businesses_age_category()
 from public, anon, authenticated;
 
 grant execute on function
   public.final_after_days(),
-  public.set_date_of_birth(uuid, date),
-  public.is_adult(uuid),
-  public.save_stripe_account(uuid, text, boolean),
+  public.set_age_band(uuid, text),
+  public.promoter_is_minor(uuid),
+  public.is_age_restricted_category(text),
+  public.save_stripe_account(uuid, text, boolean, text, timestamptz),
   public.update_stripe_account_status(text, boolean),
   public.save_stripe_customer(uuid, text),
   public._finalize_booking(public.bookings),
@@ -955,3 +1126,7 @@ to service_role;
 -- 10. Realtime: invoice and payout changes reach the right user through RLS.
 -- ===========================================================================
 alter publication supabase_realtime add table public.business_invoices, public.payouts;
+
+-- The campaign visibility policy calls this as the logged-in user.
+revoke execute on function public.can_see_age_rating(text) from public;
+grant execute on function public.can_see_age_rating(text) to anon, authenticated, service_role;
