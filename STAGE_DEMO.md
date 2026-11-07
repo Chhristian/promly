@@ -13,7 +13,7 @@ Everything shown is real database activity. The only simulated step is the clear
 |---|---|---|---|
 | **A — Business founder** | Laptop (projected) | Demo Barber Club · `demo-barber@example.com` | `/business` |
 | **B — Promoter founder** | Second laptop or phone (mirrored if possible) | Alex · `demo-alex@example.com` | `/promoter/explore` |
-| **C — Customer** | A phone (no login) | — | WhatsApp chat with B, ready to receive the link |
+| **C — Customer** | A phone (no login) | — | Camera app ready to scan a QR code (backup: WhatsApp chat with B) |
 | Admin (backstage) | Any device, separate browser profile | Promly Admin · `demo-admin@example.com` | `/admin/demo` |
 
 Passwords are **only** in `.env.local` (`DEMO_BUSINESS_PASSWORD`, `DEMO_PROMOTER_PASSWORD`, `DEMO_ADMIN_PASSWORD`). Copy one to the clipboard without showing it (PowerShell, in the project folder):
@@ -33,11 +33,11 @@ Hand passwords to the other founder privately (password manager), never in a cha
    - Test the switch once: turn wifi off → device joins the hotspot → the green **Live** dot in the app header comes back by itself (or tap **↻**).
 2. **Log in on each device** (do it now, not on stage). Use a normal browser window; sessions stay logged in.
    - A → `/business`, B → `/promoter/explore`. Check the dot in the header says **Live** (green).
-   - C → open a **private/incognito** tab so nothing is cached. Keep WhatsApp open with a chat to B.
+   - C → test the camera scans a QR code (any QR). Set the phone's default browser to a private/incognito tab if possible. Backup: WhatsApp chat with B open.
 3. **Reset the demo** (≈5 seconds) — either:
    - Admin device: `/admin/demo` → **Prepare Stage Demo** → "✓ Demo ready", or
    - Terminal: `npm run reset-demo`
-   Result: both campaigns are **drafts** with accepted agreements, no bookings, no joins, fresh time slots (10:00–17:00 Oslo time, today and the next 3 days). **Reset on the day of the demo** so today's slots exist.
+   Result: both campaigns are **drafts** with accepted agreements, no bookings, no joins, fresh hourly time slots **08:00–22:00 Oslo time**, today and the next 3 days. **Reset on the day of the demo** so today's slots exist.
 4. **Run Demo Health Check** on `/admin/demo`. Every line must be green:
    database reachable · 4 demo accounts · realtime connects · fee maths 500 NOK → 13.75 · free slots today and tomorrow · live site responding.
    Anything red → fix it or switch to the backup video.
@@ -61,8 +61,9 @@ Hand passwords to the other founder privately (password manager), never in a cha
 | 5 | **B** | Tap the **Premium Haircut** card. | Campaign page with the agreement (yellow label "Agreement template, to be reviewed by a lawyer before real use"). |
 | 6 | **B** | Tick **"I have read and accept this agreement."** → **Accept & join**. | "Your personal link" box with the link and **Copy link**. |
 | 7 | **A** | Just watch. | Activity: **"Alex joined your campaign."** with **NEW**. Promoters: 1. |
-| 8 | **B** | **Copy link** → paste it into the WhatsApp chat with C → send. Then tap **Dashboard** in the top nav. | B's dashboard: Available 0,00 kr, Pending 0,00 kr. |
-| 9 | **C** | Open the link from WhatsApp. | Booking page: *Demo Barber Club · Oslo — Premium Haircut — 500,00 kr*, days and times. No login. |
+| 8 | **B** | Tap **⛶ Show QR full screen** and hold the screen toward C (or show it on the projector). *Backup:* tap **💬 WhatsApp** and send the prepared message to C. | A big QR code with "Premium Haircut · scan to book". |
+| 9 | **C** | Point the camera at the QR → tap the link that pops up. | Booking page: *Demo Barber Club · Oslo — Premium Haircut — 500,00 kr*, days and times. No login. |
+| 9b | **B** | Tap anywhere to close the QR, then tap **Dashboard** in the top nav. | B's dashboard: Available 0,00 kr, Pending 0,00 kr. |
 | 10 | **C** | Tap a **time** → type a name and phone → **Book …**. | **"You're booked!"** with the time. |
 | 11 | **A** | Just watch. | **"New booking received — Premium Haircut"** with **NEW**. Recent bookings: *Awaiting service*. |
 | 12 | **A** | Click that booking. | Customer name and phone, **Referred by Alex**, frozen terms: 500 · 100 · 13,75 · **113,75 kr**. |
@@ -76,6 +77,8 @@ Hand passwords to the other founder privately (password manager), never in a cha
 **If the time slot is taken** ("Someone just booked that time"): tap another time.
 **If anything looks wrong before you start:** Prepare Stage Demo again (≈5 s) and reload A and B.
 
+**Optional, if you have 10 extra seconds (after step 6):** B taps **Create promo text →** → Marketing Studio → **WhatsApp recommendation**. Ready-made text with the business's own description, the price, the link and an honest "I earn a commission" note. Only channels the agreement allows are offered. Then go back and continue with step 8.
+
 ---
 
 ## 60-second version
@@ -86,7 +89,7 @@ Pre-open everything as in BEFORE. Skip reading the agreement aloud.
 |---|---|---|
 | 0:00 | "This barbershop needs customers. On Promly it offers 100 kroner for every verified booking." | A: open Premium Haircut → **Publish** |
 | 0:10 | "Alex wants to earn. The offer just appeared on Alex's phone — live." | B: card appears → tap → tick → **Accept & join** |
-| 0:20 | "Alex gets a personal link and shares it anywhere — here, WhatsApp." | B: **Copy link** → WhatsApp → C. A: "Alex joined" appears |
+| 0:20 | "Alex gets a personal link and a QR code to share anywhere." | B: **Show QR full screen** → C scans. A: "Alex joined" appears |
 | 0:30 | "A friend books a haircut. No app, no account." | C: open link → time → name/phone → **Book** |
 | 0:40 | "The barber sees the booking instantly, and confirms the haircut happened." | A: "New booking" → open → **Verify** |
 | 0:48 | "After the refund window — simulated here — the money is Alex's." | A: **Simulate end of refund window**. B: **100,00 kr available** |
@@ -102,8 +105,8 @@ Pre-open everything as in BEFORE. Skip reading the agreement aloud.
 | 0:15–0:25 | **Promise.** "Promly flips it: businesses only pay for verified customers, and anyone can earn by bringing them. Businesses get customers. People get paid." | A's dashboard |
 | 0:25–0:40 | "Demo Barber Club sets a 100-kroner commission on a 500-kroner haircut, accepts a standard agreement, and publishes." | A: steps 1–2 (point at 100 / 13,75 / 113,75) |
 | 0:40–0:55 | "Alex has never done marketing. The offer appears on Alex's phone instantly. Alex reads the terms and joins." | B: steps 3, 5–6 |
-| 0:55–1:05 | "Alex gets a personal link and can use any channel the business allows." | B: step 8. A: step 7 "Alex joined" |
-| 1:05–1:20 | "A friend books — on a phone, no account." | C: steps 9–10. A: step 11 "New booking" |
+| 0:55–1:05 | "Alex gets a personal link, a QR code and ready-made texts — for any channel the business allows." | A: step 7 "Alex joined". B: step 8 (QR full screen) |
+| 1:05–1:20 | "A friend scans and books — on a phone, no account." | C: steps 9–10. B: step 9b. A: step 11 "New booking" |
 | 1:20–1:35 | "The barber confirms the haircut happened. The commission is pending until the refund window closes — here we simulate that." | A: steps 12–13, 15 (show the yellow Demo Mode label) |
 | 1:35–1:45 | "And Alex just earned 100 kroner. Real data, live, on two devices." | B: step 16 |
 | 1:45–2:00 | **Model.** "Promoters keep 100% of the commission. Businesses pay Promly 2.75% of the booking on top — 13.75 kroner here, only when a customer is verified. We're starting with barbers and experiences in Oslo and Spain." | A: step 17 dashboard |
@@ -132,3 +135,5 @@ Pre-open everything as in BEFORE. Skip reading the agreement aloud.
 - Reset from terminal: `npm run reset-demo` · Health check + full flow test: `npm run test:e2e` (resets before and after).
 - Demo accounts are recreated (same passwords from `.env.local`) with `npm run seed-demo`.
 - Numbers: price 500,00 kr · commission 100,00 kr (promoter keeps 100%) · Promly fee 2.75% of price = 13,75 kr · business pays 113,75 kr per verified booking.
+- Spain campaign (if asked about Spain / EUR): Jet Ski Adventure 150,00 € · commission 20% = 30,00 € · fee 4,13 € · business pays 34,13 €. Log in as `demo-watersports@example.com` (`DEMO_SPAIN_BUSINESS_PASSWORD`).
+- Refund before payout: open a verified booking → **Refund** → the commission is reversed with new ledger entries ("Refund → pending charge cancelled").

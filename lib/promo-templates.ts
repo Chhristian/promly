@@ -67,7 +67,7 @@ export function buildPromoText(type: PromoType, f: PromoFacts, variant = 0): str
       `${f.serviceName} at ${f.businessName}, ${f.price} 👉 ${f.link}\n(ad · ${DISCLOSE})`,
     ],
     whatsapp: [
-      `Hi! If you're looking for a ${f.serviceName.toLowerCase()}${where}, have a look at ${f.businessName}.\n${aboutLine}It's ${f.price}. You can book here: ${f.link}\n\n(Just so you know: ${DISCLOSE.toLowerCase()})`,
+      `Hi! If you're looking for a ${f.serviceName.toLowerCase()}${where}, have a look at ${f.businessName}.\n${aboutLine}It's ${f.price}. You can book here: ${f.link}\n\n(Just so you know, ${DISCLOSE})`,
       `Hey! ${f.businessName}${where} does ${f.serviceName.toLowerCase()} for ${f.price}. Booking takes a minute: ${f.link}\n(${DISCLOSE})`,
     ],
     hook: [
