@@ -29,8 +29,12 @@ export function Stat({
       </div>
       <div
         className={cn(
-          "mt-2 font-bold tabular-nums tracking-tight",
-          size === "lg" ? "text-5xl tracking-[-0.03em] lg:text-6xl" : size === "quiet" ? "text-3xl font-semibold text-foreground/90" : "text-3xl sm:text-4xl",
+          "mt-2 whitespace-nowrap font-bold tabular-nums tracking-tight",
+          size === "lg"
+            ? "text-[clamp(2.25rem,10vw,3.75rem)] tracking-[-0.03em]"
+            : size === "quiet"
+              ? "text-[clamp(1.6rem,7vw,1.875rem)] font-semibold text-foreground/90"
+              : "text-[clamp(1.6rem,7vw,2.25rem)]",
           accent && "text-gradient",
         )}
       >

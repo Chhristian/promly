@@ -62,10 +62,10 @@ export default async function ExplorePage() {
                       {c.businesses?.country === "ES" ? ", Spain" : ", Norway"}
                     </div>
                     <div className="mt-5 flex items-end justify-between gap-3">
-                      <div className="text-sm text-muted-foreground">Price {formatMinor(c.price_minor, cur)}</div>
+                      <div className="min-w-0 text-sm text-muted-foreground">Price <span className="whitespace-nowrap">{formatMinor(c.price_minor, cur)}</span></div>
                       <div className="text-right">
                         <div className="text-sm text-muted-foreground">You earn</div>
-                        <div className="text-gradient text-3xl font-bold tabular-nums">{formatMinor(c.commission_minor, cur)}</div>
+                        <div className="text-gradient whitespace-nowrap text-3xl font-bold tabular-nums">{formatMinor(c.commission_minor, cur)}</div>
                       </div>
                     </div>
                     <div className="mt-5 flex items-center justify-center gap-1.5 rounded-xl bg-secondary py-2.5 text-sm font-semibold transition group-hover:bg-violet-500/25">

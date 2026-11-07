@@ -115,7 +115,7 @@ export default async function PromoterDashboard() {
                         </div>
                       </div>
                       <div className="shrink-0 text-right">
-                        <div className="text-lg font-bold tabular-nums">{formatMinor(b.commission_minor, cur)}</div>
+                        <div className="whitespace-nowrap text-lg font-bold tabular-nums">{formatMinor(b.commission_minor, cur)}</div>
                         <StatusBadge status={stage.key} label={stage.label} />
                       </div>
                     </div>
@@ -150,7 +150,7 @@ export default async function PromoterDashboard() {
                         <div className="truncate text-sm text-muted-foreground">{c?.businesses?.name}</div>
                       </Link>
                       <div className="shrink-0 text-right">
-                        <div className="text-gradient text-lg font-bold">{formatMinor(m.agreements?.commission_minor ?? 0, cur)}</div>
+                        <div className="text-gradient whitespace-nowrap text-lg font-bold">{formatMinor(m.agreements?.commission_minor ?? 0, cur)}</div>
                         <div className="text-xs text-muted-foreground">
                           {m.referral_links ? o.clicksByLink.get(m.referral_links.id) ?? 0 : 0} clicks
                         </div>
