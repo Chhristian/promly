@@ -13,8 +13,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { AUTH_TIMEOUT_MS, TOO_SLOW, friendlyAuthError, goToDashboard, withTimeout } from "@/lib/auth-client";
 
 export function LoginForm({
   className,
@@ -24,26 +24,33 @@ export function LoginForm({
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
+  const watchdog = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => () => {
+    if (watchdog.current) clearTimeout(watchdog.current);
+  }, []);
 
   const handleLogin = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     const supabase = createClient();
     setIsLoading(true);
     setError(null);
+    // Never spin forever: if we're still on this page after ~10 s, say so.
+    if (watchdog.current) clearTimeout(watchdog.current);
+    watchdog.current = setTimeout(() => {
+      setIsLoading(false);
+      setError(TOO_SLOW);
+    }, AUTH_TIMEOUT_MS + 500);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      const { error } = await withTimeout(supabase.auth.signInWithPassword({ email, password }));
       if (error) throw error;
-      // /dashboard sends business users to /business and promoters to /promoter.
-      router.push("/dashboard");
-      router.refresh();
+      // Full page load: /dashboard sends business users to /business, promoters to /promoter,
+      // and accounts without a profile to /onboarding.
+      goToDashboard();
     } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "An error occurred");
-    } finally {
+      if (watchdog.current) clearTimeout(watchdog.current);
+      setError(friendlyAuthError(error instanceof Error ? error.message : "Something went wrong."));
       setIsLoading(false);
     }
   };
@@ -89,7 +96,7 @@ export function LoginForm({
                   onChange={(e) => setPassword(e.target.value)}
                 />
               </div>
-              {error && <p className="text-sm text-red-400" role="alert">{error === "Invalid login credentials" ? "That email and password don't match." : error}</p>}
+              {error && <p className="text-sm text-red-400" role="alert">{error}</p>}
               <Button type="submit" className="bg-brand h-11 w-full text-white" disabled={isLoading}>
                 {isLoading ? "Logging in…" : "Log in"}
               </Button>

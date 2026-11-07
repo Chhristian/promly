@@ -1,9 +1,10 @@
 import { redirect } from "next/navigation";
-import { getCurrentUser, homeFor } from "@/lib/auth";
+import { getSession, homeFor } from "@/lib/auth";
 
 // After login: send each user to their own dashboard.
 export default async function DashboardRedirect() {
-  const current = await getCurrentUser();
-  if (!current) redirect("/auth/login");
-  redirect(homeFor(current.profile.role));
+  const s = await getSession();
+  if (!s) redirect("/auth/login");
+  if (!s.profile) redirect("/onboarding"); // logged in, but the account has no profile yet
+  redirect(homeFor(s.profile.role));
 }

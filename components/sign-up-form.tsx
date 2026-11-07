@@ -8,7 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { AUTH_TIMEOUT_MS, TOO_SLOW, friendlyAuthError, goToDashboard, withTimeout } from "@/lib/auth-client";
 
 type Role = "business" | "promoter";
 
@@ -21,21 +22,32 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const watchdog = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => () => {
+    if (watchdog.current) clearTimeout(watchdog.current);
+  }, []);
 
   const handleSignUp = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     const supabase = createClient();
     setIsLoading(true);
     setError(null);
+    if (watchdog.current) clearTimeout(watchdog.current);
+    watchdog.current = setTimeout(() => {
+      setIsLoading(false);
+      setError(TOO_SLOW);
+    }, AUTH_TIMEOUT_MS + 500);
 
     if (password !== repeatPassword) {
+      if (watchdog.current) clearTimeout(watchdog.current);
       setError("Passwords do not match");
       setIsLoading(false);
       return;
     }
 
     try {
-      const { data, error } = await supabase.auth.signUp({
+      const { data, error } = await withTimeout(supabase.auth.signUp({
         email,
         password,
         options: {
@@ -43,17 +55,19 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
           data: { role, display_name: displayName.trim() },
           emailRedirectTo: `${window.location.origin}/dashboard`,
         },
-      });
+      }));
       if (error) throw error;
+      // Supabase hides "email already registered" by returning a user with no identities.
+      if (data.user && data.user.identities?.length === 0) throw new Error("already registered");
       if (data.session) {
-        router.push("/dashboard");
-        router.refresh();
+        goToDashboard();
       } else {
+        if (watchdog.current) clearTimeout(watchdog.current);
         router.push("/auth/sign-up-success");
       }
     } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "An error occurred");
-    } finally {
+      if (watchdog.current) clearTimeout(watchdog.current);
+      setError(friendlyAuthError(error instanceof Error ? error.message : "Something went wrong."));
       setIsLoading(false);
     }
   };

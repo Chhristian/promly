@@ -2,11 +2,11 @@ import Link from "next/link";
 import { ArrowRight, BadgeCheck, Megaphone, Share2, Wallet } from "lucide-react";
 import { PromlyLogo } from "@/components/promly-logo";
 import { Button } from "@/components/ui/button";
-import { getCurrentUser, homeFor } from "@/lib/auth";
+import { getSession, homeFor } from "@/lib/auth";
 
 export default async function Home() {
-  const current = await getCurrentUser();
-  const dashboard = current ? homeFor(current.profile.role) : null;
+  const session = await getSession();
+  const dashboard = session ? (session.profile ? homeFor(session.profile.role) : "/onboarding") : null;
 
   return (
     <div className="flex min-h-screen flex-col">
