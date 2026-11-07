@@ -92,18 +92,24 @@ export type Database = {
       booking_contacts: {
         Row: {
           booking_id: string
+          consent_at: string | null
           customer_name: string
           customer_phone: string
+          customer_phone_norm: string | null
         }
         Insert: {
           booking_id: string
+          consent_at?: string | null
           customer_name: string
           customer_phone: string
+          customer_phone_norm?: never
         }
         Update: {
           booking_id?: string
+          consent_at?: string | null
           customer_name?: string
           customer_phone?: string
+          customer_phone_norm?: never
         }
         Relationships: [
           {
@@ -136,7 +142,8 @@ export type Database = {
           refund_window_ends_at: string | null
           refunded_at: string | null
           released_at: string | null
-          slot_start: string
+          slot_start: string | null
+          source: string
           status: string
           verified_at: string | null
         }
@@ -160,7 +167,8 @@ export type Database = {
           refund_window_ends_at?: string | null
           refunded_at?: string | null
           released_at?: string | null
-          slot_start: string
+          slot_start?: string | null
+          source?: string
           status?: string
           verified_at?: string | null
         }
@@ -184,7 +192,8 @@ export type Database = {
           refund_window_ends_at?: string | null
           refunded_at?: string | null
           released_at?: string | null
-          slot_start?: string
+          slot_start?: string | null
+          source?: string
           status?: string
           verified_at?: string | null
         }
@@ -333,6 +342,7 @@ export type Database = {
           currency: string
           current_agreement_id: string | null
           description: string
+          external_booking_url: string | null
           id: string
           image_url: string | null
           photo_paths: string[]
@@ -349,6 +359,7 @@ export type Database = {
           currency?: string
           current_agreement_id?: string | null
           description?: string
+          external_booking_url?: string | null
           id?: string
           image_url?: string | null
           photo_paths?: string[]
@@ -365,6 +376,7 @@ export type Database = {
           currency?: string
           current_agreement_id?: string | null
           description?: string
+          external_booking_url?: string | null
           id?: string
           image_url?: string | null
           photo_paths?: string[]
@@ -531,6 +543,7 @@ export type Database = {
           campaign_id: string
           code: string
           created_at: string
+          discount_code: string
           id: string
           membership_id: string
           promoter_id: string
@@ -539,6 +552,7 @@ export type Database = {
           campaign_id: string
           code: string
           created_at?: string
+          discount_code: string
           id?: string
           membership_id: string
           promoter_id: string
@@ -547,6 +561,7 @@ export type Database = {
           campaign_id?: string
           code?: string
           created_at?: string
+          discount_code?: string
           id?: string
           membership_id?: string
           promoter_id?: string
@@ -612,6 +627,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      _create_unslotted_booking: {
+        Args: {
+          p_consent_at: string | null
+          p_customer_name: string
+          p_customer_phone: string
+          p_fee_bps: number
+          p_link: Database["public"]["Tables"]["referral_links"]["Row"]
+          p_source: string
+        }
+        Returns: string
+      }
       _lock_booking_for_owner: {
         Args: { p_actor_id: string; p_booking_id: string }
         Returns: {
@@ -634,7 +660,8 @@ export type Database = {
           refund_window_ends_at: string | null
           refunded_at: string | null
           released_at: string | null
-          slot_start: string
+          slot_start: string | null
+          source: string
           status: string
           verified_at: string | null
         }
@@ -667,7 +694,8 @@ export type Database = {
           refund_window_ends_at: string | null
           refunded_at: string | null
           released_at: string | null
-          slot_start: string
+          slot_start: string | null
+          source: string
           status: string
           verified_at: string | null
         }
@@ -678,6 +706,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      _new_discount_code: { Args: { p_display_name: string }; Returns: string }
       campaign_id_from_path: { Args: { p_name: string }; Returns: string }
       can_join_campaign: {
         Args: { p_agreement_id: string; p_campaign_id: string }
@@ -690,6 +719,16 @@ export type Database = {
           p_fee_bps: number
           p_referral_code: string
           p_slot_start: string
+        }
+        Returns: string
+      }
+      create_external_referral: {
+        Args: {
+          p_consent: boolean
+          p_customer_name: string
+          p_customer_phone: string
+          p_fee_bps: number
+          p_referral_code: string
         }
         Returns: string
       }
@@ -706,6 +745,16 @@ export type Database = {
         Returns: number
       }
       purge_demo_data: { Args: never; Returns: undefined }
+      register_discount_code: {
+        Args: {
+          p_actor_id: string
+          p_customer_name: string
+          p_customer_phone: string
+          p_discount_code: string
+          p_fee_bps: number
+        }
+        Returns: string
+      }
       refund_booking: {
         Args: { p_actor_id: string; p_booking_id: string }
         Returns: {
@@ -728,7 +777,8 @@ export type Database = {
           refund_window_ends_at: string | null
           refunded_at: string | null
           released_at: string | null
-          slot_start: string
+          slot_start: string | null
+          source: string
           status: string
           verified_at: string | null
         }
@@ -761,7 +811,8 @@ export type Database = {
           refund_window_ends_at: string | null
           refunded_at: string | null
           released_at: string | null
-          slot_start: string
+          slot_start: string | null
+          source: string
           status: string
           verified_at: string | null
         }
@@ -794,7 +845,8 @@ export type Database = {
           refund_window_ends_at: string | null
           refunded_at: string | null
           released_at: string | null
-          slot_start: string
+          slot_start: string | null
+          source: string
           status: string
           verified_at: string | null
         }
@@ -827,7 +879,8 @@ export type Database = {
           refund_window_ends_at: string | null
           refunded_at: string | null
           released_at: string | null
-          slot_start: string
+          slot_start: string | null
+          source: string
           status: string
           verified_at: string | null
         }

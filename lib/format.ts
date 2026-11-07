@@ -1,7 +1,9 @@
 const TZ = "Europe/Oslo";
 
 /** "Sun 8 Nov, 10:00" in Oslo time. */
-export function formatSlot(iso: string): string {
+/** External and discount-code bookings have no Promly time slot. */
+export function formatSlot(iso: string | null): string {
+  if (!iso) return "Booked outside Promly";
   return new Intl.DateTimeFormat("en-GB", {
     timeZone: TZ, weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit",
   }).format(new Date(iso));

@@ -19,6 +19,13 @@ const MESSAGES: Record<string, string> = {
   booking_cancelled: "This booking was cancelled.",
   invalid_photo_path: "That photo doesn't belong to this campaign.",
   campaigns_max_3_photos: "Up to 3 photos per campaign.",
+  duplicate_referral: "This phone number already has an active booking for this offer.",
+  self_referral: "You can't use your own referral link.",
+  cannot_promote_own_business: "You can't promote your own business.",
+  consent_required: "Tick the box to share your details with the business.",
+  no_external_url: "This offer isn't set up for outside booking.",
+  discount_code_not_found: "No promoter has that code.",
+  campaigns_external_booking_url_https: "The booking link must start with https://",
 };
 
 export function friendlyError(error: { message?: string; code?: string } | null | undefined): string {

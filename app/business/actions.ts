@@ -51,11 +51,30 @@ export async function createBusiness(_: ActionState, fd: FormData): Promise<Acti
 // ---------------------------------------------------------------------------
 // Campaigns
 // ---------------------------------------------------------------------------
+/** Empty, or an https:// link to the business's own booking system. */
+const externalBookingUrl = z
+  .string()
+  .trim()
+  .max(500, "The booking link is too long")
+  .refine((s) => s === "" || (/^https:\/\/\S+$/.test(s) && URL.canParse(s)), "The booking link must start with https://");
+
 const campaignSchema = z.object({
   service_name: z.string().trim().min(1, "Enter the service name").max(120),
   description: z.string().trim().max(4000),
   price: amount,
+  external_booking_url: externalBookingUrl.default(""),
+  external_booking_url_was: z.string().default(""),
 });
+
+/**
+ * Only send external_booking_url when it is set or being cleared, so creating
+ * and editing time-slot campaigns sends exactly the same columns as before.
+ */
+function externalUrlPatch(c: z.infer<typeof campaignSchema>): { external_booking_url?: string | null } {
+  if (c.external_booking_url) return { external_booking_url: c.external_booking_url };
+  if (c.external_booking_url_was) return { external_booking_url: null };
+  return {};
+}
 
 export async function createCampaign(_: ActionState, fd: FormData): Promise<ActionState> {
   const { user, supabase } = await requireRole("business");
@@ -65,7 +84,13 @@ export async function createCampaign(_: ActionState, fd: FormData): Promise<Acti
   if (!biz) return { error: "Create your business profile first." };
   const { data, error } = await supabase
     .from("campaigns")
-    .insert({ business_id: biz.id, service_name: parsed.data.service_name, description: parsed.data.description, price_minor: parsed.data.price })
+    .insert({
+      business_id: biz.id,
+      service_name: parsed.data.service_name,
+      description: parsed.data.description,
+      price_minor: parsed.data.price,
+      ...externalUrlPatch(parsed.data),
+    })
     .select("id")
     .single();
   if (error) return { error: friendlyError(error) };
@@ -79,7 +104,12 @@ export async function updateCampaign(_: ActionState, fd: FormData): Promise<Acti
   if (!id.success || !parsed.success) return { error: parsed.success ? "Invalid campaign" : firstIssue(parsed.error) };
   const { data, error } = await supabase
     .from("campaigns")
-    .update({ service_name: parsed.data.service_name, description: parsed.data.description, price_minor: parsed.data.price })
+    .update({
+      service_name: parsed.data.service_name,
+      description: parsed.data.description,
+      price_minor: parsed.data.price,
+      ...externalUrlPatch(parsed.data),
+    })
     .eq("id", id.data)
     .select("id");
   if (error) return { error: friendlyError(error) };

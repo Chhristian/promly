@@ -88,6 +88,7 @@ export default async function CampaignEditorPage({ params }: { params: Promise<{
             serviceName={campaign.service_name}
             description={campaign.description}
             priceMinor={campaign.price_minor}
+            externalBookingUrl={campaign.external_booking_url ?? ""}
           />
         </section>
 
