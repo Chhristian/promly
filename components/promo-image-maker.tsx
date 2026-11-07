@@ -38,7 +38,7 @@ function slug(s: string) {
 }
 
 /** Draw the promo image. Uses only campaign facts, the business's photos, and the promoter's link. */
-async function draw(canvas: HTMLCanvasElement, c: PromoImageCampaign, format: PromoFormat, photoUrl: string | null) {
+async function draw(canvas: HTMLCanvasElement, c: PromoImageCampaign, format: PromoFormat, photoUrl: string | null): Promise<{ mentionShown: boolean }> {
   const L = promoLayout(format);
   const { width: W, height: H } = FORMATS[format];
   canvas.width = W;
@@ -135,21 +135,23 @@ async function draw(canvas: HTMLCanvasElement, c: PromoImageCampaign, format: Pr
   }
 
   const priceSize = Math.min(L.priceSize, fitText(c.price, { maxWidth: L.textW, maxLines: 1, maxSize: L.priceSize, minSize: 40, measure: measureAt(800) }).size);
-  y += priceSize * 0.25;
+  y += priceSize * (format === "story" ? 0.02 : 0);
   ctx.font = font(priceSize, 800);
   const pg = ctx.createLinearGradient(L.textX, 0, L.textX + ctx.measureText(c.price).width, 0);
   pg.addColorStop(0, "#a78bfa");
   pg.addColorStop(1, "#60a5fa");
   ctx.fillStyle = pg;
   ctx.fillText(c.price, L.textX, y + priceSize * 0.8);
-  y += priceSize * 1.15;
+  y += priceSize * (format === "story" ? 1.05 : 0.95);
 
   // Must-mention: only the business's own sentence, only if it fits
   const mention = c.mustMentions.find((m) => m.sentence)?.sentence;
+  let mentionShown = false;
   if (mention) {
-    const size = format === "story" ? 36 : 26;
+    const size = format === "story" ? 36 : 24;
     const m = wrapLines(`✓ ${mention}`, size, L.textW, 2, measureAt(500));
     if (y + m.lines.length * size * 1.3 <= L.textBottom) {
+      mentionShown = true;
       ctx.font = font(size, 500);
       ctx.fillStyle = "rgba(226,232,255,0.85)";
       for (const line of m.lines) {
@@ -194,6 +196,7 @@ async function draw(canvas: HTMLCanvasElement, c: PromoImageCampaign, format: Pr
   ctx.font = font(adSize, 500);
   ctx.fillStyle = "rgba(226,232,255,0.6)";
   ad.lines.forEach((line, i) => ctx.fillText(line, L.textX, L.adY - (ad.lines.length - 1 - i) * adSize * 1.3));
+  return { mentionShown };
 }
 
 export function PromoImageMaker({ campaign }: { campaign: PromoImageCampaign }) {
@@ -218,12 +221,17 @@ export function PromoImageMaker({ campaign }: { campaign: PromoImageCampaign }) 
       setRendering(true);
       setNotice(null);
       const photoUrl = photo >= 0 ? stable.photos[photo] ?? null : null;
+      let result: { mentionShown: boolean };
       try {
-        await draw(canvas.current, stable, format, photoUrl);
+        result = await draw(canvas.current, stable, format, photoUrl);
       } catch {
         // The photo couldn't be used (e.g. network) — never fake it: fall back to the artwork and say so.
-        await draw(canvas.current, stable, format, null);
+        result = await draw(canvas.current, stable, format, null);
         if (alive) setNotice("That photo couldn't be loaded, so the artwork is used instead.");
+      }
+      const needsMention = stable.mustMentions.some((m) => m.sentence);
+      if (alive && needsMention && !result.mentionShown) {
+        setNotice("The brand rules ask for a must-mention that doesn't fit on this format. Use the Story format, or mention it in your caption.");
       }
       const blob = await new Promise<Blob | null>((r) => canvas.current!.toBlob(r, "image/png"));
       if (!alive || !blob) return;

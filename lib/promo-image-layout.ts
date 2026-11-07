@@ -142,9 +142,9 @@ export function promoLayout(format: PromoFormat): PromoLayout {
     photo: { x: 0, y: 0, w: width, h: photoH },
     textX: pad, textW: width - pad * 2 - qr.w - 48, textBottom: qr.y + qr.h + 6,
     bottomTextW: width - pad * 2 - qr.w - 48,
-    businessY: photoH + 70, serviceY: photoH + 148,
-    service: { maxLines: 2, maxSize: 64, minSize: 40 },
-    priceSize: 80,
+    businessY: photoH + 62, serviceY: photoH + 134,
+    service: { maxLines: 2, maxSize: 60, minSize: 40 },
+    priceSize: 76,
     ctaY: qr.y + qr.h + 64,
     qr, linkY: qr.y + qr.h + 44, adY: height - 34,
   };
