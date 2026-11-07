@@ -6,6 +6,7 @@ import { dayKey } from "@/lib/format";
 import { CampaignCover } from "@/components/campaign-cover";
 import { PromlyMark, PromlyWordmark } from "@/components/promly-logo";
 import { BookingForm } from "./booking-form";
+import { ExternalReferralForm } from "./external-form";
 
 export const metadata: Metadata = { title: "Book — Promly" };
 
@@ -51,13 +52,18 @@ export default async function BookPage({ params }: { params: Promise<{ code: str
         {campaign.description && <p className="mt-3 leading-relaxed text-muted-foreground">{campaign.description}</p>}
 
         <ul className="mt-5 grid gap-2 text-sm">
-          <li className="flex items-center gap-2"><CreditCard className="h-4 w-4 shrink-0 text-paid" /> Pay at the appointment, nothing to pay now</li>
+          <li className="flex items-center gap-2">
+            <CreditCard className="h-4 w-4 shrink-0 text-paid" />
+            {campaign.external ? `Nothing to pay here, you book and pay with ${business.name}` : "Pay at the appointment, nothing to pay now"}
+          </li>
           <li className="flex items-center gap-2"><UserRoundX className="h-4 w-4 shrink-0 text-paid" /> No account needed</li>
           <li className="flex items-center gap-2"><Lock className="h-4 w-4 shrink-0 text-paid" /> Your details go only to {business.name}</li>
         </ul>
 
         {!campaign.open ? (
           <p className="mt-6 rounded-2xl border border-dashed border-input p-4 text-sm text-muted-foreground">This offer isn&apos;t taking bookings right now.</p>
+        ) : campaign.external ? (
+          <ExternalReferralForm code={code} businessName={business.name} />
         ) : freeSlots.length === 0 ? (
           <p className="mt-6 rounded-2xl border border-dashed border-input p-4 text-sm text-muted-foreground">No free times right now. Please check back soon.</p>
         ) : (

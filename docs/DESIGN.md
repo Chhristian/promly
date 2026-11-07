@@ -48,7 +48,7 @@ A full redesign on the `redesign` branch. Product logic, money maths, database/R
   - A white **statement panel** with four figures divided by hairlines, plus one row of small counts.
   - The campaign ledger, the bookings ledger, and Activity on the right.
 - **Landing page:**
-  - A typographic hero: "Share a link. Get paid when they show up."
+  - A typographic hero: "Refer a sale. Get paid." with the line "Only when the customer actually shows up."
   - Beside it, a static example payout slip computed with the real money function (500 kr booking → 100 kr to the promoter, 113,75 kr paid by the business). It's labelled as an example, so it's never a fake live event.
 
 ## Motion (150–300 ms, ease-out, transform/opacity only)

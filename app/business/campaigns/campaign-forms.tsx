@@ -22,11 +22,13 @@ function CampaignFields({
   serviceName = "",
   description = "",
   priceMinor,
+  externalBookingUrl = "",
 }: {
   currency: string;
   serviceName?: string;
   description?: string;
   priceMinor?: number;
+  externalBookingUrl?: string;
 }) {
   return (
     <>
@@ -42,6 +44,25 @@ function CampaignFields({
         <Label htmlFor="description">Description</Label>
         <textarea id="description" name="description" maxLength={4000} defaultValue={description} className={textareaClass} />
       </div>
+      <div className="grid gap-2">
+        <Label htmlFor="external_booking_url">External booking link (optional)</Label>
+        <Input
+          id="external_booking_url"
+          name="external_booking_url"
+          type="url"
+          inputMode="url"
+          maxLength={500}
+          pattern="https://.+"
+          defaultValue={externalBookingUrl}
+          placeholder="https://yourbookingsystem.com/book"
+          aria-describedby="external_booking_url_help"
+        />
+        <input type="hidden" name="external_booking_url_was" value={externalBookingUrl} />
+        <p id="external_booking_url_help" className="text-sm text-muted-foreground">
+          Use your own booking system? Customers leave their name and phone on Promly, then go to this link with{" "}
+          <code className="text-xs">?ref=CODE</code> added. Leave empty to take bookings on Promly.
+        </p>
+      </div>
     </>
   );
 }
@@ -52,6 +73,7 @@ export function EditCampaignForm(props: {
   serviceName: string;
   description: string;
   priceMinor: number;
+  externalBookingUrl?: string;
 }) {
   return (
     <ActionForm action={updateCampaign} className="space-y-4">

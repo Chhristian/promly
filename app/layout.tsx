@@ -8,7 +8,7 @@ const defaultUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL
 
 export const metadata: Metadata = {
   metadataBase: new URL(defaultUrl),
-  title: "Promly: share a link, get paid when they show up",
+  title: "Promly: refer a sale, get paid when the customer shows up",
   description: "Performance-based marketing marketplace: promote local businesses and earn commission on verified bookings.",
 };
 

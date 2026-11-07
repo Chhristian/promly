@@ -39,11 +39,12 @@ export default async function Home() {
         <section className="grid items-center gap-10 pb-16 pt-6 sm:pt-12 lg:grid-cols-[1.15fr_1fr] lg:gap-14 lg:pb-24">
           <div>
             <h1 className="text-[clamp(2.75rem,8.5vw,4.6rem)] leading-[0.98] tracking-[-0.045em]">
-              Share a link.
+              Refer a sale.
               <br />
-              Get paid when they show up.
+              Get paid.
             </h1>
-            <p className="mt-6 max-w-xl text-lg text-muted-foreground sm:text-xl">
+            <p className="mt-4 text-xl font-bold tracking-[-0.02em] sm:text-2xl">Only when the customer actually shows up.</p>
+            <p className="mt-4 max-w-xl text-lg text-muted-foreground sm:text-xl">
               Local businesses set a commission. You share their offer with friends. When the customer has been and the
               business confirms it, the whole commission is yours.
             </p>

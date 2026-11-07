@@ -284,7 +284,7 @@ export async function runServerHealthChecks(db: Db, liveUrl: string | null): Pro
       db.from("time_slots").select("starts_at").eq("business_id", biz.id).gt("starts_at", nowIso),
       db.from("bookings").select("slot_start").eq("business_id", biz.id).in("status", ["pending", "verified"]),
     ]);
-    const takenSet = new Set((taken ?? []).map((t) => new Date(t.slot_start).getTime()));
+    const takenSet = new Set((taken ?? []).flatMap((t) => (t.slot_start ? [new Date(t.slot_start).getTime()] : [])));
     const free = (slots ?? []).filter((s) => !takenSet.has(new Date(s.starts_at).getTime()));
     const dayOf = (iso: string) => new Date(iso).toLocaleDateString("sv-SE", { timeZone: OSLO });
     const today = free.filter((s) => dayOf(s.starts_at) === osloDay(0)).length;
