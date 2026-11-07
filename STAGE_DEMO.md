@@ -41,12 +41,14 @@ Hand passwords to the other founder privately (password manager), never in a cha
 4. **Run Demo Health Check** on `/admin/demo`. Every line must be green:
    database reachable · 4 demo accounts · realtime connects · fee maths 500 NOK → 13.75 · free slots today and tomorrow · live site responding.
    Anything red → fix it or switch to the backup video.
+   **Photos survive a reset**: photos you uploaded for the demo campaigns are moved onto the fresh campaigns, so upload them once.
 5. **Reload A and B** after the reset so their screens show the fresh state (A: Premium Haircut is *draft*; B: Explore is empty).
-6. **Backup video** — record one full rehearsal the day before:
+6. **Photos (once, the day before):** log in as Demo Barber Club → Premium Haircut → **Photos → Add photos**. Up to 3 real photos (JPG/PNG/WebP, max 5 MB; they're resized automatically). The first one is the cover on Explore, the campaign page and the customer's booking page. Only use photos you have the rights to. Without photos, a category artwork is shown.
+7. **Backup video** — record one full rehearsal the day before:
    - Windows: `Win + Alt + R` (Xbox Game Bar) records the screen; iPhone: Control Centre → Screen Recording.
    - Or record all three browsers automatically: `E2E_VIDEO=1 npm run test:e2e` → videos in `test-results/` (no sound).
    Keep it on the presenting laptop's desktop, ready to play.
-7. Brightness up, notifications off (Do Not Disturb) on all devices, browser zoom ~110–125% on the projected laptop.
+8. Brightness up, notifications off (Do Not Disturb) on all devices, browser zoom ~110–125% on the projected laptop.
 
 ---
 
@@ -77,7 +79,9 @@ Hand passwords to the other founder privately (password manager), never in a cha
 **If the time slot is taken** ("Someone just booked that time"): tap another time.
 **If anything looks wrong before you start:** Prepare Stage Demo again (≈5 s) and reload A and B.
 
-**Optional, if you have 10 extra seconds (after step 6):** B taps **Create promo text →** → Marketing Studio → **WhatsApp recommendation**. Ready-made text with the business's own description, the price, the link and an honest "I earn a commission" note. Only channels the agreement allows are offered. Then go back and continue with step 8.
+**Optional, if you have 10–15 extra seconds (after step 6):** B taps **Create promo text →** → Marketing Studio.
+- **Promo image** tab → **Story 1080×1920** → pick the business's photo → a branded image appears with the service, price, "Scan to book", Alex's QR code and link, and an "AD · I earn a commission" note. **Download PNG** (or **Share** on a phone). Great to hold up: "Alex has never designed anything — this took one tap."
+- **Texts** tab → **WhatsApp recommendation**. Ready-made text with the business's own description, the price, the link and an honest "I earn a commission" note. Only channels the agreement allows are offered. Then go back and continue with step 8.
 
 ---
 
@@ -136,4 +140,5 @@ Pre-open everything as in BEFORE. Skip reading the agreement aloud.
 - Demo accounts are recreated (same passwords from `.env.local`) with `npm run seed-demo`.
 - Numbers: price 500,00 kr · commission 100,00 kr (promoter keeps 100%) · Promly fee 2.75% of price = 13,75 kr · business pays 113,75 kr per verified booking.
 - Spain campaign (if asked about Spain / EUR): Jet Ski Adventure 150,00 € · commission 20% = 30,00 € · fee 4,13 € · business pays 34,13 €. Log in as `demo-watersports@example.com` (`DEMO_SPAIN_BUSINESS_PASSWORD`).
+- Promo image: only the business's own photos and words are used. If the brand rules say "Always mention …", the business's own sentence about it is added (e.g. Spain: "Safety briefing and life jacket included."); if it isn't in the description, Studio asks the promoter to mention it in the caption instead.
 - Refund before payout: open a verified booking → **Refund** → the commission is reversed with new ledger entries ("Refund → pending charge cancelled").
