@@ -353,7 +353,7 @@ export function PromoImageMaker({ campaign }: { campaign: PromoImageCampaign }) 
           className={cn(
             "h-auto max-w-full rounded-2xl border border-border shadow-2xl shadow-violet-950/50",
             // Fit the whole image on screen (projector 1280×720 and phones).
-            format === "story" ? "w-[min(100%,calc(72vh*1080/1920))]" : "w-[min(100%,72vh,30rem)]",
+            format === "story" ? "w-[min(100%,calc((100vh-17rem)*0.5625))]" : "w-[min(100%,calc(100vh-17rem),30rem)]",
           )}
         />
       </div>
