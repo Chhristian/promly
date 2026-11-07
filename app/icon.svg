@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40">
+  <style>
+    .ink { stroke: #0D1B2A; }
+    @media (prefers-color-scheme: dark) { .ink { stroke: #FFFFFF; } }
+  </style>
+  <defs>
+    <linearGradient id="horn" x1="3" y1="20" x2="25" y2="20" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#4F86F7" />
+      <stop offset="1" stop-color="#7C3AED" />
+    </linearGradient>
+  </defs>
+  <path class="ink" d="M12.5 23.5 10.25 32.5" fill="none" stroke-width="3.5" stroke-linecap="round" />
+  <path d="M5.5 16.25 24.5 8.5v23L5.5 23.75C3.6 23.1 2.75 21.8 2.75 20s.85-3.1 2.75-3.75Z" fill="url(#horn)" />
+  <ellipse class="ink" cx="25" cy="20" rx="3.75" ry="11.75" fill="#2E1065" stroke-width="2.5" />
+  <g fill="none" stroke="#7C3AED" stroke-width="2.75" stroke-linecap="round">
+    <path d="M32 13.25 36 11" />
+    <path d="M32.5 20h4.75" />
+    <path d="M32 26.75 36 29" />
+  </g>
+</svg>
