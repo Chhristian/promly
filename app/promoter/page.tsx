@@ -4,10 +4,11 @@ import { requireRole } from "@/lib/auth";
 import { getPromoterOverview, siteUrl } from "@/lib/promoter-data";
 import { formatMinor, type Currency } from "@/lib/money";
 import { formatDate, formatSlot } from "@/lib/format";
-import { Stat, StatusBadge, bookingStage } from "@/components/stat";
+import { StatusBadge, bookingStage } from "@/components/stat";
 import { ShareTools } from "@/components/share-tools";
 import { Button } from "@/components/ui/button";
-import { Highlight, MoneyPulse } from "@/components/live";
+import { Highlight } from "@/components/live";
+import { EarningsSummary } from "./earnings-summary";
 import { ActivityFeed } from "@/components/activity-feed";
 import { CampaignCover } from "@/components/campaign-cover";
 import { EmptyState } from "@/components/empty-state";
@@ -34,7 +35,6 @@ export default async function PromoterDashboard() {
 
   const currencies = [market.currency] as Currency[];
   const verified = o.bookings.filter((b) => b.status === "verified");
-  const multi = currencies.length > 1;
   // Next real payout date among commissions that are already available.
   const nextPayout = o.bookings
     .filter((b) => b.status === "verified" && b.released_at && b.payout_at && new Date(b.payout_at).getTime() > Date.now())
@@ -42,7 +42,15 @@ export default async function PromoterDashboard() {
     .sort()[0];
   const covers = await coverUrls(o.memberships.flatMap((m) => (m.campaigns ? [m.campaigns] : [])));
 
-  const totalAvailable = currencies.reduce((sum, cur) => sum + (o.earnings[cur]?.available ?? 0), 0);
+  // Display only: the refund window from the agreements (e.g. 3 or 14 days), so the text never states the wrong number.
+  const waiting = o.bookings.filter((b) => b.status === "verified" && !b.released_at);
+  const windowDays = new Set(
+    waiting.length
+      ? waiting.map((b) => b.refund_window_days)
+      : o.memberships.flatMap((m) => (m.agreements ? [m.agreements.refund_window_days] : [])),
+  );
+  const onlyDays = windowDays.size === 1 ? [...windowDays][0] : null;
+  const pendingHint = onlyDays !== null ? `Waiting for refund window (${onlyDays} ${onlyDays === 1 ? "day" : "days"})` : "Waiting for refund window";
 
   return (
     <div className="space-y-6">
@@ -58,37 +66,15 @@ export default async function PromoterDashboard() {
         </div>
       </div>
 
-      {/* The payout slip: the one dark element on the page. Labels come before amounts. */}
-      <section className="slip grid gap-6 p-6 sm:px-8 sm:py-7 lg:grid-cols-[1.4fr_1fr] lg:items-center lg:gap-10">
-        <div className="space-y-6">
-          {currencies.map((cur) => (
-            <MoneyPulse key={`a-${cur}`}>
-              <Stat
-                onSlip
-                size="hero"
-                label={`Available${multi ? ` (${cur})` : ""}`}
-                value={formatMinor(o.earnings[cur]?.available ?? 0, cur)}
-                mark={(o.earnings[cur]?.available ?? 0) > 0}
-                hint={nextPayout ? `Ready for payout, paid out ${formatDate(nextPayout)}` : totalAvailable > 0 ? "Ready for payout" : "Verified commissions land here after the refund window"}
-              />
-            </MoneyPulse>
-          ))}
-        </div>
-        <div className="grid grid-cols-2 gap-x-6 gap-y-4 border-t border-white/15 pt-6 lg:border-l lg:border-t-0 lg:pl-10 lg:pt-0">
-          {currencies.map((cur) => (
-            <Stat
-              key={`p-${cur}`}
-              onSlip
-              className="col-span-2"
-              label={`Pending${multi ? ` (${cur})` : ""}`}
-              value={formatMinor(o.earnings[cur]?.pending ?? 0, cur)}
-              hint="Verified, refund window still open"
-            />
-          ))}
-          <Stat onSlip size="sm" label="Link clicks" value={String(o.totalClicks)} />
-          <Stat onSlip size="sm" label="Bookings" value={String(o.bookings.length)} hint={`${verified.length} verified`} />
-        </div>
-      </section>
+      <EarningsSummary
+        earnings={o.earnings}
+        currencies={currencies}
+        nextPayout={nextPayout}
+        pendingHint={pendingHint}
+        clicks={o.totalClicks}
+        bookings={o.bookings.length}
+        verified={verified.length}
+      />
       {otherMarkets.length > 0 && (
         <p className="text-sm text-muted-foreground" data-testid="other-market-totals">
           {otherMarkets.map((c) => (
