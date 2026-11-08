@@ -54,7 +54,8 @@ export async function updateSession(request: NextRequest) {
     path.startsWith("/auth") ||
     path.startsWith("/r/") ||
     path.startsWith("/book/") ||
-    path === "/api/stripe/webhook"; // Stripe calls it; every request must carry a valid Stripe signature
+    path === "/api/stripe/webhook" || // Stripe calls it; every request must carry a valid Stripe signature
+    path === "/api/conversions"; // businesses' own systems call it; every request must carry a valid HMAC signature
 
   if (!user && !isPublic) {
     // no user, potentially respond by redirecting the user to the login page
