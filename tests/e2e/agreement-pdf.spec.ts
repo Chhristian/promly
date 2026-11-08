@@ -6,7 +6,7 @@
  * views it inline, downloads it and joins; the database records the accepted
  * PDF version and hash. Then a stranger and a logged-out visitor try to read it.
  *
- * Needs the 20261108100000_agreement_pdfs migration and a deployment with this
+ * Needs the 20261108120000_agreement_pdfs migration and a deployment with this
  * code (set E2E_BASE_URL to the preview). Everything it creates is deleted.
  */
 import { test, expect, type Browser, type Page } from "@playwright/test";
