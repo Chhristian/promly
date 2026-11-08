@@ -125,6 +125,9 @@ test("business uploads its agreement PDF; promoter views, downloads and accepts 
   const db = adminDb();
   const biz = await logIn(browser, "business", "/business");
   await biz.goto(`/business/campaigns/${campaignId}`);
+  // The page must be hydrated before a file is chosen, or the change event is lost.
+  // The header's "Live" dot only appears once the client code is running.
+  await expect(biz.locator("header").getByText("Live", { exact: true })).toBeVisible({ timeout: 30_000 });
 
   // A file that only pretends to be a PDF is refused.
   const fake = path.join(os.tmpdir(), `promly-e2e-fake-${run}.pdf`);
@@ -143,6 +146,16 @@ test("business uploads its agreement PDF; promoter views, downloads and accepts 
   expect(doc).toMatchObject({ version: 1, sha256: pdfSha256, size_bytes: pdf.length, uploaded_by: userIds[0] });
   documentId = doc!.id;
   storagePath = doc!.storage_path;
+
+  // The business can view and download its own upload (live Storage policy), byte for byte.
+  for (const download of [false, true]) {
+    const res = await biz.request.get(`/agreement-pdf/${documentId}${download ? "?download=1" : ""}`, { maxRedirects: 0, headers: previewHeaders() });
+    expect(res.status()).toBe(302);
+    const own = await biz.request.get(res.headers()["location"]);
+    expect(own.ok()).toBe(true);
+    expect(createHash("sha256").update(await own.body()).digest("hex")).toBe(pdfSha256);
+    if (download) expect(own.headers()["content-disposition"] ?? "").toContain("attachment");
+  }
 
   // Accept the agreement with the PDF included, then publish.
   await biz.fill("#commission", "100");
