@@ -94,7 +94,7 @@ export default async function BillingPage() {
                     )}
                   </div>
                 </div>
-                <div className="ledger border-t border-border text-sm">
+                <div className="divide-y divide-border border-t border-border text-sm">
                   {inv.invoice_lines.filter((l) => l.active).map((l) => {
                     const b = l.bookings;
                     const when = formatDate(b?.slot_start ?? b?.created_at);

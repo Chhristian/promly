@@ -99,10 +99,35 @@ Stripe calls this a marketplace with **separate charges and transfers**:
 
 ## Secrets
 
-- `STRIPE_SECRET_KEY` in `.env.local` and on Vercel (preview + production). Test key only.
-  TODO: replace the full `sk_test_` key with a restricted `rk_test_` key (permissions in the morning report).
-- `STRIPE_WEBHOOK_SECRET` (`whsec_…`) for verifying webhook signatures.
+- `STRIPE_SECRET_KEY` in `.env.local` and on Vercel (preview + production). Test key only; the app refuses live keys.
+  TODO: replace the full `sk_test_` key with a restricted `rk_test_` key. Permissions are listed below.
+- `STRIPE_WEBHOOK_SECRET`: one `whsec_…` per Stripe endpoint, comma-separated.
+  - **Production:** two endpoints at `https://promly-eight.vercel.app/api/stripe/webhook`, one for platform events (`we_1UZJeYHwrk2mOXPQ30C5dcXe`) and one for Connect `account.updated` (`we_1UZJeYHwrk2mOXPQb29NbRh7`). Both were created **disabled**; enable them in the Stripe Dashboard when payments are merged.
+  - **Preview (`payments` branch) and `.env.local`:** the `stripe listen` secret. Previews are protected by Vercel, so Stripe can't call them directly. Run `stripe listen --forward-to <preview>/api/stripe/webhook --forward-connect-to <same> --events invoice.paid,invoice.payment_failed,invoice.overdue,invoice.voided,transfer.created,transfer.reversed,transfer.updated,account.updated` with the preview access header.
+- `PAYMENTS_ENABLED=true` is set only for previews of the `payments` branch.
 - Never printed, never committed.
+
+### Restricted test key permissions (Dashboard → Developers → API keys → Create restricted key)
+
+| Resource | Permission | Used for |
+|---|---|---|
+| Customers | Write | One Stripe customer per business |
+| Invoices, Invoice items | Write | Monthly invoice: create, add lines, finalise, pay (test), void |
+| Payment methods | Write | Test mode only: attach the test card for "Pay test invoice" |
+| Balance | Read | Check funds are available before each transfer |
+| Transfers | Write | Promoter payouts, and reversals |
+| Connect → Accounts (v2), Account links (v2) | Write | Promoter payout accounts and Stripe-hosted onboarding |
+
+Everything else: None. Creating webhook endpoints is a one-time step and doesn't need the app's key.
+
+## Stripe Connect setup still needed (blocks payouts)
+
+Stripe won't create promoter payout accounts until **Promly accepts loss liability for connected accounts**. The Dashboard does this under Connect → Platform profile (`dashboard.stripe.com/settings/connect/platform-profile`). Only the account owner can do it. Payout accounts are created with the **Accounts v2 API**: transfers-only ("recipient") configuration, Express Dashboard, Promly collecting fees and covering losses.
+
+## Demo notes
+
+- The demo's agreements are created by the seed and stay template v1. The database is shared with production, where payments are off. New agreements accepted while `PAYMENTS_ENABLED` is on use v2.
+- The demo promoter Alex is set to 18+ on every reset. That changes nothing about what Alex can see or join.
 
 ## Open questions for the lawyer and accountant
 
