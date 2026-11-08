@@ -54,6 +54,16 @@ await fetch("https://promly-eight.vercel.app/api/conversions", {
 
 The `external_id` is stored in the business's "New referral" notification payload, so no database migration was needed.
 
+## Glans demo checkout (`/demo/glans`, Demo Mode only)
+
+A fictional car-care business, "Glans Bilpleie" (banner: "Demo business – not a real company"), with its "own" checkout, to show this flow on stage without a second app.
+
+- Only on when `DEMO_MODE=true`; otherwise `/demo/glans` is a 404 and `/r/<code>` behaves as before.
+- Set a campaign's external booking link to `https://<promly host>/demo/glans` (same host as Promly). `/r/<code>` then sends the customer straight to `/demo/glans?ref=<code>`, without the details form on `/book/<code>`, so the phone number is only entered once.
+- The page shows the service and price of the campaign the ref belongs to (from the database), so the amount always matches. The ref is kept in an httpOnly cookie for 30 days.
+- **Betal (demo)** takes no payment. It calls `processConversion` (`lib/conversions.ts`), the same logic as this endpoint, directly on the server: no HTTP and no secret, with `status: "paid"`, `amount_minor` = the campaign price and a new `external_id`. Then it shows "Takk for bestillingen".
+- Only campaigns whose external link is this host's `/demo/glans` can be paid this way, so the demo can't verify bookings for real businesses.
+
 ## Responses
 
 | Status | Body | Meaning |
