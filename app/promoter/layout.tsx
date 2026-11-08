@@ -1,11 +1,13 @@
 import { AppShell } from "@/components/app-shell";
 import { requireRole } from "@/lib/auth";
+import { demoAvatarUrls } from "@/lib/demo-images";
 import { getMarket } from "@/lib/market-server";
 import { paymentsEnabled } from "@/lib/flags";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export default async function PromoterLayout({ children }: { children: React.ReactNode }) {
   const { profile, user, supabase } = await requireRole("promoter");
+  const avatarUrl = (await demoAvatarUrls([profile]))[profile.display_name] ?? null;
   const market = await getMarket();
   if (paymentsEnabled() && profile.role === "promoter") {
     // Save the age band chosen at sign-up (16-17 / 18+) the first time the promoter arrives.
@@ -17,6 +19,7 @@ export default async function PromoterLayout({ children }: { children: React.Rea
   }
   return (
     <AppShell
+      avatarUrl={avatarUrl}
       market={market.key}
       home="/promoter"
       userName={profile.display_name || "Promoter"}
