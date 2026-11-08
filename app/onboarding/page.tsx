@@ -2,6 +2,8 @@ import { redirect } from "next/navigation";
 import { getSession, homeFor } from "@/lib/auth";
 import { PromlyLogo } from "@/components/promly-logo";
 import { OnboardingForm } from "./onboarding-form";
+import { MarketPicker } from "@/components/market-picker";
+import { getMarket } from "@/lib/market-server";
 
 /** For logged-in accounts that have no profile yet: pick a role and finish setup. */
 export default async function OnboardingPage() {
@@ -9,6 +11,7 @@ export default async function OnboardingPage() {
   if (!s) redirect("/auth/login");
   if (s.profile) redirect(homeFor(s.profile.role));
   const suggested = typeof s.user.user_metadata?.display_name === "string" ? s.user.user_metadata.display_name : "";
+  const market = await getMarket();
   return (
     <div className="flex min-h-screen flex-col">
       <header className="mx-auto flex w-full max-w-6xl px-4 py-5">
@@ -16,6 +19,10 @@ export default async function OnboardingPage() {
       </header>
       <div className="flex flex-1 items-center justify-center px-4 pb-16">
         <div className="w-full max-w-md">
+          <div className="mb-4 flex items-center justify-between gap-3 text-sm">
+            <span className="font-medium">Your market</span>
+            <MarketPicker current={market.key} />
+          </div>
           <OnboardingForm email={s.user.email ?? ""} suggestedName={suggested} />
         </div>
       </div>

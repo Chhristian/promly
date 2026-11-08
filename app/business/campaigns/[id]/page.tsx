@@ -8,6 +8,7 @@ import { StatusBadge } from "@/components/stat";
 import { AgreementView } from "@/components/agreement-view";
 import { AgreementForm, EditCampaignForm, StatusButtons } from "../campaign-forms";
 import { paymentsEnabled } from "@/lib/flags";
+import { demoAvatarUrls } from "@/lib/demo-images";
 import { isAgeRestrictedCategory } from "@/lib/payments";
 import { CampaignCover } from "@/components/campaign-cover";
 import { signedPhotoUrls } from "@/lib/photos";
@@ -27,11 +28,12 @@ export default async function CampaignEditorPage({ params }: { params: Promise<{
       : Promise.resolve({ data: null }),
     supabase
       .from("campaign_memberships")
-      .select("id, created_at, promoter_accepted_at, profiles(display_name), agreements(version)")
+      .select("id, created_at, promoter_accepted_at, profiles(display_name, is_demo), agreements(version)")
       .eq("campaign_id", id)
       .order("created_at", { ascending: false }),
   ]);
 
+  const avatars = await demoAvatarUrls((members ?? []).flatMap((m) => (m.profiles ? [m.profiles] : [])));
   const signed = campaign.photo_paths.length ? await signedPhotoUrls(campaign.photo_paths) : {};
   const photos = campaign.photo_paths.filter((p) => signed[p]).map((p) => ({ path: p, url: signed[p] }));
   const cur = campaign.businesses.currency as Currency;
@@ -145,7 +147,13 @@ export default async function CampaignEditorPage({ params }: { params: Promise<{
         {!!members?.length && <div className="ledger">{members.map((m) => (
           <Highlight key={m.id} ids={[m.id]}>
           <div className="flex flex-wrap items-center justify-between gap-x-3 px-4 py-3 text-sm">
-            <span className="font-medium">{m.profiles?.display_name || "Promoter"}</span>
+            <span className="flex items-center gap-2 font-medium">
+              {m.profiles && avatars[m.profiles.display_name] && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={avatars[m.profiles.display_name]} alt="" width={28} height={28} className="h-7 w-7 rounded-full" data-testid="promoter-avatar" />
+              )}
+              {m.profiles?.display_name || "Promoter"}
+            </span>
             <span className="text-muted-foreground">
               accepted v{m.agreements?.version}, {formatDateTime(m.promoter_accepted_at)}
             </span>

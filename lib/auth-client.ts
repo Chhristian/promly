@@ -1,6 +1,9 @@
 /** Shared helpers for the login / sign-up forms (browser side). */
 
-export const AUTH_TIMEOUT_MS = 10_000;
+export const AUTH_TIMEOUT_MS = 15_000;
+
+/** Minimum password length for new accounts. */
+export const MIN_PASSWORD_LENGTH = 10;
 
 export const TOO_SLOW =
   "This is taking longer than it should. Check your internet connection and try again. If it keeps happening, reload the page.";
@@ -26,8 +29,8 @@ export function withTimeout<T>(promise: Promise<T>, ms = AUTH_TIMEOUT_MS): Promi
 export function friendlyAuthError(message: string): string {
   if (/invalid login credentials/i.test(message)) return "That email and password don't match.";
   if (/already registered|already exists/i.test(message)) return "An account with this email already exists. Log in instead.";
-  if (/password should be|weak password/i.test(message)) return "Choose a stronger password (at least 8 characters).";
-  if (/rate limit|too many/i.test(message)) return "Too many attempts. Wait a minute and try again.";
+  if (/password should be|weak password/i.test(message)) return `Choose a stronger password (at least ${MIN_PASSWORD_LENGTH} characters).`;
+  if (/rate limit|too many|over_request_rate_limit|429/i.test(message)) return "Too many attempts. Wait a minute and try again.";
   if (/failed to fetch|network/i.test(message)) return "Can't reach the server. Check your internet connection.";
   return message;
 }

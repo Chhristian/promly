@@ -1,3 +1,15 @@
+# Demo polish (8 Nov, branch demo-polish)
+
+| # | Item | Status |
+|---|---|---|
+| 0 | Pause "Premium bilvask", "Bilvask", "jjjj" (ids 266f00aa…, b0713dbb…, c33ce090…); PR #8 migration check | ✅ paused; PR #8 added no migration |
+| 1 | Aged illustrative data (2–6 months, ~160 bookings, ledger sums to zero) + generated avatars, business tiles and campaign covers (`npm run demo-assets`) | ✅ (past Stripe invoices not created: they would need real Stripe test invoices on every reset) |
+| 2 | Market selector Oslo/NOK vs Mallorca/EUR (cookie, default Oslo; no migration) | ✅ |
+| 3 | Auth hardening (clear errors, min 10 chars, show/hide, 15 s timeout + Try again) | ✅ |
+| 4 | Native share (link + QR PNG, #reklame text, copy fallback with "Link copied") | ✅ |
+| 5 | Tests, screenshots (`C:\Users\chris\promly-screenshots-polish`), PR | ✅ unit 40/40; e2e 10 passed + 2 skipped (payments, flag off) and polish 2/2 after a test fix |
+
+
 # Backlog
 
 Feature freeze: **Sunday 8 Nov, 11:00**. Deadline: Sunday 14:00. Work top to bottom.

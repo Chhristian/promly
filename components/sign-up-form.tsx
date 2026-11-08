@@ -9,7 +9,8 @@ import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { AUTH_TIMEOUT_MS, TOO_SLOW, friendlyAuthError, goToDashboard, withTimeout } from "@/lib/auth-client";
+import { PasswordInput } from "@/components/password-input";
+import { AUTH_TIMEOUT_MS, MIN_PASSWORD_LENGTH, TOO_SLOW, friendlyAuthError, goToDashboard, withTimeout } from "@/lib/auth-client";
 
 type Role = "business" | "promoter";
 
@@ -43,6 +44,13 @@ export function SignUpForm({ className, askAgeBand = false, ...props }: React.Co
     if (askAgeBand && role === "promoter" && !ageBand) {
       if (watchdog.current) clearTimeout(watchdog.current);
       setError("Tell us how old you are.");
+      setIsLoading(false);
+      return;
+    }
+
+    if (password.length < MIN_PASSWORD_LENGTH) {
+      if (watchdog.current) clearTimeout(watchdog.current);
+      setError(`Use at least ${MIN_PASSWORD_LENGTH} characters for your password.`);
       setIsLoading(false);
       return;
     }
@@ -139,15 +147,16 @@ export function SignUpForm({ className, askAgeBand = false, ...props }: React.Co
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="password">Password</Label>
-                <Input id="password" type="password" required minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} />
+                <PasswordInput id="password" required minLength={MIN_PASSWORD_LENGTH} autoComplete="new-password" aria-describedby="password-hint" value={password} onChange={(e) => setPassword(e.target.value)} />
+                <p id="password-hint" className="text-xs text-muted-foreground">At least {MIN_PASSWORD_LENGTH} characters. A short sentence is easy to remember.</p>
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="repeat-password">Repeat password</Label>
-                <Input id="repeat-password" type="password" required value={repeatPassword} onChange={(e) => setRepeatPassword(e.target.value)} />
+                <PasswordInput id="repeat-password" required autoComplete="new-password" value={repeatPassword} onChange={(e) => setRepeatPassword(e.target.value)} />
               </div>
               {error && <p className="text-sm text-destructive">{error}</p>}
               <Button type="submit" className="h-11 w-full" disabled={isLoading}>
-                {isLoading ? "Creating account..." : "Sign up"}
+                {isLoading ? "Creating account..." : error === TOO_SLOW ? "Try again" : "Sign up"}
               </Button>
             </div>
             <div className="mt-4 text-center text-sm">
