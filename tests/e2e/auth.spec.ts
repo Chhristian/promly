@@ -113,11 +113,25 @@ test("a wrong password shows a clear error instead of spinning", async ({ page }
   await expect(page.getByRole("button", { name: "Log in" })).toBeEnabled();
 });
 
-test("if the server never answers, the button stops spinning and explains after ~10 s", async ({ page }) => {
+test("if the server never answers, the button stops spinning after ~15 s and offers a working Try again", async ({ page }) => {
   // Simulate a hung network: hold the Supabase login request forever.
   await page.route("**/auth/v1/token**", () => {});
   await logIn(page, process.env.DEMO_PROMOTER_EMAIL!, "any-password");
   await expect(page.getByRole("button", { name: "Logging in…" })).toBeVisible();
-  await expect(page.getByText("This is taking longer than it should.")).toBeVisible({ timeout: 14_000 });
-  await expect(page.getByRole("button", { name: "Log in" })).toBeEnabled();
+  await expect(page.getByText("This is taking longer than it should.")).toBeVisible({ timeout: 19_000 });
+  const retry = page.getByRole("button", { name: "Try again" });
+  await expect(retry).toBeEnabled();
+  await retry.click(); // really retries: the request goes out again
+  await expect(page.getByRole("button", { name: "Logging in…" })).toBeVisible();
+});
+
+test("sign-up asks for at least 10 characters and the password can be shown", async ({ page }) => {
+  await page.goto("/auth/sign-up");
+  await expect(page.getByText("At least 10 characters.")).toBeVisible();
+  await page.fill("#password", "short-pw1");
+  await expect(page.locator("#password")).toHaveAttribute("type", "password");
+  await page.getByRole("button", { name: "Show password" }).first().click();
+  await expect(page.locator("#password")).toHaveAttribute("type", "text");
+  await page.getByRole("button", { name: "Hide password" }).first().click();
+  await expect(page.locator("#password")).toHaveAttribute("type", "password");
 });
