@@ -20,8 +20,20 @@ Test results (from `docs/PROGRESS.md` and this handoff's checks):
 
 - **Unit (Vitest):** 40/40 when the branch was last tested.
 - **E2E on the preview:** 10 passed, 2 skipped (payments, flag off); one failure in my own new share test was a bad check, which I fixed. Share and market tests then passed 2/2.
-- **Full e2e suite has NOT been rerun since that fix.** Do this first (next steps, item 2).
+- **Full e2e suite rerun after the fix: see the "Resume log" below (11 passed, 2 skipped).**
 - **Handoff checks (8 Nov):** `npx tsc --noEmit` passes. `npm run build` passes. I did not run unit or e2e tests for the handoff and fixed nothing.
+
+## Resume log (Christian's session, 8 Nov ~10:15, branch `demo-polish`)
+
+- `git pull`: nothing new from Jakob since `a4b842e`. Branch still 2 commits behind `main`.
+- **Step 1 (merge `main`):** not merged, as instructed (no merging). A trial merge with `--no-commit` applied **cleanly with no conflicts** and was aborted; the branch is unchanged. Merging `main` in stays a decision for Christian/Jakob.
+- **Step 2 (checks), on the branch as it stands (without `main`'s 2 commits):**
+  - `npm test`: **40/40** passed.
+  - `npm run build`: passed.
+  - Full e2e on the preview (`E2E_BASE_URL=<preview> npm run test:e2e`): **11 passed, 2 skipped** (the two payments specs, flag off). This includes both stage-demo tests and the share and market tests.
+- **Step 3 (stage demo):** the stage-demo e2e passed (health check green, full flow live). `npm run reset-demo` then ended with "Stage demo is ready" (2 businesses, 158 illustrative bookings, Alex confirmed 18+).
+- **Screenshots:** public pages (landing, login, sign-up) on the preview at desktop and phone size, in `C:\Users\chris\promly-screenshots-handoff` (outside the repo). Earlier polish screenshots are in `C:\Users\chris\promly-screenshots-polish`.
+- **Not done, on purpose:** step 4 (merge PR #11, needs Christian's OK) and step 5 (optional backlog items, after the feature freeze). No migration was needed or written; nothing was pushed to the database.
 
 ## Not done / next steps (in order)
 
