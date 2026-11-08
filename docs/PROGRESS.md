@@ -1,3 +1,69 @@
+# Morning report: payments and settlement (Sun 8 Nov, 01:30)
+
+## Needs you
+
+1. **Stripe Connect: accept loss liability** in the sandbox Dashboard (Connect → Platform profile,
+   `dashboard.stripe.com/settings/connect/platform-profile`).
+   - Until then, Stripe refuses to create promoter payout accounts.
+   - So "Set up payouts with Stripe" shows a polite error, and the payout e2e test is **skipped**, not passed.
+   - Everything else works.
+   - Afterwards, run `E2E_PAYMENTS=1` e2e again; I expect the payout step to need a short test run to confirm.
+2. **Optional: swap the full `sk_test_` key for a restricted `rk_test_` key.** Permissions are in `docs/PAYMENTS.md`.
+3. **Webhooks on the preview need `stripe listen` running on a machine.** Command in `docs/PAYMENTS.md`. Vercel protects previews, so Stripe can't call them directly.
+   - The production webhook endpoints exist but are **disabled** until payments are merged.
+   - Alternative: allow Vercel "Protection Bypass for Automation" for webhooks. That's a protection setting, so it's your call.
+4. **Lawyer / accountant list** in `docs/PAYMENTS.md`:
+   - VAT on the fee
+   - whether commission is Promly revenue or collected for promoters
+   - reporting payouts to Skatteetaten
+   - whether a guardian can receive payouts for a minor
+
+## What works (preview, Stripe test mode)
+
+Preview: **https://promly-git-payments-christian-45cf.vercel.app** (branch `payments`, `PAYMENTS_ENABLED=true`, not merged).
+
+- **Database (migration applied):**
+  - invoices, invoice lines (with credit lines), payouts, Stripe account/customer ids, age bands, campaign age ratings, clawbacks, webhook dedupe
+  - all money functions server-only, with RLS on every table
+  - the live site ran the full e2e suite **8/8 after the migration**
+- **Business:**
+  - **Billing** tab: one invoice per month, a line per booking, Stripe-hosted "Pay on Stripe" link, overdue banner
+  - **16+/18+** choice and an "age-restricted" tick in the campaign editor
+  - nightlife, club and alcohol categories are always 18+
+- **Promoter:**
+  - **Earnings** tab with statuses and dates: Pending → Final → Invoiced → Paid by business → Paid out, plus "Awaiting business payment"
+  - payout setup: own Stripe account at 18+, or a guardian (with consent) at 16–17
+  - age band asked at sign-up
+- **Admin Demo Control Center** (test mode):
+  - Simulate end of 14-day holding period
+  - Create this month's invoices (real Stripe invoices)
+  - Pay test invoice (Stripe test card)
+  - Run payouts
+- **Webhook:** `/api/stripe/webhook` verifies the signature on every request (unsigned or forged → 400) and deduplicates events. It is the **only** thing that marks an invoice paid; confirmed end to end with `invoice.paid` → 200.
+- **Agreement template v2** for new agreements: 14-day finality, 7-day verification, invoicing, payouts only from paid money, guardian rule, business liable for its own payment disputes. The lawyer label is kept, and v1 agreements are unchanged.
+- **Demo reset** clears demo invoices and payouts. Demo promoter Alex is set to 18+. Demo agreements stay v1, because production shares the database.
+
+## Test results
+
+| Suite | Result |
+|---|---|
+| Unit (Vitest), incl. `payments.test.ts` + `payments-db.test.ts` (PGlite replay of every migration, 105 database checks) | **42/42** |
+| Full e2e on the preview, payments on (`E2E_PAYMENTS=1`) | **9 passed, 1 skipped** (payout: Stripe Connect setting above) |
+| Stage-demo e2e (unchanged) on the preview and on the live site after the migration | passed |
+| Build | passes |
+
+Screenshots (Billing, Earnings, payout setup, sign-up age question, campaign age rating, admin buttons; desktop and phone) were checked on the preview. Demo reset at the end.
+
+## What's left
+
+- **Payouts end to end:** blocked by the Connect setting above; the code is written.
+- **Monthly schedule:** no cron yet for the monthly invoice run, the daily "final after 14 days" and "cancel if not verified in 7 days" jobs, or the payout run. Today they run from the admin buttons. The database functions exist (`finalize_due_bookings`, `cancel_unverified_bookings`).
+- **Bank-transfer invoices:** NOK invoices offer card only (Stripe has no NOK bank transfer). EUR bank transfer is a TODO for the Mallorca pilot, together with Spanish promoters on Stripe's full account agreement.
+- **Fraud clawback:** there's no admin screen for it yet; the database function and invoice credits are done and tested.
+- **Merge:** not merged. On merge, enable the two production webhook endpoints in Stripe and set `PAYMENTS_ENABLED` for production when you're ready.
+
+---
+
 # Progress — UI/UX pass
 
 Brief: `docs/DESIGN.md`. Audit screenshots: every listed screen at 1280×720 and phone size, taken on the live site with real demo data.
