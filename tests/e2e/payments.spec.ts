@@ -32,9 +32,12 @@ async function login(page: Page, prefix: string, landsOn: string) {
 
 /** Click a Demo Control Center payments step and return its log text. */
 async function runStep(admin: Page, label: string) {
-  await admin.getByRole("button", { name: label }).click();
   const log = admin.getByTestId("payments-log");
+  const before = (await log.count()) ? (await log.innerText()).trim() : "";
+  await admin.getByRole("button", { name: label }).click();
+  // Wait for THIS run's result (a new log), not the previous one still on screen.
   await expect(log).toContainText(label, { timeout: 60_000 });
+  await expect.poll(async () => (await log.innerText()).trim(), { timeout: 60_000 }).not.toBe(before);
   return (await log.innerText()).trim();
 }
 
