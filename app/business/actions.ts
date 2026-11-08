@@ -8,6 +8,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { parseMajorToMinor } from "@/lib/money";
 import { friendlyError } from "@/lib/errors";
 import { AGREEMENT_TEMPLATE_VERSION_V2, CHANNEL_VALUES } from "@/lib/agreement-template";
+import { AGREEMENT_PDF_BUCKET, AGREEMENT_PDF_MAX_BYTES, hasPdfMagicBytes, isAgreementPdfPath } from "@/lib/agreement-pdf";
+import { createHash } from "node:crypto";
 import { BUSINESS_CATEGORY_VALUES } from "@/lib/categories";
 import { paymentsEnabled } from "@/lib/flags";
 import { effectiveAgeRating } from "@/lib/payments";
@@ -152,6 +154,8 @@ const agreementSchema = z
     refund_window_days: z.coerce.number().int().min(0).max(14),
     allowed_channels: z.array(z.enum(CHANNEL_VALUES)).min(1, "Pick at least one marketing channel"),
     brand_rules: z.string().trim().max(2000),
+    // Optional uploaded PDF version to include in this agreement version.
+    document_id: z.union([z.literal(""), z.uuid()]).default(""),
     accept: z.literal("on", { message: "Tick the box to accept the agreement" }),
   })
   .refine((a) => a.refund_window_days <= a.payout_days, {
@@ -177,6 +181,7 @@ export async function acceptAgreement(_: ActionState, fd: FormData): Promise<Act
     .insert({
       campaign_id: a.campaign_id, commission_minor: a.commission, payout_days: a.payout_days,
       refund_window_days: a.refund_window_days, allowed_channels: a.allowed_channels, brand_rules: a.brand_rules,
+      document_id: a.document_id || null, // the database checks it belongs to this campaign
       business_accepted_at: new Date().toISOString(), // the database replaces this with its own clock
       ...(paymentsEnabled() ? { template_version: AGREEMENT_TEMPLATE_VERSION_V2 } : {}),
     })
@@ -258,4 +263,46 @@ export async function setCampaignPhotos(campaignId: string, paths: string[]): Pr
   if (!data?.length) return { error: "You don't have permission to do that." };
   revalidatePath(`/business/campaigns/${id.data}`);
   return { ok: "Photos saved." };
+}
+
+// ---------------------------------------------------------------------------
+// Agreement PDFs. The browser uploads the file under RLS (own campaign folder,
+// new file only). This checks the bytes really are a PDF, hashes them and
+// registers the next version. Only the server can write agreement_documents.
+// ---------------------------------------------------------------------------
+export async function registerAgreementPdf(campaignId: string, path: string, fileName: string): Promise<ActionState> {
+  const { user, supabase } = await requireRole("business");
+  const id = z.uuid().safeParse(campaignId);
+  if (!id.success || !isAgreementPdfPath(id.data, path)) return { error: "Invalid upload." };
+  const { data: owns } = await supabase.rpc("owns_campaign", { p_campaign_id: id.data });
+  if (!owns) return { error: "You can only upload to your own campaigns." };
+
+  const admin = createAdminClient();
+  const reject = async (error: string): Promise<ActionState> => {
+    await admin.storage.from(AGREEMENT_PDF_BUCKET).remove([path]);
+    return { error };
+  };
+
+  const { data: blob, error: dlErr } = await admin.storage.from(AGREEMENT_PDF_BUCKET).download(path);
+  if (dlErr || !blob) return { error: "Upload not found. Please try again." };
+  const bytes = new Uint8Array(await blob.arrayBuffer());
+  if (bytes.length > AGREEMENT_PDF_MAX_BYTES) return reject("The PDF is larger than 5 MB.");
+  if (!hasPdfMagicBytes(bytes)) return reject("That file isn't a PDF.");
+
+  const { data: doc, error } = await admin
+    .from("agreement_documents")
+    .insert({
+      campaign_id: id.data,
+      storage_path: path,
+      sha256: createHash("sha256").update(bytes).digest("hex"),
+      size_bytes: bytes.length,
+      file_name: z.string().trim().max(200).catch("agreement.pdf").parse(fileName) || "agreement.pdf",
+      uploaded_by: user.id,
+    })
+    .select("version")
+    .single();
+  if (error?.code === "23505") return { ok: "This PDF is already uploaded." }; // never delete a registered file
+  if (error) return reject(friendlyError(error));
+  revalidatePath(`/business/campaigns/${id.data}`);
+  return { ok: `PDF version ${doc.version} uploaded. Accept the agreement with it to make it part of the terms.` };
 }

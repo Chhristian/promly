@@ -10,6 +10,7 @@ import { JoinForm } from "./join-form";
 import { ArrowLeft, ChevronDown, MapPin } from "lucide-react";
 import { CampaignCover, categoryLabel } from "@/components/campaign-cover";
 import { signedPhotoUrls } from "@/lib/photos";
+import { shortHash } from "@/lib/agreement-pdf";
 
 export default async function PromoterCampaignPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -20,7 +21,7 @@ export default async function PromoterCampaignPage({ params }: { params: Promise
 
   const { data: membership } = await supabase
     .from("campaign_memberships")
-    .select("id, promoter_accepted_at, agreement_id, referral_links(code)")
+    .select("id, promoter_accepted_at, agreement_id, agreement_document_sha256, referral_links(code)")
     .eq("campaign_id", id)
     .eq("promoter_id", user.id)
     .maybeSingle();
@@ -29,6 +30,10 @@ export default async function PromoterCampaignPage({ params }: { params: Promise
   const agreementId = membership?.agreement_id ?? c.current_agreement_id;
   const { data: agreement } = agreementId
     ? await supabase.from("agreements").select("*").eq("id", agreementId).maybeSingle()
+    : { data: null };
+  // The agreement's PDF, if it has one (RLS: published or joined campaigns only).
+  const { data: pdf } = agreement?.document_id
+    ? await supabase.from("agreement_documents").select("id, version, sha256").eq("id", agreement.document_id).maybeSingle()
     : { data: null };
 
   const signed = c.photo_paths.length ? await signedPhotoUrls(c.photo_paths.slice(0, 1)) : {};
@@ -102,7 +107,13 @@ export default async function PromoterCampaignPage({ params }: { params: Promise
           <p className="text-sm text-muted-foreground" data-testid="ad-disclosure-note">
             Mark your posts as advertising (#reklame) and follow the business&apos;s brand rules.
           </p>
-          <p className="pt-1 text-xs text-muted-foreground">You accepted the agreement on {formatDateTime(membership?.promoter_accepted_at)}.</p>
+          <p className="pt-1 text-xs text-muted-foreground">
+            You accepted the agreement on {formatDateTime(membership?.promoter_accepted_at)}
+            {membership?.agreement_document_sha256 && (
+              <>, including PDF version {pdf?.version} (SHA-256 <span title={membership.agreement_document_sha256}>{shortHash(membership.agreement_document_sha256)}…</span>)</>
+            )}
+            .
+          </p>
         </section>
       ) : c.status !== "published" ? (
         <p className="rounded-2xl border border-dashed border-input p-4 text-sm text-muted-foreground">This campaign isn&apos;t accepting new promoters right now.</p>
@@ -117,6 +128,7 @@ export default async function PromoterCampaignPage({ params }: { params: Promise
           <div className="px-4 pb-4">
             <AgreementView
               version={agreement.version}
+              pdf={pdf}
               terms={{
                 businessName: c.businesses.name,
                 serviceName: c.service_name,
@@ -137,6 +149,7 @@ export default async function PromoterCampaignPage({ params }: { params: Promise
       {agreement && !link && (
         <AgreementView
           version={agreement.version}
+          pdf={pdf}
           terms={{
             businessName: c.businesses.name,
             serviceName: c.service_name,
@@ -152,7 +165,7 @@ export default async function PromoterCampaignPage({ params }: { params: Promise
         />
       )}
 
-      {!membership && agreement && c.status === "published" && <JoinForm campaignId={c.id} agreementId={agreement.id} />}
+      {!membership && agreement && c.status === "published" && <JoinForm campaignId={c.id} agreementId={agreement.id} pdfVersion={pdf?.version} />}
     </div>
   );
 }

@@ -68,6 +68,11 @@ describe("payments in the database (PGlite replay of all migrations)", () => {
     expectCheck("invoice that charged it is unpaid: no credit yet");
   });
 
+  it("agreement PDFs: same campaign only, frozen once accepted, hash recorded on join, private to the right people", () => {
+    for (const c of checks.filter((x) => x.section === "Agreement PDFs")) expectCheck(c.name);
+    expect(checks.filter((x) => x.section === "Agreement PDFs").length).toBeGreaterThanOrEqual(15);
+  });
+
   it(`all database checks pass`, () => {
     const failed = checks.filter((c) => !c.pass);
     expect(failed.map((c) => `${c.section} › ${c.name} ${c.detail}`)).toEqual([]);

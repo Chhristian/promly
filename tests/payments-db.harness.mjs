@@ -275,6 +275,54 @@ ok((await asErr(owner, `update public.business_invoices set status = 'paid'`))?.
 const svc = async (sql) => { await db.exec(`set role service_role`); try { return await q(sql); } finally { await db.exec(`reset role`); } };
 ok((await svc(`select public.finalize_due_bookings() n`))[0].n === 0, "server role can run the functions");
 
+section = "Agreement PDFs";
+{
+  const owner2 = await user("biz2@x.no", "business");
+  const biz2 = (await one(`insert into public.businesses (owner_id, name, country, currency, category) values ($1, 'Other Barber', 'NO', 'NOK', 'barbershop') returning id`, [owner2])).id;
+  const camp2 = (await one(`insert into public.campaigns (business_id, service_name, price_minor) values ($1, 'Other Cut', 40000) returning id`, [biz2])).id;
+  // The server registers versions (clients have no insert grant on agreement_documents).
+  const doc = async (campaignId) => (await one(`insert into public.agreement_documents (campaign_id, storage_path, sha256, size_bytes, file_name)
+    values ('${campaignId}', '${campaignId}/' || gen_random_uuid()::text || '.pdf', repeat('a', 64), 1000, 'terms.pdf') returning id`)).id;
+  const docMine = await doc(camp);
+  const docMine2 = await doc(camp);
+  const docOther = await doc(camp2);
+  const draft = (await one(`insert into public.agreements (campaign_id, commission_minor, payout_days, refund_window_days) values ($1, 10000, 14, 7) returning id`, [camp])).id;
+
+  // a) a PDF must belong to the same campaign as the agreement
+  ok((await asErr(owner, `update public.agreements set document_id = '${docOther}' where id = '${draft}'`))?.includes("agreement_document_not_in_campaign"), "can't attach another business's PDF (update, as the business owner)");
+  ok((await asErr(owner, `insert into public.agreements (campaign_id, commission_minor, payout_days, refund_window_days, document_id) values ('${camp}', 10000, 14, 7, '${docOther}')`))?.includes("agreement_document_not_in_campaign"), "can't attach another business's PDF (insert, as the business owner)");
+  ok((await err(`update public.agreements set document_id = '${docOther}' where id = '${draft}'`))?.includes("agreement_document_not_in_campaign"), "same rule even for a superuser (it is a trigger, not just a policy)");
+  ok((await asErr(owner, `update public.agreements set document_id = '${docMine}' where id = '${draft}'`)) === null, "the campaign's own PDF can be attached to a draft");
+  ok((await asErr(owner, `update public.agreements set document_id = '${docMine2}' where id = '${draft}'`)) === null, "a draft can switch to a newer PDF version");
+  ok((await asErr(owner2, `update public.agreements set document_id = '${docOther}' where id = '${draft}'`)) === null && (await one(`select document_id from public.agreements where id = $1`, [draft])).document_id === docMine2, "another business can't change my draft (RLS, no row updated)");
+
+  // b) frozen once accepted
+  await q(`update public.agreements set business_accepted_at = now() where id = $1`, [draft]);
+  // As the owner, RLS ("owner edits until accepted") hides the accepted row from UPDATE: 0 rows change, no error.
+  const frozenDoc = async () => (await one(`select document_id from public.agreements where id = $1`, [draft])).document_id;
+  await asErr(owner, `update public.agreements set document_id = '${docMine}' where id = '${draft}'`);
+  ok((await frozenDoc()) === docMine2, "accepted agreement: the business can't swap the PDF (RLS)");
+  await asErr(owner, `update public.agreements set document_id = null where id = '${draft}'`);
+  ok((await frozenDoc()) === docMine2, "accepted agreement: the business can't remove the PDF (RLS)");
+  ok((await err(`update public.agreements set document_id = '${docMine}' where id = '${draft}'`))?.includes("agreement_is_accepted_and_cannot_change") && (await frozenDoc()) === docMine2, "accepted agreement: frozen even without RLS (trigger)");
+  ok((await err(`update public.agreement_documents set sha256 = repeat('b', 64) where id = '${docMine2}'`))?.includes("agreement_document_is_immutable"), "a registered PDF version can never be edited");
+
+  // The accepted PDF + hash is copied onto the membership when a promoter joins
+  await q(`update public.campaigns set current_agreement_id = $1 where id = $2`, [draft, camp]);
+  const joiner = await user("joiner@x.no", "promoter");
+  await q(`update public.profiles set is_demo = true where id = $1`, [joiner]);
+  await q(`insert into public.campaign_memberships (campaign_id, promoter_id, agreement_id) values ($1, $2, $3)`, [camp, joiner, draft]);
+  const mem = await one(`select agreement_document_id, agreement_document_sha256 from public.campaign_memberships where promoter_id = $1 and campaign_id = $2`, [joiner, camp]);
+  ok(mem.agreement_document_id === docMine2 && mem.agreement_document_sha256 === "a".repeat(64), "joining records the accepted PDF version and its hash");
+
+  // Who can read the registered versions
+  const seen = async (uid, id) => (await as(uid, `select id from public.agreement_documents where id = '${id}'`)).length;
+  ok((await seen(owner, docMine)) === 1 && (await seen(owner2, docMine)) === 0, "PDF rows: owner sees them, another business doesn't");
+  ok((await seen(owner2, docOther)) === 1 && (await seen(owner, docOther)) === 0, "PDF rows: the other business sees only its own");
+  ok((await seen(joiner, docMine2)) === 1 && (await seen(joiner, docMine)) === 0, "PDF rows: promoter sees only the version in the accepted agreement");
+  ok((await asErr(owner, `insert into public.agreement_documents (campaign_id, storage_path, sha256, size_bytes) values ('${camp}', '${camp}/${camp}.pdf', repeat('a', 64), 100)`))?.includes("permission denied"), "clients can't register PDF versions");
+}
+
 section = "Demo purge with payments data present";
 const purgeErr = await err(`select public.purge_demo_data()`);
 ok(purgeErr === null, "purge_demo_data succeeds", purgeErr ?? "");

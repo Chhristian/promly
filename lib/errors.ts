@@ -26,6 +26,8 @@ const MESSAGES: Record<string, string> = {
   no_external_url: "This offer isn't set up for outside booking.",
   discount_code_not_found: "No promoter has that code.",
   campaigns_external_booking_url_https: "The booking link must start with https://",
+  agreement_document_not_in_campaign: "That PDF doesn't belong to this campaign.",
+  agreement_document_is_immutable: "An uploaded PDF version can't be changed. Upload a new version instead.",
   // Payments and age ratings
   billing_overdue: "An invoice is overdue, so campaigns can't go live until it's paid. See Billing.",
   age_restricted_campaign_is_18_plus: "Age-restricted campaigns (nightlife, clubs, alcohol) are always 18+.",
