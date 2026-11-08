@@ -7,6 +7,8 @@ import { formatDateTime } from "@/lib/format";
 import { StatusBadge } from "@/components/stat";
 import { AgreementView } from "@/components/agreement-view";
 import { AgreementForm, EditCampaignForm, StatusButtons } from "../campaign-forms";
+import { paymentsEnabled } from "@/lib/flags";
+import { isAgeRestrictedCategory } from "@/lib/payments";
 import { CampaignCover } from "@/components/campaign-cover";
 import { signedPhotoUrls } from "@/lib/photos";
 import { PhotoManager } from "./photo-manager";
@@ -89,6 +91,11 @@ export default async function CampaignEditorPage({ params }: { params: Promise<{
             description={campaign.description}
             priceMinor={campaign.price_minor}
             externalBookingUrl={campaign.external_booking_url ?? ""}
+            age={
+              paymentsEnabled()
+                ? { rating: campaign.age_rating as "16+" | "18+", restricted: campaign.age_restricted, categoryRestricted: isAgeRestrictedCategory(campaign.businesses.category) }
+                : undefined
+            }
           />
         </section>
 

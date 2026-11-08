@@ -8,6 +8,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { parseMajorToMinor } from "@/lib/money";
 import { friendlyError } from "@/lib/errors";
 import { CHANNEL_VALUES } from "@/lib/agreement-template";
+import { paymentsEnabled } from "@/lib/flags";
+import { effectiveAgeRating } from "@/lib/payments";
 import type { ActionState } from "@/components/action-form";
 
 const amount = z
@@ -30,7 +32,7 @@ const businessSchema = z.object({
   name: z.string().trim().min(1, "Enter the business name").max(120),
   city: z.string().trim().max(80),
   country: z.enum(["NO", "ES"]),
-  category: z.enum(["barbershop", "beauty", "restaurant", "experience", "water_sports", "jet_ski", "boat_tour", "fitness", "other"]),
+  category: z.enum(["barbershop", "beauty", "restaurant", "experience", "water_sports", "jet_ski", "boat_tour", "fitness", "other", "nightlife", "club", "alcohol"]),
   description: z.string().trim().max(2000),
 });
 
@@ -64,7 +66,22 @@ const campaignSchema = z.object({
   price: amount,
   external_booking_url: externalBookingUrl.default(""),
   external_booking_url_was: z.string().default(""),
+  age_fields: z.string().optional(),
+  age_rating: z.enum(["16+", "18+"]).optional(),
+  age_restricted: z.literal("on").optional(),
 });
+
+/** Age rating patch (only when the form showed the age fields and payments are on). The database enforces it too. */
+async function agePatch(
+  supabase: Awaited<ReturnType<typeof requireRole>>["supabase"],
+  businessId: string,
+  c: z.infer<typeof campaignSchema>,
+): Promise<{ age_rating?: "16+" | "18+"; age_restricted?: boolean }> {
+  if (!paymentsEnabled() || c.age_fields !== "1") return {};
+  const { data: biz } = await supabase.from("businesses").select("category").eq("id", businessId).maybeSingle();
+  const restricted = c.age_restricted === "on";
+  return { age_rating: effectiveAgeRating(biz?.category ?? "other", restricted, c.age_rating ?? "18+"), ...(restricted ? { age_restricted: true } : {}) };
+}
 
 /**
  * Only send external_booking_url when it is set or being cleared, so creating
@@ -90,6 +107,7 @@ export async function createCampaign(_: ActionState, fd: FormData): Promise<Acti
       description: parsed.data.description,
       price_minor: parsed.data.price,
       ...externalUrlPatch(parsed.data),
+      ...(await agePatch(supabase, biz.id, parsed.data)),
     })
     .select("id")
     .single();
@@ -102,6 +120,7 @@ export async function updateCampaign(_: ActionState, fd: FormData): Promise<Acti
   const id = z.uuid().safeParse(fd.get("campaign_id"));
   const parsed = campaignSchema.safeParse(Object.fromEntries(fd));
   if (!id.success || !parsed.success) return { error: parsed.success ? "Invalid campaign" : firstIssue(parsed.error) };
+  const { data: current } = await supabase.from("campaigns").select("business_id").eq("id", id.data).maybeSingle();
   const { data, error } = await supabase
     .from("campaigns")
     .update({
@@ -109,6 +128,7 @@ export async function updateCampaign(_: ActionState, fd: FormData): Promise<Acti
       description: parsed.data.description,
       price_minor: parsed.data.price,
       ...externalUrlPatch(parsed.data),
+      ...(current ? await agePatch(supabase, current.business_id, parsed.data) : {}),
     })
     .eq("id", id.data)
     .select("id");

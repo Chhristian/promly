@@ -13,8 +13,9 @@ import { AUTH_TIMEOUT_MS, TOO_SLOW, friendlyAuthError, goToDashboard, withTimeou
 
 type Role = "business" | "promoter";
 
-export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutRef<"div">) {
+export function SignUpForm({ className, askAgeBand = false, ...props }: React.ComponentPropsWithoutRef<"div"> & { askAgeBand?: boolean }) {
   const [role, setRole] = useState<Role>("promoter");
+  const [ageBand, setAgeBand] = useState<"16-17" | "18+" | "">("");
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -39,6 +40,13 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
       setError(TOO_SLOW);
     }, AUTH_TIMEOUT_MS + 500);
 
+    if (askAgeBand && role === "promoter" && !ageBand) {
+      if (watchdog.current) clearTimeout(watchdog.current);
+      setError("Tell us how old you are.");
+      setIsLoading(false);
+      return;
+    }
+
     if (password !== repeatPassword) {
       if (watchdog.current) clearTimeout(watchdog.current);
       setError("Passwords do not match");
@@ -52,7 +60,7 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
         password,
         options: {
           // Read by the database's sign-up trigger to create the profile.
-          data: { role, display_name: displayName.trim() },
+          data: { role, display_name: displayName.trim(), ...(askAgeBand && role === "promoter" ? { age_band: ageBand } : {}) },
           emailRedirectTo: `${window.location.origin}/dashboard`,
         },
       }));
@@ -111,6 +119,20 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
                   onChange={(e) => setDisplayName(e.target.value)}
                 />
               </div>
+              {askAgeBand && role === "promoter" && (
+                <fieldset className="grid gap-2">
+                  <legend className="mb-2 text-sm font-medium">How old are you?</legend>
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    {(["18+", "16-17"] as const).map((b) => (
+                      <label key={b} className={cn("flex items-center gap-2 rounded-lg border p-3", ageBand === b ? "border-primary bg-primary/15" : "border-border")}>
+                        <input type="radio" name="age_band" value={b} checked={ageBand === b} onChange={() => setAgeBand(b)} />
+                        {b === "18+" ? "18 or older" : "16 or 17"}
+                      </label>
+                    ))}
+                  </div>
+                  <p className="text-xs text-muted-foreground">Under 16? Promly isn&apos;t for you yet. At 16 or 17 you can promote 16+ campaigns, paid through a parent or guardian.</p>
+                </fieldset>
+              )}
               <div className="grid gap-2">
                 <Label htmlFor="email">Email</Label>
                 <Input id="email" type="email" placeholder="you@example.com" required value={email} onChange={(e) => setEmail(e.target.value)} />

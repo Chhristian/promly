@@ -176,6 +176,12 @@ export async function seedDemoData(db: Db): Promise<SeedSummary> {
   const s1 = await ensureSlots(db, barber.id);
   const s2 = await ensureSlots(db, spain.id);
   lines.push(`slots    added ${s1} for Demo Barber Club, ${s2} for Mediterranean Water Sports Demo`);
+
+  // Payments: Alex is an adult promoter (sees and joins everything exactly as before).
+  if (ids.alex) {
+    const { error: ageErr } = await db.rpc("set_age_band", { p_actor_id: ids.alex, p_age_band: "18+" });
+    if (!ageErr) lines.push("promoter Alex confirmed 18+");
+  }
   return { lines, haircutCampaignId: haircut.id };
 }
 

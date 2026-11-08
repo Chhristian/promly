@@ -8,10 +8,13 @@ import { minorToMajorInput } from "@/lib/money";
 import { acceptAgreement, createCampaign, setCampaignStatus, updateCampaign } from "../actions";
 import { selectClass, textareaClass } from "../create-business-form";
 
-export function NewCampaignForm({ currency }: { currency: string }) {
+/** Age rating settings; only shown when payments (and age ratings) are switched on. */
+export type AgeProps = { rating: "16+" | "18+"; restricted: boolean; categoryRestricted: boolean };
+
+export function NewCampaignForm({ currency, age }: { currency: string; age?: AgeProps }) {
   return (
     <ActionForm action={createCampaign} className="mt-6 space-y-4 card p-5">
-      <CampaignFields currency={currency} />
+      <CampaignFields currency={currency} age={age} />
       <SubmitButton className="w-full">Create campaign</SubmitButton>
     </ActionForm>
   );
@@ -23,12 +26,14 @@ function CampaignFields({
   description = "",
   priceMinor,
   externalBookingUrl = "",
+  age,
 }: {
   currency: string;
   serviceName?: string;
   description?: string;
   priceMinor?: number;
   externalBookingUrl?: string;
+  age?: AgeProps;
 }) {
   return (
     <>
@@ -63,7 +68,36 @@ function CampaignFields({
           <code className="text-xs">?ref=CODE</code> added. Leave empty to take bookings on Promly.
         </p>
       </div>
+      {age && <AgeFields age={age} />}
     </>
+  );
+}
+
+function AgeFields({ age }: { age: AgeProps }) {
+  const locked = age.restricted || age.categoryRestricted;
+  return (
+    <fieldset className="grid gap-2" data-testid="age-rating">
+      <input type="hidden" name="age_fields" value="1" />
+      <legend className="mb-1 text-sm font-medium">Who can promote this?</legend>
+      <div className="grid grid-cols-2 gap-2 text-sm">
+        {(["18+", "16+"] as const).map((r) => (
+          <label key={r} className="flex items-center gap-2 rounded-lg border border-border p-3">
+            <input type="radio" name="age_rating" value={r} defaultChecked={(locked ? "18+" : age.rating) === r} disabled={locked && r === "16+"} />
+            {r === "18+" ? "18+ only" : "16+ (16 and 17 too)"}
+          </label>
+        ))}
+      </div>
+      {age.categoryRestricted ? (
+        <p className="text-xs text-muted-foreground">Nightlife, clubs and alcohol are always 18+.</p>
+      ) : (
+        <label className="flex items-start gap-2 text-sm">
+          <input type="checkbox" name="age_restricted" defaultChecked={age.restricted} disabled={age.restricted} className="mt-1 accent-cobalt" />
+          {age.restricted && <input type="hidden" name="age_restricted" value="on" />}
+          <span>Age-restricted (for example alcohol): always 18+. This can&apos;t be undone.</span>
+        </label>
+      )}
+      <p className="text-xs text-muted-foreground">Promoters aged 16-17 only see 16+ campaigns and are paid through a parent or guardian.</p>
+    </fieldset>
   );
 }
 
@@ -74,6 +108,7 @@ export function EditCampaignForm(props: {
   description: string;
   priceMinor: number;
   externalBookingUrl?: string;
+  age?: AgeProps;
 }) {
   return (
     <ActionForm action={updateCampaign} className="space-y-4">
