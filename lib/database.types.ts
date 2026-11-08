@@ -135,17 +135,17 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "agreements_document_id_fkey"
-            columns: ["document_id"]
-            isOneToOne: false
-            referencedRelation: "agreement_documents"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "agreements_campaign_id_fkey"
             columns: ["campaign_id"]
             isOneToOne: false
             referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agreements_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "agreement_documents"
             referencedColumns: ["id"]
           },
         ]

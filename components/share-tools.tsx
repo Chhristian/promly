@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import QRCode from "qrcode";
 import { Button } from "@/components/ui/button";
 import { CopyLink } from "@/components/copy-link";
@@ -24,9 +24,19 @@ function slug(s: string) {
   return s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 }
 
-/** WhatsApp message: only facts from the campaign, no invented claims. */
+/** The ad label that goes with every share (Norwegian marketing law: mark it as advertising). */
+export function shareText(serviceName: string, businessName: string) {
+  return `${serviceName} at ${businessName}. #reklame: I earn a commission if you book through my link.`;
+}
+
+/** WhatsApp message: only facts from the campaign, labelled as advertising, no invented claims. */
 export function whatsappMessage(serviceName: string, businessName: string, url: string) {
-  return `Have a look at ${serviceName} at ${businessName}. You can book here: ${url}`;
+  return `${shareText(serviceName, businessName)} You can book here: ${url}`;
+}
+
+/** The user closed the share sheet: not an error. */
+function isCancel(e: unknown) {
+  return e instanceof DOMException && e.name === "AbortError";
 }
 
 export function ShareTools({
@@ -43,22 +53,70 @@ export function ShareTools({
   whatsappAllowed?: boolean;
 }) {
   const qrSmall = useQr(url, 560); // shown at ~280px, crisp on retina
-  const qrPng = useQr(url, 1024); // download
+  const qrPng = useQr(url, 1024); // download and share
   const [fullscreen, setFullscreen] = useState(false);
-  const [canShare, setCanShare] = useState(false);
   const [showQr, setShowQr] = useState(!compact);
+  const [toast, setToast] = useState<string | null>(null);
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  useEffect(() => setCanShare(typeof navigator !== "undefined" && typeof navigator.share === "function"), []);
+  useEffect(() => () => {
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+  }, []);
 
   const waHref = `https://wa.me/?text=${encodeURIComponent(whatsappMessage(serviceName, businessName, url))}`;
   const fileName = `promly-qr-${slug(serviceName)}.png`;
+  const title = `${serviceName} — ${businessName}`;
+  const text = shareText(serviceName, businessName);
 
-  const nativeShare = async () => {
+  const flash = (message: string) => {
+    setToast(message);
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(() => setToast(null), 2500);
+  };
+
+  /** Fallback everywhere: copy the link and say so. */
+  const copyLink = async () => {
     try {
-      await navigator.share({ title: `${serviceName} — ${businessName}`, text: `Book ${serviceName} at ${businessName}:`, url });
+      await navigator.clipboard.writeText(url);
     } catch {
-      // user cancelled
+      const ta = document.createElement("textarea");
+      ta.value = url;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      ta.remove();
     }
+    flash("Link copied");
+  };
+
+  /** Phones: the native share sheet (AirDrop, Messages, WhatsApp, Instagram …). */
+  const shareLink = async () => {
+    if (typeof navigator.share === "function") {
+      try {
+        await navigator.share({ title, text, url });
+        return;
+      } catch (e) {
+        if (isCancel(e)) return; // the user closed the sheet
+      }
+    }
+    await copyLink();
+  };
+
+  /** Share the QR code as a PNG where the browser can share files; otherwise copy the link. */
+  const shareQr = async () => {
+    if (qrPng && typeof navigator.share === "function" && typeof navigator.canShare === "function") {
+      const blob = await (await fetch(qrPng)).blob();
+      const file = new File([blob], fileName, { type: "image/png" });
+      if (navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({ files: [file], title, text: `${text} ${url}` });
+          return;
+        } catch (e) {
+          if (isCancel(e)) return;
+        }
+      }
+    }
+    await copyLink();
   };
 
   return (
@@ -66,16 +124,17 @@ export function ShareTools({
       <CopyLink url={url} />
 
       <div className="flex flex-wrap gap-2">
+        <Button type="button" size="sm" onClick={shareLink} data-testid="share-link">
+          <Share2 className="h-4 w-4" /> Share link
+        </Button>
+        <Button type="button" variant="secondary" size="sm" onClick={shareQr} disabled={!qrPng} data-testid="share-qr">
+          <QrCode className="h-4 w-4" /> Share QR code
+        </Button>
         {whatsappAllowed && (
           <Button asChild variant="secondary" size="sm">
             <a href={waHref} target="_blank" rel="noopener noreferrer">
               <MessageCircle className="h-4 w-4" /> WhatsApp
             </a>
-          </Button>
-        )}
-        {canShare && (
-          <Button type="button" variant="secondary" size="sm" onClick={nativeShare}>
-            <Share2 className="h-4 w-4" /> Share…
           </Button>
         )}
         {compact && (
@@ -90,13 +149,7 @@ export function ShareTools({
             </a>
           </Button>
         )}
-        <Button
-          type="button"
-          variant={compact ? "secondary" : "default"}
-          size="sm"
-          onClick={() => setFullscreen(true)}
-          disabled={!qrPng}
-        >
+        <Button type="button" variant="secondary" size="sm" onClick={() => setFullscreen(true)} disabled={!qrPng}>
           <Maximize2 className="h-4 w-4" /> Show QR full screen
         </Button>
       </div>
@@ -110,6 +163,16 @@ export function ShareTools({
             <div className="h-[280px] w-[280px] animate-pulse rounded-xl bg-secondary" />
           )}
           <p className="max-w-48 text-xs text-muted-foreground">Scan with a phone camera to open the booking page.</p>
+        </div>
+      )}
+
+      {toast && (
+        <div
+          role="status"
+          data-testid="share-toast"
+          className="toast-in fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-full bg-ink px-4 py-2 text-sm font-semibold text-white shadow-lg"
+        >
+          {toast}
         </div>
       )}
 

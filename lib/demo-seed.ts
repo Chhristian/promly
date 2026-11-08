@@ -202,7 +202,12 @@ export async function resetDemo(db: Db): Promise<SeedSummary> {
     .from("campaigns")
     .select("service_name, photo_paths, businesses!inner(name, is_demo)")
     .eq("businesses.is_demo", true);
-  const keep = (old ?? []).filter((c) => c.photo_paths.length);
+  // Only the stage businesses keep uploaded photos. Illustrative covers are recreated from the
+  // generated library, so their old copies are deleted here.
+  const STAGE_NAMES = [STAGE_BUSINESS, "Mediterranean Water Sports Demo"];
+  const keep = (old ?? []).filter((c) => c.photo_paths.length && STAGE_NAMES.includes(c.businesses.name));
+  const stale = (old ?? []).filter((c) => !STAGE_NAMES.includes(c.businesses.name)).flatMap((c) => c.photo_paths);
+  if (stale.length) await db.storage.from("campaign-photos").remove(stale);
 
   const { error } = await db.rpc("purge_demo_data");
   if (error) throw new Error("purge_demo_data failed: " + error.message);

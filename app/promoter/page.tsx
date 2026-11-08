@@ -12,13 +12,27 @@ import { ActivityFeed } from "@/components/activity-feed";
 import { CampaignCover } from "@/components/campaign-cover";
 import { EmptyState } from "@/components/empty-state";
 import { coverUrls } from "@/lib/photos";
+import { getMarket } from "@/lib/market-server";
+import { MARKETS, marketForCurrency } from "@/lib/market";
 
 export default async function PromoterDashboard() {
   const { user, profile, supabase } = await requireRole("promoter");
-  const o = await getPromoterOverview(supabase, user.id);
+  const all = await getPromoterOverview(supabase, user.id);
+  const market = await getMarket();
+  // Only the selected market. Money in different currencies is never added together.
+  const memberships = all.memberships.filter((m) => m.campaigns?.currency === market.currency);
+  const linkIds = new Set(memberships.flatMap((m) => (m.referral_links ? [m.referral_links.id] : [])));
+  const o = {
+    ...all,
+    memberships,
+    bookings: all.bookings.filter((b) => b.currency === market.currency),
+    totalClicks: [...all.clicksByLink].reduce((n, [id, c]) => n + (linkIds.has(id) ? c : 0), 0),
+  };
+  const otherMarkets = (Object.keys(all.earnings) as Currency[])
+    .filter((c) => c !== market.currency && ((all.earnings[c]?.available ?? 0) !== 0 || (all.earnings[c]?.pending ?? 0) !== 0));
   const base = await siteUrl();
 
-  const currencies = Object.keys(o.earnings).length ? (Object.keys(o.earnings) as Currency[]) : (["NOK"] as Currency[]);
+  const currencies = [market.currency] as Currency[];
   const verified = o.bookings.filter((b) => b.status === "verified");
   const multi = currencies.length > 1;
   // Next real payout date among commissions that are already available.
@@ -75,6 +89,17 @@ export default async function PromoterDashboard() {
           <Stat onSlip size="sm" label="Bookings" value={String(o.bookings.length)} hint={`${verified.length} verified`} />
         </div>
       </section>
+      {otherMarkets.length > 0 && (
+        <p className="text-sm text-muted-foreground" data-testid="other-market-totals">
+          {otherMarkets.map((c) => (
+            <span key={c} className="mr-4">
+              Also in {MARKETS[marketForCurrency(c)].label}: {formatMinor(all.earnings[c]?.available ?? 0, c)} available,{" "}
+              {formatMinor(all.earnings[c]?.pending ?? 0, c)} pending.
+            </span>
+          ))}
+          Switch market in the header to see them.
+        </p>
+      )}
 
       <div className="grid gap-8 lg:grid-cols-3">
         <div className="min-w-0 space-y-8 lg:col-span-2">

@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { AUTH_TIMEOUT_MS, TOO_SLOW, friendlyAuthError, goToDashboard, withTimeout } from "@/lib/auth-client";
+import { PasswordInput } from "@/components/password-input";
 
 export function LoginForm({
   className,
@@ -35,7 +36,7 @@ export function LoginForm({
     const supabase = createClient();
     setIsLoading(true);
     setError(null);
-    // Never spin forever: if we're still on this page after ~10 s, say so.
+    // Never spin forever: if we're still on this page after ~15 s, say so.
     if (watchdog.current) clearTimeout(watchdog.current);
     watchdog.current = setTimeout(() => {
       setIsLoading(false);
@@ -88,17 +89,17 @@ export function LoginForm({
                     Forgot your password?
                   </Link>
                 </div>
-                <Input
+                <PasswordInput
                   id="password"
-                  type="password"
                   required
+                  autoComplete="current-password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
               </div>
               {error && <p className="text-sm text-destructive" role="alert">{error}</p>}
               <Button type="submit" className="h-11 w-full" disabled={isLoading}>
-                {isLoading ? "Logging in…" : "Log in"}
+                {isLoading ? "Logging in…" : error === TOO_SLOW ? "Try again" : "Log in"}
               </Button>
             </div>
             <div className="mt-4 text-center text-sm">

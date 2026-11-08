@@ -11,14 +11,36 @@ import { ActivityFeed } from "@/components/activity-feed";
 import { CampaignCover } from "@/components/campaign-cover";
 import { EmptyState } from "@/components/empty-state";
 import { CreateBusinessForm } from "./create-business-form";
+import { getMarket } from "@/lib/market-server";
+import { MARKETS, marketForCurrency } from "@/lib/market";
+import { SwitchMarketButton } from "@/components/market-picker";
+import { demoBusinessImage } from "@/lib/demo-images";
 import { coverUrls } from "@/lib/photos";
 
 export default async function BusinessDashboard() {
   const { user, supabase } = await requireRole("business");
-  const business = await getMyBusiness(supabase, user.id);
-  if (!business) return <CreateBusinessForm />;
+  const market = await getMarket();
+  const business = await getMyBusiness(supabase, user.id, market.currency);
+  if (!business) {
+    // The owner's business may be in the other market: offer to switch instead of a new form.
+    const elsewhere = await getMyBusiness(supabase, user.id);
+    if (elsewhere) {
+      const there = MARKETS[marketForCurrency(elsewhere.currency)];
+      return (
+        <div className="mx-auto max-w-lg space-y-4 py-10 text-center" data-testid="other-market-business">
+          <h1 className="text-3xl">{elsewhere.name} is in {there.label}</h1>
+          <p className="text-muted-foreground">
+            You&apos;re looking at {market.label} ({market.currency}). Your business sells in {there.place} ({there.currency}).
+          </p>
+          <SwitchMarketButton to={there.key}>Switch to {there.label}</SwitchMarketButton>
+        </div>
+      );
+    }
+    return <CreateBusinessForm defaultCountry={market.country} />;
+  }
 
   const o = await getBusinessOverview(supabase, business.id);
+  const businessImage = await demoBusinessImage(business);
   const cur = business.currency as Currency;
   const money = (m: number) => formatMinor(m, cur);
   const t = moneyTotals(o.bookings);
@@ -30,7 +52,13 @@ export default async function BusinessDashboard() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="min-w-0">
-          <h1 className="line-clamp-2 text-[clamp(2rem,5vw,2.75rem)]">{business.name}</h1>
+          <h1 className="flex items-center gap-3 text-[clamp(2rem,5vw,2.75rem)]">
+            {businessImage && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={businessImage} alt="" width={56} height={56} className="h-14 w-14 shrink-0 rounded-2xl" data-testid="business-image" />
+            )}
+            <span className="line-clamp-2">{business.name}</span>
+          </h1>
           <p className="mt-1.5 text-muted-foreground">{business.city}{business.country === "ES" ? ", Spain" : ", Norway"}</p>
         </div>
         <Button asChild>

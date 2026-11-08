@@ -6,14 +6,17 @@ import { Highlight } from "@/components/live";
 import { CampaignCover, categoryLabel } from "@/components/campaign-cover";
 import { EmptyState } from "@/components/empty-state";
 import { coverUrls } from "@/lib/photos";
+import { getMarket } from "@/lib/market-server";
 
 export default async function ExplorePage() {
   const { user, supabase } = await requireRole("promoter");
+  const market = await getMarket();
   const [{ data: campaigns }, { data: mine }] = await Promise.all([
     supabase
       .from("campaigns")
       .select("id, service_name, description, photo_paths, price_minor, commission_minor, currency, published_at, businesses(name, city, country, category)")
       .eq("status", "published")
+      .eq("currency", market.currency)
       .order("published_at", { ascending: false }),
     supabase.from("campaign_memberships").select("campaign_id").eq("promoter_id", user.id),
   ]);
@@ -24,13 +27,13 @@ export default async function ExplorePage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-[clamp(2rem,5vw,2.75rem)]">Explore campaigns</h1>
-        <p className="mt-1 text-muted-foreground">Businesses that sell online (tours, rentals, experiences, tickets) looking for customers. Join one, share your link, earn on every verified booking.</p>
+        <p className="mt-1 text-muted-foreground">Businesses in {market.place} that sell online (tours, rentals, experiences, tickets) and want customers. Join one, share your link, earn on every verified booking.</p>
       </div>
       {!campaigns?.length ? (
         <EmptyState
           icon={Compass}
-          title="No live campaigns right now"
-          body="New campaigns appear here the moment a business publishes. No need to refresh."
+          title={`No live campaigns in ${market.label} right now`}
+          body="New campaigns appear here the moment a business publishes. Looking for the other market? Switch it in the header."
         />
       ) : (
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
