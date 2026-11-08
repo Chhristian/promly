@@ -11,7 +11,7 @@ export const selectClass =
 export const textareaClass =
   "min-h-24 w-full rounded-[10px] border border-input bg-card px-3.5 py-2.5 text-base focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/25 md:text-sm";
 
-export function CreateBusinessForm() {
+export function CreateBusinessForm({ defaultCountry = "NO" }: { defaultCountry?: "NO" | "ES" }) {
   return (
     <div className="mx-auto max-w-lg">
       <h1 className="text-3xl">Set up your business</h1>
@@ -30,10 +30,10 @@ export function CreateBusinessForm() {
             <Input id="city" name="city" maxLength={80} />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="country">Country</Label>
-            <select id="country" name="country" className={selectClass} defaultValue="NO">
-              <option value="NO">Norway (NOK)</option>
-              <option value="ES">Spain (EUR)</option>
+            <Label htmlFor="country">Market</Label>
+            <select id="country" name="country" className={selectClass} defaultValue={defaultCountry}>
+              <option value="NO">Oslo, Norway (NOK)</option>
+              <option value="ES">Mallorca, Spain (EUR)</option>
             </select>
           </div>
         </div>

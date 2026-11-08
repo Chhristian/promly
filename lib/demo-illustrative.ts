@@ -147,29 +147,48 @@ async function must<T>(p: PromiseLike<{ data: T; error: { message: string } | nu
   return data as NonNullable<T>;
 }
 
-/** Create the illustrative data with four weeks of history. Call after the purge (fresh state). */
+/** Storage bucket and library folder for generated demo images (see scripts/demo-assets.mjs). */
+export const DEMO_ASSET_BUCKET = "campaign-photos";
+export const demoAssetPath = {
+  avatar: (displayName: string) => `demo-assets/avatars/${slug(displayName)}.png`,
+  business: (name: string) => `demo-assets/businesses/${slug(name)}.png`,
+  campaign: (serviceName: string) => `demo-assets/campaigns/${slug(serviceName)}.png`,
+};
+
+/** How much history to create: ~2.5x the listed bookings, spread over months. */
+const HISTORY_SCALE = 2.5;
+
+/**
+ * Create the illustrative data with months of history (businesses 4.5-6 months old, campaigns
+ * 2-6 months old). Call after the purge (fresh state).
+ */
 export async function seedIllustrativeData(db: Db): Promise<string[]> {
-  const rand = rng(20261108);
   const users = await listAllUsers(db);
   const now = Date.now();
+  const ago = (days: number) => new Date(now - days * DAY).toISOString();
 
-  // Promoters (accounts persist between resets; profiles are re-marked as demo).
+  // Promoters (accounts persist between resets; profiles are re-marked as demo). Joined 2-6 months ago.
   const promoters: { id: string; name: string; band: "16-17" | "18+" }[] = [];
-  for (const p of ILLUSTRATIVE_PROMOTERS) {
+  for (const [pi, p] of ILLUSTRATIVE_PROMOTERS.entries()) {
     const id = await ensureUser(db, users, emailFor("promoter", p.name), "promoter", p.name);
     await must(db.rpc("set_age_band", { p_actor_id: id, p_age_band: p.band }), "age band");
+    await db.from("profiles").update({ created_at: ago(60 + ((pi * 37) % 120)) }).eq("id", id);
     promoters.push({ id, ...p });
   }
   const adults = promoters.filter((p) => p.band === "18+");
 
-  let campaigns = 0, bookings = 0, visits = 0;
+  let campaigns = 0, bookings = 0, visits = 0, covers = 0;
   await Promise.all(ILLUSTRATIVE_BUSINESSES.map(async (b, bi) => {
     const r = rng(1000 + bi);
+    const businessAge = 140 + r() * 40; // days
     const ownerId = await ensureUser(db, users, emailFor("owner", b.key), "business", `${b.owner} (${b.name})`);
+    await db.from("profiles").update({ created_at: ago(businessAge + 1) }).eq("id", ownerId);
     const biz = await must(db.from("businesses").insert({
       owner_id: ownerId, name: b.name, description: b.description, city: b.city, country: b.country,
       currency: b.currency, category: b.category, is_demo: true, checkout_url: `https://example.com/${slug(b.name)}/book`,
+      logo_url: demoAssetPath.business(b.name),
     }).select("id").single(), "business");
+    await db.from("businesses").update({ created_at: ago(businessAge) }).eq("id", biz.id);
 
     // Bookable times: a block 40+ days ahead used only to create history bookings (then moved into the
     // past), plus normal free times for the next week.
@@ -198,29 +217,40 @@ export async function seedIllustrativeData(db: Db): Promise<string[]> {
         brand_rules: "Only use the business's own photos and facts. No invented discounts.", business_accepted_at: new Date().toISOString(),
       }).select("id").single(), "agreement");
       await must(db.from("campaigns").update({ current_agreement_id: ag.id, status: "published" }).eq("id", camp.id), "publish");
-      await db.from("campaigns").update({ published_at: new Date(now - 28 * DAY).toISOString() }).eq("id", camp.id);
+      const campaignAge = Math.max(60, businessAge - 5 - r() * 70); // 2-6 months
+      await db.from("campaigns").update({ created_at: ago(campaignAge + 2), published_at: ago(campaignAge) }).eq("id", camp.id);
       campaigns++;
 
-      // 3-5 promoters join (18+ only for 18+ campaigns; the 16-17 promoters have no guardian account yet, so they don't join).
+      // Cover image: copied from the generated library into the campaign's own folder (like an upload).
+      const coverTo = `${camp.id}/cover.png`;
+      const { error: copyErr } = await db.storage.from(DEMO_ASSET_BUCKET).copy(demoAssetPath.campaign(c.name), coverTo);
+      if (!copyErr) {
+        await db.from("campaigns").update({ photo_paths: [coverTo] }).eq("id", camp.id);
+        covers++;
+      }
+
+      // 3-5 promoters join (18+ only; the 16-17 promoters have no guardian payout account, so they don't join).
       const pool = adults.slice().sort(() => r() - 0.5).slice(0, 3 + Math.floor(r() * 3));
-      const links: { code: string; promoterId: string }[] = [];
+      const links: { code: string; joinedAge: number }[] = [];
       for (const p of pool) {
         const m = await must(db.from("campaign_memberships").insert({ campaign_id: camp.id, promoter_id: p.id, agreement_id: ag.id }).select("id").single(), "join");
-        const joinedAt = new Date(now - (20 + r() * 8) * DAY).toISOString();
-        await db.from("campaign_memberships").update({ created_at: joinedAt, promoter_accepted_at: joinedAt }).eq("id", m.id);
-        await db.from("notifications").update({ created_at: joinedAt }).eq("payload->>membership_id", m.id);
-        const link = await must(db.from("referral_links").select("code").eq("membership_id", m.id).single(), "link");
-        links.push({ code: link.code, promoterId: p.id });
-        // Link visits over the last four weeks (no personal data).
-        const n = 8 + Math.floor(r() * 30);
-        const ev = Array.from({ length: n }, () => ({ referral_link_id: undefined as unknown as string, created_at: new Date(now - r() * 27 * DAY).toISOString() }));
-        const { data: lr } = await db.from("referral_links").select("id").eq("membership_id", m.id).single();
-        await must(db.from("referral_events").insert(ev.map((e) => ({ ...e, referral_link_id: lr!.id, type: "visit" }))), "visits");
+        const joinedAge = Math.max(30, campaignAge - 2 - r() * 30);
+        await db.from("campaign_memberships").update({ created_at: ago(joinedAge), promoter_accepted_at: ago(joinedAge) }).eq("id", m.id);
+        await db.from("notifications").update({ created_at: ago(joinedAge) }).eq("payload->>membership_id", m.id);
+        const link = await must(db.from("referral_links").select("id, code").eq("membership_id", m.id).single(), "link");
+        await db.from("referral_links").update({ created_at: ago(joinedAge) }).eq("id", link.id);
+        links.push({ code: link.code, joinedAge });
+        // Link visits since joining (no personal data).
+        const n = 20 + Math.floor(r() * 90);
+        await must(db.from("referral_events").insert(Array.from({ length: n }, () => ({
+          referral_link_id: link.id, type: "visit", created_at: ago(r() * joinedAge),
+        }))), "visits");
         visits += n;
       }
 
       // Bookings through the real functions, then moved back in time.
-      for (let i = 0; i < c.bookings; i++) {
+      const count = Math.round(c.bookings * HISTORY_SCALE);
+      for (let i = 0; i < count; i++) {
         const link = links[Math.floor(r() * links.length)];
         const id = await must(db.rpc("create_booking", {
           p_referral_code: link.code, p_slot_start: await freshSlot(),
@@ -229,9 +259,10 @@ export async function seedIllustrativeData(db: Db): Promise<string[]> {
           p_fee_bps: PLATFORM_FEE_BPS,
         }), "booking") as unknown as string;
         bookings++;
-        const ageDays = 1 + r() * 26; // when the visit happened
+        const ageDays = 0.5 + r() * (link.joinedAge - 1); // when the visit happened, after the promoter joined
         const roll = r();
-        const kind = ageDays < 3 && roll < 0.5 ? "upcoming" : roll < 0.08 ? "refunded" : ageDays < 9 ? "verified" : "released";
+        // Older than ~3 weeks: paid out. Inside the windows: verified, commission pending. Recent: upcoming.
+        const kind = ageDays < 4 && roll < 0.5 ? "upcoming" : roll < 0.06 ? "refunded" : ageDays < 22 ? "verified" : "released";
         const visitAt = kind === "upcoming" ? new Date(now + (1 + r() * 5) * DAY) : new Date(now - ageDays * DAY);
         visitAt.setUTCMinutes(0, 0, 0);
         while (usedHours.has(visitAt.getTime())) visitAt.setTime(visitAt.getTime() + 3_600_000);
@@ -263,5 +294,5 @@ export async function seedIllustrativeData(db: Db): Promise<string[]> {
     await db.from("time_slots").delete().eq("business_id", biz.id).gte("starts_at", new Date(now + 39 * DAY).toISOString());
   }));
 
-  return [`illustrative ${ILLUSTRATIVE_BUSINESSES.length} businesses, ${campaigns} campaigns, ${promoters.length} promoters, ${bookings} bookings, ${visits} link visits (four weeks)`];
+  return [`illustrative ${ILLUSTRATIVE_BUSINESSES.length} businesses, ${campaigns} campaigns (${covers} with covers), ${promoters.length} promoters, ${bookings} bookings, ${visits} link visits (2-6 months)`];
 }

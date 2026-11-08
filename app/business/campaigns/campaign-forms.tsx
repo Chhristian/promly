@@ -123,9 +123,12 @@ export function AgreementForm({
   campaignId,
   currency,
   defaults,
+  latestPdf,
 }: {
   campaignId: string;
   currency: string;
+  /** Newest uploaded agreement PDF, offered for inclusion in this version. */
+  latestPdf?: { id: string; version: number } | null;
   defaults: {
     commissionMinor?: number;
     payoutDays: number;
@@ -176,6 +179,12 @@ export function AgreementForm({
         <Label htmlFor="brand_rules">Brand rules</Label>
         <textarea id="brand_rules" name="brand_rules" maxLength={2000} defaultValue={defaults.brandRules} className={textareaClass} placeholder="e.g. Use only our photos. No discounts that aren't in the campaign." />
       </div>
+      {latestPdf && (
+        <label className="flex items-start gap-2 text-sm">
+          <input type="checkbox" name="document_id" value={latestPdf.id} defaultChecked className="mt-1 accent-[hsl(232_87%_54%)]" data-testid="include-agreement-pdf" />
+          <span>Include my agreement PDF (version {latestPdf.version}). Promoters must accept it to join.</span>
+        </label>
+      )}
       <label className="flex items-start gap-2 text-sm">
         <input type="checkbox" name="accept" required className="mt-1 accent-cobalt" />
         <span>I accept this agreement on behalf of the business.</span>
