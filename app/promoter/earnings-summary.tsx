@@ -51,26 +51,47 @@ export function EarningsSummary({
   return (
     <section className="space-y-3" aria-label="Your earnings">
       <MoneyPulse>
-        <div className="slip space-y-5 p-6 sm:px-8 sm:py-7">
+        <div className="slip grid gap-4 p-5 sm:px-7 sm:py-5 lg:grid-cols-[1fr_auto] lg:items-center lg:gap-10">
+          <div className="space-y-4">
           {currencies.map((cur) => {
             const available = earnings[cur]?.available ?? 0;
-            const total = available + (earnings[cur]?.pending ?? 0);
+            const pending = earnings[cur]?.pending ?? 0;
+            const total = available + pending;
             return (
               <Stat
                 key={cur}
                 onSlip
-                size="hero"
+                size="lead"
                 label={`You've earned${multi ? ` (${cur})` : ""}`}
                 value={formatMinor(total, cur)}
                 mark={total > 0}
                 hint={
-                  nextPayout && available > 0
-                    ? `${formatMinor(available, cur)} available, paid out ${formatDate(nextPayout)}`
-                    : `${formatMinor(available, cur)} available`
+                  pending > 0 && available === 0
+                    ? `${formatMinor(pending, cur)} on its way – paid out after the refund window`
+                    : nextPayout && available > 0
+                      ? `${formatMinor(available, cur)} available, paid out ${formatDate(nextPayout)}`
+                      : `${formatMinor(available, cur)} available`
                 }
               />
             );
           })}
+          </div>
+
+          {/* The funnel shares the slip (right side on desktop), so the Commissions list starts above the fold. */}
+          <ol
+            className="flex items-stretch border-t border-white/15 pt-4 lg:min-w-[22rem] lg:border-l lg:border-t-0 lg:pl-8 lg:pt-0"
+            aria-label="From click to commission"
+          >
+            {funnel.map((step, i) => (
+              <li key={step.label} className="flex min-w-0 flex-1 items-center">
+                {i > 0 && <ArrowRight className="h-4 w-4 shrink-0 text-white/40" aria-hidden />}
+                <div className="min-w-0 flex-1 px-2 text-center">
+                  <div className="money text-2xl sm:text-3xl">{step.value}</div>
+                  <div className="truncate text-sm text-white/65">{step.label}</div>
+                </div>
+              </li>
+            ))}
+          </ol>
         </div>
       </MoneyPulse>
 
@@ -84,18 +105,6 @@ export function EarningsSummary({
         <Stat className="card h-full p-5" label="Pending" value={perCurrency("pending")} hint={pendingHint} />
         <Stat className="card h-full p-5" label="Total earned" value={perCurrency("total")} hint="Available and pending together" />
       </div>
-
-      <ol className="card flex items-stretch p-2 sm:p-3" aria-label="From click to commission">
-        {funnel.map((step, i) => (
-          <li key={step.label} className="flex min-w-0 flex-1 items-center">
-            {i > 0 && <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />}
-            <div className="min-w-0 flex-1 px-2 py-1.5 text-center sm:px-4">
-              <div className="money text-2xl sm:text-3xl">{step.value}</div>
-              <div className="truncate text-sm text-muted-foreground">{step.label}</div>
-            </div>
-          </li>
-        ))}
-      </ol>
     </section>
   );
 }

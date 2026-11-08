@@ -16,7 +16,8 @@ export function Stat({
   label: string;
   value: React.ReactNode;
   hint?: React.ReactNode;
-  size?: "hero" | "md" | "sm";
+  /** "lead": a smaller hero, for a hero that shares the first screen with a list. */
+  size?: "hero" | "lead" | "md" | "sm";
   onSlip?: boolean;
   className?: string;
   /** Highlighter stroke under the amount (money that is yours). */
@@ -28,13 +29,14 @@ export function Stat({
   const veryLong = len > 17;
   const sizes = {
     hero: veryLong ? "text-[clamp(2rem,7vw,2.75rem)]" : long ? "text-[clamp(2.25rem,8vw,3.25rem)]" : "text-[clamp(2.75rem,11vw,4.5rem)]",
+    lead: veryLong ? "text-[clamp(1.75rem,6vw,2.25rem)]" : long ? "text-[clamp(2rem,7vw,2.75rem)]" : "text-[clamp(2.4rem,9vw,3.25rem)]",
     md: veryLong ? "text-[0.95rem] sm:text-xl" : long ? "text-[1.05rem] sm:text-2xl" : "text-[clamp(1.4rem,6vw,2.05rem)]",
     sm: veryLong ? "text-lg" : long ? "text-xl" : "text-2xl",
   };
   return (
     <div className={cn("min-w-0", className)}>
       <div className={cn("text-sm font-medium", onSlip ? "text-white/65" : "text-muted-foreground")}>{label}</div>
-      <div className={cn("money mt-1 leading-[1.05]", sizes[size], size === "hero" && "tracking-[-0.04em]")}>
+      <div className={cn("money mt-1 leading-[1.05]", sizes[size], (size === "hero" || size === "lead") && "tracking-[-0.04em]")}>
         {mark ? <span className={cn("money-mark marked", onSlip && "marked-full ml-[0.16em]")}>{value}</span> : value}
       </div>
       {hint && <div className={cn("mt-1.5 text-sm", onSlip ? "text-white/65" : "text-muted-foreground")}>{hint}</div>}
