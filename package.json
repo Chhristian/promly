@@ -9,7 +9,8 @@
     "seed-demo": "tsx scripts/seed-demo.ts",
     "reset-demo": "tsx scripts/reset-demo.ts",
     "test:e2e": "playwright test",
-    "demo-assets": "node scripts/demo-assets.mjs"
+    "demo-assets": "node scripts/demo-assets.mjs",
+    "pwa-icons": "tsx scripts/pwa-icons.ts"
   },
   "dependencies": {
     "@radix-ui/react-checkbox": "^1.3.1",
