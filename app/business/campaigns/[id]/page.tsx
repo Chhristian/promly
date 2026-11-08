@@ -134,28 +134,28 @@ export default async function CampaignEditorPage({ params }: { params: Promise<{
               brandRules: agreement?.brand_rules ?? "",
             }}
           />
+          {/* The accepted agreement, with its PDF, lives only here in the agreement section. */}
+          {agreement && (
+            <AgreementView
+              version={agreement.version}
+              acceptedAt={formatDateTime(agreement.business_accepted_at)}
+              pdf={agreementPdf}
+              terms={{
+                businessName: campaign.businesses.name,
+                serviceName: campaign.service_name,
+                currency: cur,
+                priceMinor: campaign.price_minor,
+                commissionMinor: agreement.commission_minor,
+                payoutDays: agreement.payout_days,
+                refundWindowDays: agreement.refund_window_days,
+                allowedChannels: agreement.allowed_channels,
+                brandRules: agreement.brand_rules,
+                templateVersion: agreement.template_version,
+              }}
+            />
+          )}
         </section>
       </div>
-
-      {agreement && (
-        <AgreementView
-          version={agreement.version}
-          acceptedAt={formatDateTime(agreement.business_accepted_at)}
-          pdf={agreementPdf}
-          terms={{
-            businessName: campaign.businesses.name,
-            serviceName: campaign.service_name,
-            currency: cur,
-            priceMinor: campaign.price_minor,
-            commissionMinor: agreement.commission_minor,
-            payoutDays: agreement.payout_days,
-            refundWindowDays: agreement.refund_window_days,
-            allowedChannels: agreement.allowed_channels,
-            brandRules: agreement.brand_rules,
-            templateVersion: agreement.template_version,
-          }}
-        />
-      )}
 
       <section className="space-y-3">
         <h2 className="text-lg">Promoters ({members?.length ?? 0})</h2>
