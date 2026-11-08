@@ -10,6 +10,9 @@ export const metadata: Metadata = {
   metadataBase: new URL(defaultUrl),
   title: "Promly: refer a sale, get paid when the customer shows up",
   description: "Performance-based marketing marketplace: promote businesses that sell online (tours, rentals, experiences, tickets) and earn commission on verified bookings.",
+  // iOS home-screen app. "default" keeps the status bar opaque, so the sticky header is never under the notch.
+  // The apple-touch-icon comes from app/apple-icon.png; the manifest from app/manifest.ts.
+  appleWebApp: { capable: true, title: "Promly", statusBarStyle: "default" },
 };
 
 export const viewport: Viewport = {
