@@ -16,17 +16,22 @@ const IGNORABLE = ["invoice_not_found", "payout_not_found"];
  */
 export async function POST(request: NextRequest) {
   if (!paymentsEnabled()) return new NextResponse("Not found", { status: 404 });
-  const secret = process.env.STRIPE_WEBHOOK_SECRET;
+  // One secret per Stripe endpoint (platform events, and Connect events from promoters' accounts), comma-separated.
+  const secrets = (process.env.STRIPE_WEBHOOK_SECRET ?? "").split(",").map((s) => s.trim()).filter(Boolean);
   const signature = request.headers.get("stripe-signature");
-  if (!secret || !signature) return new NextResponse("Missing signature", { status: 400 });
+  if (!secrets.length || !signature) return new NextResponse("Missing signature", { status: 400 });
 
   const body = await request.text();
-  let event: Stripe.Event;
-  try {
-    event = getStripe().webhooks.constructEvent(body, signature, secret);
-  } catch {
-    return new NextResponse("Invalid signature", { status: 400 });
+  let event: Stripe.Event | null = null;
+  for (const secret of secrets) {
+    try {
+      event = getStripe().webhooks.constructEvent(body, signature, secret);
+      break;
+    } catch {
+      // try the next endpoint's secret
+    }
   }
+  if (!event) return new NextResponse("Invalid signature", { status: 400 });
 
   const db = createAdminClient();
   const { data: fresh, error: dedupeErr } = await db.rpc("begin_stripe_event", { p_event_id: event.id, p_type: event.type });
