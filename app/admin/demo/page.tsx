@@ -14,6 +14,11 @@ export default async function DemoControlPage() {
           make sure everything is green. See STAGE_DEMO.md.
         </p>
       </div>
+      <p className="rounded-xl border border-dashed border-border p-3 text-sm text-muted-foreground">
+        <strong>Illustrative demo data.</strong> Prepare Stage Demo also recreates 8 fictional online-checkout businesses,
+        their campaigns, ~20 fictional promoters and four weeks of history (made with the real booking and money functions).
+        Nothing here is a real business, review or user count.
+      </p>
       <DemoControl />
       {paymentsEnabled() && <PaymentsControl />}
     </div>

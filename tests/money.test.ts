@@ -17,7 +17,7 @@ describe("money maths", () => {
     expect(PLATFORM_FEE_BPS).toBe(275);
   });
 
-  it("Demo Barber Club: 500 NOK haircut, 100 NOK commission", () => {
+  it("Demo Fjord Boat Tours: 500 NOK cruise, 100 NOK commission", () => {
     const t = bookingTerms(50_000, 10_000);
     expect(t.commissionMinor).toBe(10_000); // promoter gets 100.00 NOK
     expect(t.feeMinor).toBe(1_375); // Promly gets 13.75 NOK

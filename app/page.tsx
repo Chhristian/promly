@@ -45,8 +45,9 @@ export default async function Home() {
             </h1>
             <p className="mt-4 text-xl font-bold tracking-[-0.02em] sm:text-2xl">Only when the customer actually shows up.</p>
             <p className="mt-4 max-w-xl text-lg text-muted-foreground sm:text-xl">
-              Local businesses set a commission. You share their offer with friends. When the customer has been and the
-              business confirms it, the whole commission is yours.
+              Businesses that sell online (tours, rentals, experiences, tickets, classes) set a commission. You share their
+              offer. When a customer books through your link on the business&apos;s own checkout and the business confirms it,
+              the whole commission is yours.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               {dashboard ? (
@@ -65,6 +66,7 @@ export default async function Home() {
               )}
             </div>
             <ul className="mt-8 grid max-w-xl gap-x-6 gap-y-1.5 text-sm text-muted-foreground sm:grid-cols-2">
+              <li>For businesses with online booking or ticketing</li>
               <li>Promoters keep 100% of the commission</li>
               <li>Businesses pay 2.75% only on verified bookings</li>
               <li>Both sides see every step live</li>
@@ -78,10 +80,10 @@ export default async function Home() {
                 <span>Example payout slip</span>
                 <span>Oslo</span>
               </div>
-              <div className="mt-5 text-lg font-bold">Full car wash &amp; interior clean</div>
+              <div className="mt-5 text-lg font-bold">Sunset fjord cruise, booked online</div>
               <dl className="mt-5 space-y-2.5 text-[0.95rem]">
                 <div className="flex justify-between gap-4">
-                  <dt className="text-white/65">Customer pays the business</dt>
+                  <dt className="text-white/65">Customer pays the business online</dt>
                   <dd className="money font-semibold">{kr(PRICE)}</dd>
                 </div>
                 <div className="flex justify-between gap-4">
@@ -107,9 +109,9 @@ export default async function Home() {
           <h2 className="text-3xl sm:text-4xl">How it works</h2>
           <ol className="mt-8 grid gap-8 sm:grid-cols-3">
             {[
-              { title: "The business publishes", body: "It picks a service, sets the commission, accepts the agreement and goes live." },
+              { title: "The business publishes", body: "It adds an offer from its online checkout, sets the commission, accepts the agreement and goes live." },
               { title: "You share", body: "Join the campaign and get your own link, QR code and ready-made texts. Share them anywhere." },
-              { title: "You get paid", body: "The customer books through your link. The business confirms the visit. After the refund window, it's yours." },
+              { title: "You get paid", body: "The customer books online through your link. The business confirms it. After the refund window, it's yours." },
             ].map((s, i) => (
               <li key={s.title}>
                 <div className="money grid h-10 w-10 place-items-center rounded-full bg-ink text-white">{i + 1}</div>
@@ -124,14 +126,15 @@ export default async function Home() {
           <div className="card p-6 sm:p-8">
             <h2 className="text-2xl">For businesses</h2>
             <p className="mt-2 text-muted-foreground">
-              Pay for customers who actually came, not for clicks or views. You set the commission, and you confirm every visit
-              before anything is owed.
+              For businesses that sell online: tours, rentals, experiences, event and club tickets, classes and memberships.
+              Pay for customers who actually booked and came, not for clicks or views. You set the commission and confirm every
+              booking before anything is owed.
             </p>
           </div>
           <div className="card p-6 sm:p-8">
             <h2 className="text-2xl">For promoters</h2>
             <p className="mt-2 text-muted-foreground">
-              Recommend places you already like. Track clicks, bookings and money as it happens, and keep the full commission.
+              Recommend experiences you already like. Track clicks, bookings and money as it happens, and keep the full commission.
             </p>
           </div>
         </section>

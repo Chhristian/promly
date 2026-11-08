@@ -39,7 +39,7 @@ function CampaignFields({
     <>
       <div className="grid gap-2">
         <Label htmlFor="service_name">Service</Label>
-        <Input id="service_name" name="service_name" required maxLength={120} defaultValue={serviceName} placeholder="Premium Haircut" />
+        <Input id="service_name" name="service_name" required maxLength={120} defaultValue={serviceName} placeholder="Sunset Fjord Cruise" />
       </div>
       <div className="grid gap-2">
         <Label htmlFor="price">Price ({currency})</Label>

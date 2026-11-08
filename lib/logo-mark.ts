@@ -1,5 +1,5 @@
 // Promly megaphone mark (drawn by Jakob), on a 40x40 grid.
-// One source for the header logo, the promo image canvas and the favicon generator.
+// One source for the header logo and the favicon generator.
 // Colours follow docs/DESIGN.md: flat cobalt horn, yellow bell opening,
 // "ink" parts (handle, rim, sound lines) that turn white on dark backgrounds,
 // with the sound lines turning yellow there.

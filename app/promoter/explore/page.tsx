@@ -24,7 +24,7 @@ export default async function ExplorePage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-[clamp(2rem,5vw,2.75rem)]">Explore campaigns</h1>
-        <p className="mt-1 text-muted-foreground">Local businesses looking for customers. Join one, share your link, earn on every verified booking.</p>
+        <p className="mt-1 text-muted-foreground">Businesses that sell online (tours, rentals, experiences, tickets) looking for customers. Join one, share your link, earn on every verified booking.</p>
       </div>
       {!campaigns?.length ? (
         <EmptyState
