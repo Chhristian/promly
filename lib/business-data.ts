@@ -29,8 +29,11 @@ export function moneyTotals(bookings: BookingRow[]) {
   };
 }
 
-export async function getMyBusiness(db: Db, ownerId: string) {
-  const { data } = await db.from("businesses").select("*").eq("owner_id", ownerId).order("created_at").limit(1).maybeSingle();
+/** The owner's business; with a currency, the one in that market (NOK = Oslo, EUR = Mallorca). */
+export async function getMyBusiness(db: Db, ownerId: string, currency?: string) {
+  let q = db.from("businesses").select("*").eq("owner_id", ownerId);
+  if (currency) q = q.eq("currency", currency);
+  const { data } = await q.order("created_at").limit(1).maybeSingle();
   return data;
 }
 

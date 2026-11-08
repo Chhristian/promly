@@ -1,11 +1,14 @@
 import { AppShell } from "@/components/app-shell";
 import { requireRole } from "@/lib/auth";
+import { getMarket } from "@/lib/market-server";
 import { paymentsEnabled } from "@/lib/flags";
 
 export default async function BusinessLayout({ children }: { children: React.ReactNode }) {
   const { profile } = await requireRole("business");
+  const market = await getMarket();
   return (
     <AppShell
+      market={market.key}
       home="/business"
       userName={profile.display_name || "Business"}
       roleLabel="Business"
