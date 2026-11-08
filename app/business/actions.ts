@@ -8,6 +8,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { parseMajorToMinor } from "@/lib/money";
 import { friendlyError } from "@/lib/errors";
 import { AGREEMENT_TEMPLATE_VERSION_V2, CHANNEL_VALUES } from "@/lib/agreement-template";
+import { BUSINESS_CATEGORY_VALUES } from "@/lib/categories";
 import { paymentsEnabled } from "@/lib/flags";
 import { effectiveAgeRating } from "@/lib/payments";
 import type { ActionState } from "@/components/action-form";
@@ -32,7 +33,12 @@ const businessSchema = z.object({
   name: z.string().trim().min(1, "Enter the business name").max(120),
   city: z.string().trim().max(80),
   country: z.enum(["NO", "ES"]),
-  category: z.enum(["barbershop", "beauty", "restaurant", "experience", "water_sports", "jet_ski", "boat_tour", "fitness", "other", "nightlife", "club", "alcohol"]),
+  category: z.enum(BUSINESS_CATEGORY_VALUES),
+  checkout_url: z
+    .string()
+    .trim()
+    .max(500, "The checkout link is too long")
+    .refine((s) => /^https:\/\/\S+$/.test(s) && URL.canParse(s), "Add your online checkout or booking page (https://…)"),
   description: z.string().trim().max(2000),
 });
 
@@ -43,7 +49,7 @@ export async function createBusiness(_: ActionState, fd: FormData): Promise<Acti
   const b = parsed.data;
   const { error } = await supabase.from("businesses").insert({
     owner_id: user.id, name: b.name, city: b.city, country: b.country,
-    currency: b.country === "NO" ? "NOK" : "EUR", category: b.category, description: b.description,
+    currency: b.country === "NO" ? "NOK" : "EUR", category: b.category, description: b.description, checkout_url: b.checkout_url,
   });
   if (error) return { error: friendlyError(error) };
   revalidatePath("/business");

@@ -61,12 +61,12 @@ test("verify → final → invoice → Stripe test payment → webhook marks it 
   await login(admin, "DEMO_ADMIN", "/admin/demo");
 
   // Publish, join, book, verify (the normal stage flow, without the extras).
-  await biz.getByRole("link", { name: /Premium Haircut/ }).first().click();
+  await biz.getByRole("link", { name: /Sunset Fjord Cruise/ }).first().click();
   await biz.waitForURL("**/business/campaigns/**");
   await biz.getByRole("button", { name: "Publish" }).click();
   await expect(biz.getByText("Published!")).toBeVisible();
   await pro.goto("/promoter/explore");
-  await pro.getByRole("link", { name: /Premium Haircut/ }).first().click();
+  await pro.getByRole("link", { name: /Sunset Fjord Cruise/ }).first().click();
   await pro.check('input[name="accept"]');
   await pro.getByRole("button", { name: "Accept & join" }).click();
   await expect(pro.getByText("Your personal link")).toBeVisible();

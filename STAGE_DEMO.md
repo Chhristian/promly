@@ -7,11 +7,14 @@ Everything shown is real database activity. The only simulated step is the clear
 
 ---
 
+
+> **Who Promly is for:** businesses with an online checkout (tours, rentals, experiences, event and club tickets, classes, memberships). In the demo, our booking page stands in for the business's own checkout and is labelled **"Demo checkout"**. Prepare Stage Demo also recreates fictional **illustrative demo data** (8 businesses, ~20 promoters, four weeks of history), labelled as such in the app.
+
 ## Roles and devices
 
 | Who | Device | Logged in as | Page to have open |
 |---|---|---|---|
-| **A — Business founder** | Laptop (projected) | Demo Barber Club · `demo-barber@example.com` | `/business` |
+| **A — Business founder** | Laptop (projected) | Demo Fjord Boat Tours · `demo-boat company@example.com` | `/business` |
 | **B — Promoter founder** | Second laptop or phone (mirrored if possible) | Alex · `demo-alex@example.com` | `/promoter/explore` |
 | **C — Customer** | A phone (no login) | — | Camera app ready to scan a QR code (backup: WhatsApp chat with B) |
 | Admin (backstage) | Any device, separate browser profile | Promly Admin · `demo-admin@example.com` | `/admin/demo` |
@@ -42,8 +45,8 @@ Hand passwords to the other founder privately (password manager), never in a cha
    database reachable · 4 demo accounts · realtime connects · fee maths 500 NOK → 13.75 · free slots today and tomorrow · live site responding.
    Anything red → fix it or switch to the backup video.
    **Photos survive a reset**: photos you uploaded for the demo campaigns are moved onto the fresh campaigns, so upload them once.
-5. **Reload A and B** after the reset so their screens show the fresh state (A: Premium Haircut is *draft*; B: Explore is empty).
-6. **Photos (once, the day before):** log in as Demo Barber Club → Premium Haircut → **Photos → Add photos**. Up to 3 real photos (JPG/PNG/WebP, max 5 MB; they're resized automatically). The first one is the cover on Explore, the campaign page and the customer's booking page. Only use photos you have the rights to. Without photos, a category artwork is shown.
+5. **Reload A and B** after the reset so their screens show the fresh state (A: Sunset Fjord Cruise is *draft*; B: Explore is empty).
+6. **Photos (once, the day before):** log in as Demo Fjord Boat Tours → Sunset Fjord Cruise → **Photos → Add photos**. Up to 3 real photos (JPG/PNG/WebP, max 5 MB; they're resized automatically). The first one is the cover on Explore, the campaign page and the customer's booking page. Only use photos you have the rights to. Without photos, a category artwork is shown.
 7. **Backup video** — record one full rehearsal the day before:
    - Windows: `Win + Alt + R` (Xbox Game Bar) records the screen; iPhone: Control Centre → Screen Recording.
    - Or record all three browsers automatically: `E2E_VIDEO=1 npm run test:e2e` → videos in `test-results/` (no sound).
@@ -56,18 +59,18 @@ Hand passwords to the other founder privately (password manager), never in a cha
 
 | # | Who | Do this | What appears |
 |---|---|---|---|
-| 1 | **A** | On the dashboard, click the **Premium Haircut** campaign card. | Campaign page: *draft*. Boxes show **Promoter earns 100,00 kr · Promly fee 13,75 kr · You pay 113,75 kr**. Agreement v1 accepted. |
+| 1 | **A** | On the dashboard, click the **Sunset Fjord Cruise** campaign card. | Campaign page: *draft*. Boxes show **Promoter earns 100,00 kr · Promly fee 13,75 kr · You pay 113,75 kr**. Agreement v1 accepted. |
 | 2 | **A** | Click **Publish**. | "Published! Promoters can see it now." Badge turns *published*. |
-| 3 | **B** | Just watch Explore. Don't touch anything. | **Premium Haircut — You earn 100,00 kr** appears with a glowing **NEW** badge, no refresh. |
+| 3 | **B** | Just watch Explore. Don't touch anything. | **Sunset Fjord Cruise — You earn 100,00 kr** appears with a glowing **NEW** badge, no refresh. |
 | 4 | **A** | Click **Dashboard** in the top nav. | Dashboard with 0 kr everywhere. |
-| 5 | **B** | Tap the **Premium Haircut** card. | Campaign page with the agreement (yellow label "Agreement template, to be reviewed by a lawyer before real use"). |
+| 5 | **B** | Tap the **Sunset Fjord Cruise** card. | Campaign page with the agreement (yellow label "Agreement template, to be reviewed by a lawyer before real use"). |
 | 6 | **B** | Tick **"I have read and accept this agreement."** → **Accept & join**. | "Your personal link" box with the link and **Copy link**. |
 | 7 | **A** | Just watch. | Activity: **"Alex joined your campaign."** with **NEW**. Promoters: 1. |
-| 8 | **B** | Tap **⛶ Show QR full screen** and hold the screen toward C (or show it on the projector). *Backup:* tap **💬 WhatsApp** and send the prepared message to C. | A big QR code with "Premium Haircut · scan to book". |
-| 9 | **C** | Point the camera at the QR → tap the link that pops up. | Booking page: *Demo Barber Club · Oslo — Premium Haircut — 500,00 kr*, days and times. No login. |
+| 8 | **B** | Tap **⛶ Show QR full screen** and hold the screen toward C (or show it on the projector). *Backup:* tap **💬 WhatsApp** and send the prepared message to C. | A big QR code with "Sunset Fjord Cruise · scan to book". |
+| 9 | **C** | Point the camera at the QR → tap the link that pops up. | Booking page: *Demo Fjord Boat Tours · Oslo — Sunset Fjord Cruise — 500,00 kr*, days and times. No login. |
 | 9b | **B** | Tap anywhere to close the QR, then tap **Dashboard** in the top nav. | B's dashboard: Available 0,00 kr, Pending 0,00 kr. |
 | 10 | **C** | Tap a **time** → type a name and phone → **Book …**. | **"You're booked!"** with the time. |
-| 11 | **A** | Just watch. | **"New booking received — Premium Haircut"** with **NEW**. Recent bookings: *Awaiting service*. |
+| 11 | **A** | Just watch. | **"New booking received — Sunset Fjord Cruise"** with **NEW**. Recent bookings: *Awaiting service*. |
 | 12 | **A** | Click that booking. | Customer name and phone, **Referred by Alex**, frozen terms: 500 · 100 · 13,75 · **113,75 kr**. |
 | 13 | **A** | Click **Verify service completed**. | "✓ Service verified — commission pending until the refund window ends." |
 | 14 | **B** | Just watch. | Commission row *Verified · commission pending*, **Pending 100,00 kr**, NEW. |
@@ -79,9 +82,6 @@ Hand passwords to the other founder privately (password manager), never in a cha
 **If the time slot is taken** ("Someone just booked that time"): tap another time.
 **If anything looks wrong before you start:** Prepare Stage Demo again (≈5 s) and reload A and B.
 
-**Optional, if you have 10–15 extra seconds (after step 6):** B taps **Create promo text →** → Marketing Studio.
-- **Promo image** tab → **Story 1080×1920** → pick the business's photo → a branded image appears with the service, price, "Scan to book", Alex's QR code and link, and an "AD · I earn a commission" note. **Download PNG** (or **Share** on a phone). Great to hold up: "Alex has never designed anything — this took one tap."
-- **Texts** tab → **WhatsApp recommendation**. Ready-made text with the business's own description, the price, the link and an honest "I earn a commission" note. Only channels the agreement allows are offered. Then go back and continue with step 8.
 
 ---
 
@@ -91,11 +91,11 @@ Pre-open everything as in BEFORE. Skip reading the agreement aloud.
 
 | Time | Say | Do |
 |---|---|---|
-| 0:00 | "This barbershop needs customers. On Promly it offers 100 kroner for every verified booking." | A: open Premium Haircut → **Publish** |
+| 0:00 | "This fjord-cruise company sells tickets online and needs customers. On Promly it offers 100 kroner for every verified booking." | A: open Sunset Fjord Cruise → **Publish** |
 | 0:10 | "Alex wants to earn. The offer just appeared on Alex's phone — live." | B: card appears → tap → tick → **Accept & join** |
 | 0:20 | "Alex gets a personal link and a QR code to share anywhere." | B: **Show QR full screen** → C scans. A: "Alex joined" appears |
-| 0:30 | "A friend books a haircut. No app, no account." | C: open link → time → name/phone → **Book** |
-| 0:40 | "The barber sees the booking instantly, and confirms the haircut happened." | A: "New booking" → open → **Verify** |
+| 0:30 | "A friend books the cruise. Here our demo checkout stands in for the company's own booking page." | C: open link → time → name/phone → **Book** |
+| 0:40 | "The boat company sees the booking instantly, and confirms the trip happened." | A: "New booking" → open → **Verify** |
 | 0:48 | "After the refund window — simulated here — the money is Alex's." | A: **Simulate end of refund window**. B: **100,00 kr available** |
 | 0:55 | "Businesses get customers. People get paid." | Point at both screens |
 
@@ -105,15 +105,15 @@ Pre-open everything as in BEFORE. Skip reading the agreement aloud.
 
 | Time | Say | Do |
 |---|---|---|
-| 0:00–0:15 | **Problem.** "Local businesses pay for ads whether or not a customer ever shows up. Meanwhile millions of people already recommend places to friends — for free." | Title slide / landing page |
+| 0:00–0:15 | **Problem.** "Businesses that sell online — tours, rentals, experiences, tickets — pay for ads whether or not anyone books. Meanwhile people already recommend experiences to friends — for free." | Title slide / landing page |
 | 0:15–0:25 | **Promise.** "Promly flips it: businesses only pay for verified customers, and anyone can earn by bringing them. Businesses get customers. People get paid." | A's dashboard |
-| 0:25–0:40 | "Demo Barber Club sets a 100-kroner commission on a 500-kroner haircut, accepts a standard agreement, and publishes." | A: steps 1–2 (point at 100 / 13,75 / 113,75) |
+| 0:25–0:40 | "Demo Fjord Boat Tours sets a 100-kroner commission on a 500-kroner sunset cruise, accepts a standard agreement, and publishes." | A: steps 1–2 (point at 100 / 13,75 / 113,75) |
 | 0:40–0:55 | "Alex has never done marketing. The offer appears on Alex's phone instantly. Alex reads the terms and joins." | B: steps 3, 5–6 |
-| 0:55–1:05 | "Alex gets a personal link, a QR code and ready-made texts — for any channel the business allows." | A: step 7 "Alex joined". B: step 8 (QR full screen) |
+| 0:55–1:05 | "Alex gets a personal link and a QR code to share on any channel the business allows, marked as advertising." | A: step 7 "Alex joined". B: step 8 (QR full screen) |
 | 1:05–1:20 | "A friend scans and books — on a phone, no account." | C: steps 9–10. B: step 9b. A: step 11 "New booking" |
-| 1:20–1:35 | "The barber confirms the haircut happened. The commission is pending until the refund window closes — here we simulate that." | A: steps 12–13, 15 (show the yellow Demo Mode label) |
+| 1:20–1:35 | "The boat company confirms the cruise happened. The commission is pending until the refund window closes — here we simulate that." | A: steps 12–13, 15 (show the yellow Demo Mode label) |
 | 1:35–1:45 | "And Alex just earned 100 kroner. Real data, live, on two devices." | B: step 16 |
-| 1:45–2:00 | **Model.** "Promoters keep 100% of the commission. Businesses pay Promly 2.75% of the booking on top — 13.75 kroner here, only when a customer is verified. We're starting with barbers and experiences in Oslo and Spain." | A: step 17 dashboard |
+| 1:45–2:00 | **Model.** "Promoters keep 100% of the commission. Businesses pay Promly 2.75% of the booking on top — 13.75 kroner here, only when a customer is verified. We're starting with tours, rentals and experiences that sell online, in Oslo and Spain." | A: step 17 dashboard |
 
 ### Likely questions (1 minute)
 
@@ -140,5 +140,4 @@ Pre-open everything as in BEFORE. Skip reading the agreement aloud.
 - Demo accounts are recreated (same passwords from `.env.local`) with `npm run seed-demo`.
 - Numbers: price 500,00 kr · commission 100,00 kr (promoter keeps 100%) · Promly fee 2.75% of price = 13,75 kr · business pays 113,75 kr per verified booking.
 - Spain campaign (if asked about Spain / EUR): Jet Ski Adventure 150,00 € · commission 20% = 30,00 € · fee 4,13 € · business pays 34,13 €. Log in as `demo-watersports@example.com` (`DEMO_SPAIN_BUSINESS_PASSWORD`).
-- Promo image: only the business's own photos and words are used. If the brand rules say "Always mention …", the business's own sentence about it is added (e.g. Spain: "Safety briefing and life jacket included."); if it isn't in the description, Studio asks the promoter to mention it in the caption instead.
 - Refund before payout: open a verified booking → **Refund** → the commission is reversed with new ledger entries ("Refund → pending charge cancelled").

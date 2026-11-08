@@ -349,6 +349,7 @@ export type Database = {
       businesses: {
         Row: {
           category: string
+          checkout_url: string | null
           city: string
           country: string
           created_at: string
@@ -362,6 +363,7 @@ export type Database = {
         }
         Insert: {
           category: string
+          checkout_url?: string | null
           city?: string
           country: string
           created_at?: string
@@ -375,6 +377,7 @@ export type Database = {
         }
         Update: {
           category?: string
+          checkout_url?: string | null
           city?: string
           country?: string
           created_at?: string

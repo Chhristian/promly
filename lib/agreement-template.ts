@@ -75,11 +75,11 @@ function renderV2(t: AgreementTerms, money: (m: number) => string, channels: str
   return [
     {
       heading: "1. Parties and service",
-      body: `This agreement is between ${t.businessName} (the Business) and the promoter who accepts it (the Promoter), through Promly. It covers the service "${t.serviceName}" at ${money(t.priceMinor)}. The customer pays the Business directly; Promly never handles the customer's payment.`,
+      body: `This agreement is between ${t.businessName} (the Business) and the promoter who accepts it (the Promoter), through Promly. It covers "${t.serviceName}" at ${money(t.priceMinor)}, sold through the Business's own online checkout. The customer books and pays the Business directly; Promly never handles the customer's payment.`,
     },
     {
       heading: "2. Commission",
-      body: `For each booking made through the Promoter's personal Promly link and verified by the Business as completed, the Promoter earns ${money(t.commissionMinor)}. Promly's platform fee of 2.75% of the booking price is paid by the Business on top and is never deducted from the Promoter's commission.`,
+      body: `For each booking made on the Business's online checkout through the Promoter's personal Promly link, and verified by the Business as completed, the Promoter earns ${money(t.commissionMinor)}. Promly's platform fee of 2.75% of the booking price is paid by the Business on top and is never deducted from the Promoter's commission.`,
     },
     {
       heading: "3. Verification and when commission is final",

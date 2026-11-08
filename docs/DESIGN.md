@@ -2,6 +2,8 @@
 
 A full redesign on the `redesign` branch. Product logic, money maths, database/RLS, the stage flow and realtime behaviour are unchanged. Every animation still answers a real database event.
 
+**Audience (8 Nov):** businesses with an **online checkout**: tours, rentals, experiences, event and club tickets, classes and memberships. Copy, categories and demo content speak to them, never to walk-in shops. There is no Marketing Studio: promoters get the sharing tools (copy link, QR code, WhatsApp, native share) and one plain line, "Mark your posts as advertising (#reklame) and follow the business's brand rules." Logged-in pages carry a quiet "Illustrative demo data" footer; nothing shows ratings, reviews or user counts.
+
 ## The concept in five lines
 
 1. **Daylight, not night mode.** A cool paper-white app in Oslo daylight. Light themes stay readable on a washed-out projector, and dark navy didn't.

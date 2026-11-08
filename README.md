@@ -2,7 +2,7 @@
 
 **Live:** https://promly-eight.vercel.app
 
-Local businesses pay for ads whether or not a customer ever walks in, while people recommend places to their friends every day for free. **Promly is a performance-based marketing marketplace that connects the two.** A business publishes a campaign with a commission. Anyone can join it as a promoter and share a personal link, QR code or ready-made post. When a referred customer books and the business confirms the service actually happened, the promoter earns the full commission. Businesses only pay for real, verified customers, and anyone can be a marketer.
+Businesses that sell online (tours, rentals, experiences, event and club tickets, classes and memberships) pay for ads whether or not anyone books, while people recommend experiences to their friends every day for free. **Promly is a performance-based marketing marketplace that connects the two.** A business publishes a campaign with a commission. Anyone can join it as a promoter and share a personal link or QR code. When a referred customer books and the business confirms the service actually happened, the promoter earns the full commission. Businesses only pay for real, verified customers, and anyone can be a marketer.
 
 > Built during **Oslo Sprint, 6–8 Nov 2026**.
 
@@ -10,8 +10,8 @@ Local businesses pay for ads whether or not a customer ever walks in, while peop
 
 ## How it works
 
-1. **Business publishes.** A barbershop creates "Premium Haircut — 500 NOK", sets a 100 NOK commission, accepts the standard promoter agreement and publishes.
-2. **Promoter joins.** The campaign appears instantly on every promoter's Explore page. A promoter reads the agreement, accepts it and gets a personal referral link, QR code, promo texts and a branded promo image.
+1. **Business publishes.** A boat-tour company with online booking creates "Sunset Fjord Cruise — 500 NOK", sets a 100 NOK commission, accepts the standard promoter agreement and publishes.
+2. **Promoter joins.** The campaign appears instantly on every promoter's Explore page. A promoter reads the agreement, accepts it and gets a personal referral link and QR code to share (marked as advertising, following the business's brand rules).
 3. **Customer books.** A friend opens the link or scans the QR code on their phone, picks a time and books with a name and phone number. No account needed.
 4. **Business verifies.** The booking appears live on the business dashboard. After the appointment, the business clicks **Verify service completed**. The commission is now *pending*.
 5. **Promoter gets paid.** When the refund window has passed, the commission becomes *available* and appears live on the promoter's dashboard with its payout date.
@@ -67,7 +67,7 @@ All amounts are stored as **integers in minor units** (øre / cents). Fees are c
 - The **promoter keeps 100%** of the advertised commission.
 - The **business pays a platform fee on top**: `PLATFORM_FEE_BPS = 275` (2.75%) of the **booking price**, rounded half-up.
 
-| Example: Premium Haircut | NOK | stored as (øre) |
+| Example: Sunset Fjord Cruise | NOK | stored as (øre) |
 |---|---:|---:|
 | Booking price | 500.00 | 50 000 |
 | Commission → **promoter** | 100.00 | 10 000 |
@@ -151,7 +151,8 @@ This is a hackathon demo, so a few things are deliberately simulated and clearly
 - **Refund window fast-forward.** In Demo Mode the business can click **"Simulate end of refund window"** (shown in a yellow "Demo Mode · simulated" box) instead of waiting 3–7 days. It runs the same release logic as the real path.
 - **No real money moves.** Balances, payout dates and fees are real database records. With `PAYMENTS_ENABLED`, invoices, payments and transfers are real **Stripe test-mode** objects (test cards, test balances); live keys are refused. Real money would need a lawyer's and an accountant's review first (see `docs/PAYMENTS.md`).
 - **The agreement is a template.** Every agreement is labelled *"Agreement template, to be reviewed by a lawyer before real use"*.
-- **Demo businesses are illustrative.** "Demo Barber Club" and "Mediterranean Water Sports Demo" are not real partners.
+- **Demo businesses are illustrative.** "Demo Fjord Boat Tours" and "Mediterranean Water Sports Demo" are not real partners. The demo booking page stands in for the business's own checkout and says so ("Demo checkout").
+- **Illustrative demo data.** Prepare Stage Demo also creates 8 fictional online-checkout businesses in Oslo and Mallorca, 13 campaigns, ~20 fictional promoters and four weeks of history, all through the real booking and money functions. Logged-in pages say "Illustrative demo data". No ratings, reviews or user counts.
 
 ---
 
@@ -167,10 +168,8 @@ This is a hackathon demo, so a few things are deliberately simulated and clearly
   - real-time Explore
   - agreement and join
   - personal link, QR code (download and full screen), WhatsApp and the native share sheet
-  - **Marketing Studio:** text templates per channel, plus a branded promo image (Story 1080×1920 / Post 1080×1080) with the promoter's QR code
   - dashboard with the live "money moment" when a commission becomes available
 - **Customer:** a mobile booking page with free time slots, then a confirmation. No account needed.
-- **Marketing Studio rules:** only campaign facts and the business's own photos are used, it never invents discounts, reviews or guarantees, every text carries an "ad / I earn a commission" note, and only channels the agreement allows are offered.
 - **Admin:** a Demo Control Center with **Prepare Stage Demo** (reset) and a **Demo Health Check** that runs real checks.
 
 ---
@@ -179,8 +178,8 @@ This is a hackathon demo, so a few things are deliberately simulated and clearly
 
 | Suite | What it covers | Command |
 |---|---|---|
-| **Unit (Vitest)**, `tests/*.test.ts` | Money maths (500/100 NOK, the €150 rounding case, a refund that brings every balance back to zero, TypeScript vs database fee); promo text templates (always include link and disclosure, never invent claims, allowed channels only); promo image layout (long names never overflow, must-mentions only from the business's own text) | `npm test` |
-| **End-to-end (Playwright)**, `tests/e2e/*.spec.ts`, against the live site | Health check all green; the **full stage flow in three browsers** (business publishes → promoter sees it live and joins → QR decodes to the link → promo images have the right size and a scannable QR → customer books on a phone → business verifies → promoter sees the commission live, including the money toast); photo upload and removal; sign-up and login for new business and promoter accounts; onboarding for accounts without a profile; clear errors for a wrong password, a duplicate email or a hung network | `npm run test:e2e` |
+| **Unit (Vitest)**, `tests/*.test.ts` | Money maths (500/100 NOK, the €150 rounding case, a refund that brings every balance back to zero, TypeScript vs database fee) | `npm test` |
+| **End-to-end (Playwright)**, `tests/e2e/*.spec.ts`, against the live site | Health check all green; the **full stage flow in three browsers** (business publishes → promoter sees it live and joins → QR decodes to the link → customer books on a phone → business verifies → promoter sees the commission live, including the money toast); photo upload and removal; sign-up and login for new business and promoter accounts; onboarding for accounts without a profile; clear errors for a wrong password, a duplicate email or a hung network | `npm run test:e2e` |
 
 | **Payments rules (Vitest)**, `tests/payments.test.ts` | 113.75 kr invoice, the exact 14-day boundary, refund before/after, the 300 NOK / 30 EUR minimum rolling over, age rules, agreement template v2 | `npm test` |
 | **Payments in the database (Vitest + PGlite)**, `tests/payments-db.test.ts` | Replays **every migration** on an in-memory Postgres and checks over 100 database rules: no payout from an unpaid invoice, no double payout, under-18 blocked, overdue pauses campaigns, fraud clawback credits only money Promly received, RLS per role, the old stage-demo functions unchanged | `npm test` |
@@ -226,7 +225,7 @@ You can try the live site by creating your own business or promoter account at [
 - **Tailwind CSS** · **shadcn/ui** · **lucide** icons
 - **Supabase**: Postgres, Auth, Realtime and Storage (hosted, Frankfurt)
 - **Vercel**: hosting and automatic deploys from `main`, functions in `fra1`
-- **Zod** for input validation · `qrcode` for QR codes · HTML canvas for promo images
+- **Zod** for input validation · `qrcode` for QR codes
 - **Vitest** and **Playwright** for tests
 
 ---

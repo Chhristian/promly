@@ -1,7 +1,7 @@
 import { Dumbbell, Lamp, Sailboat, Scissors, Sparkles, Store, UtensilsCrossed, Waves, Wine, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-// Flat daylight tints for covers without a photo (the promo image keeps from/to).
+// Flat daylight tints for covers without a photo.
 const TINT: Record<string, string> = {
   barbershop: "#DCE3FF",
   beauty: "#FBE0EC",
@@ -12,6 +12,9 @@ const TINT: Record<string, string> = {
   boat_tour: "#DAEBFB",
   fitness: "#DDF3E4",
   other: "#E6EAF0",
+  tour: "#DAEBFB",
+  activity: "#E4E0FA",
+  event: "#FBE0EC",
   nightlife: "#E4E0FA",
   club: "#E4E0FA",
   alcohol: "#F6E1E6",
@@ -27,18 +30,21 @@ const CATEGORY: Record<string, { icon: LucideIcon; from: string; to: string; lab
   boat_tour: { icon: Sailboat, from: "#0ea5e9", to: "#1e3a8a", label: "Boat tour" },
   fitness: { icon: Dumbbell, from: "#16a34a", to: "#1e3a8a", label: "Fitness" },
   other: { icon: Store, from: "#6366f1", to: "#1e1b4b", label: "Other" },
+  tour: { icon: Sailboat, from: "#0ea5e9", to: "#1e3a8a", label: "Tour" },
+  activity: { icon: Lamp, from: "#7c3aed", to: "#1e1b4b", label: "Activity" },
+  event: { icon: Sparkles, from: "#db2777", to: "#1e1b4b", label: "Event" },
   nightlife: { icon: Sparkles, from: "#7c3aed", to: "#1e1b4b", label: "Nightlife" },
   club: { icon: Sparkles, from: "#6d28d9", to: "#111827", label: "Club" },
   alcohol: { icon: Wine, from: "#9f1239", to: "#1e1b4b", label: "Bar & alcohol" },
 };
 
-/** Gradient colours of the category artwork (also used by the promo image). */
+/** Gradient colours of the category artwork. */
 export function categoryColors(category?: string | null): { from: string; to: string } {
   const c = CATEGORY[category ?? "other"] ?? CATEGORY.other;
   return { from: c.from, to: c.to };
 }
 
-/** Flat tint of the category artwork (also used by the promo image). */
+/** Flat tint of the category artwork. */
 export function categoryTint(category?: string | null): string {
   return TINT[category ?? "other"] ?? TINT.other;
 }

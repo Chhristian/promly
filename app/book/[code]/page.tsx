@@ -42,6 +42,11 @@ export default async function BookPage({ params }: { params: Promise<{ code: str
       <div className="relative m-2 h-48 overflow-hidden rounded-[1.25rem]">
         <CampaignCover category={business.category} imageUrl={coverUrl} size="lg" />
       </div>
+      {business.is_demo && (
+        <p className="mx-2 rounded-xl bg-marker/60 px-3 py-2 text-xs font-medium text-ink" data-testid="demo-checkout-note">
+          Demo checkout: in production the customer books on the business&apos;s own site, tracked with the promoter&apos;s link.
+        </p>
+      )}
       <div className="px-5 pb-6">
         <div className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
           <span className="relative rounded-full border border-border bg-card px-3 py-1 font-semibold text-foreground">{business.name}</span>

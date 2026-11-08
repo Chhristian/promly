@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { BadgeCheck, CalendarClock, Compass, Sparkles, Wallet } from "lucide-react";
+import { BadgeCheck, CalendarClock, Compass, Wallet } from "lucide-react";
 import { requireRole } from "@/lib/auth";
 import { getPromoterOverview, siteUrl } from "@/lib/promoter-data";
 import { formatMinor, type Currency } from "@/lib/money";
@@ -38,9 +38,6 @@ export default async function PromoterDashboard() {
           <p className="mt-1.5 text-muted-foreground">Share your links. Every verified booking earns you the full commission.</p>
         </div>
         <div className="flex gap-2">
-          <Button asChild variant="secondary">
-            <Link href="/promoter/studio"><Sparkles className="h-4 w-4" /> Create content</Link>
-          </Button>
           <Button asChild>
             <Link href="/promoter/explore"><Compass className="h-4 w-4" /> Find campaigns</Link>
           </Button>
@@ -125,7 +122,7 @@ export default async function PromoterDashboard() {
               <EmptyState
                 icon={Compass}
                 title="Join your first campaign"
-                body="Local businesses are looking for customers. Pick one you'd happily recommend."
+                body="Businesses that sell online are looking for customers. Pick an experience you'd happily recommend."
                 action={{ href: "/promoter/explore", label: "Explore campaigns" }}
               />
             ) : (
