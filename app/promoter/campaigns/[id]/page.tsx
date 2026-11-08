@@ -5,7 +5,8 @@ import { formatMinor, type Currency } from "@/lib/money";
 import { formatDateTime } from "@/lib/format";
 import { siteUrl } from "@/lib/promoter-data";
 import { AgreementView } from "@/components/agreement-view";
-import { ShareTools } from "@/components/share-tools";
+import { ShareTools, adLangForCurrency } from "@/components/share-tools";
+import { AdDisclosureNote } from "@/components/ad-disclosure-note";
 import { JoinForm } from "./join-form";
 import { ArrowLeft, ChevronDown, MapPin } from "lucide-react";
 import { CampaignCover, categoryLabel } from "@/components/campaign-cover";
@@ -93,6 +94,7 @@ export default async function PromoterCampaignPage({ params }: { params: Promise
       )}
 
       {c.description && !link && <p className="text-muted-foreground">{c.description}</p>}
+      {!link && <AdDisclosureNote businessName={c.businesses.name} />}
 
       {link ? (
         <section className="card space-y-3 border-2 border-ink p-5">
@@ -103,10 +105,9 @@ export default async function PromoterCampaignPage({ params }: { params: Promise
             serviceName={c.service_name}
             businessName={c.businesses.name}
             whatsappAllowed={!!agreement?.allowed_channels.includes("whatsapp")}
+            lang={adLangForCurrency(cur)}
           />
-          <p className="text-sm text-muted-foreground" data-testid="ad-disclosure-note">
-            Mark your posts as advertising (#reklame) and follow the business&apos;s brand rules.
-          </p>
+          <AdDisclosureNote businessName={c.businesses.name} />
           <p className="pt-1 text-xs text-muted-foreground">
             You accepted the agreement on {formatDateTime(membership?.promoter_accepted_at)}
             {membership?.agreement_document_sha256 && (

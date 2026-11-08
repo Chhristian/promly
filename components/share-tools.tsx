@@ -24,14 +24,23 @@ function slug(s: string) {
   return s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 }
 
-/** The ad label that goes with every share (Norwegian marketing law: mark it as advertising). */
-export function shareText(serviceName: string, businessName: string) {
-  return `${serviceName} at ${businessName}. #reklame: I earn a commission if you book through my link.`;
+/** Language of the share text: Norwegian for the Oslo/NOK market, English otherwise. */
+export type AdLang = "no" | "en";
+export const adLangForCurrency = (currency: string | null | undefined): AdLang => (currency === "NOK" ? "no" : "en");
+
+/**
+ * Every share starts with the advertising label and names the business
+ * (Norwegian marketing law: the ad must be recognisable up front, not via a hashtag at the end).
+ */
+export function shareText(serviceName: string, businessName: string, lang: AdLang = "en") {
+  return lang === "no"
+    ? `Reklame: Jeg får provisjon fra ${businessName} hvis du bestiller via lenken min. ${serviceName} hos ${businessName}.`
+    : `Advertising: I earn a commission from ${businessName} if you book through my link. ${serviceName} at ${businessName}.`;
 }
 
 /** WhatsApp message: only facts from the campaign, labelled as advertising, no invented claims. */
-export function whatsappMessage(serviceName: string, businessName: string, url: string) {
-  return `${shareText(serviceName, businessName)} You can book here: ${url}`;
+export function whatsappMessage(serviceName: string, businessName: string, url: string, lang: AdLang = "en") {
+  return `${shareText(serviceName, businessName, lang)} ${lang === "no" ? "Bestill her" : "Book here"}: ${url}`;
 }
 
 /** The user closed the share sheet: not an error. */
@@ -45,12 +54,14 @@ export function ShareTools({
   businessName,
   compact = false,
   whatsappAllowed = true,
+  lang = "en",
 }: {
   url: string;
   serviceName: string;
   businessName: string;
   compact?: boolean;
   whatsappAllowed?: boolean;
+  lang?: AdLang;
 }) {
   const qrSmall = useQr(url, 560); // shown at ~280px, crisp on retina
   const qrPng = useQr(url, 1024); // download and share
@@ -63,10 +74,11 @@ export function ShareTools({
     if (toastTimer.current) clearTimeout(toastTimer.current);
   }, []);
 
-  const waHref = `https://wa.me/?text=${encodeURIComponent(whatsappMessage(serviceName, businessName, url))}`;
+  const waHref = `https://wa.me/?text=${encodeURIComponent(whatsappMessage(serviceName, businessName, url, lang))}`;
   const fileName = `promly-qr-${slug(serviceName)}.png`;
-  const title = `${serviceName} — ${businessName}`;
-  const text = shareText(serviceName, businessName);
+  const adLabel = lang === "no" ? "Reklame" : "Advertising";
+  const title = `${adLabel}: ${serviceName} — ${businessName}`;
+  const text = shareText(serviceName, businessName, lang);
 
   const flash = (message: string) => {
     setToast(message);
@@ -186,6 +198,9 @@ export function ShareTools({
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={qrPng} alt="QR code" className="aspect-square w-[min(78vh,90vw)] rounded-3xl border border-border bg-white p-4" />
           <div className="text-center">
+            <div className="text-sm font-bold uppercase tracking-wide" data-testid="qr-ad-label">
+              {lang === "no" ? `Reklame: promoteren får provisjon fra ${businessName}` : `Advertising: the promoter earns a commission from ${businessName}`}
+            </div>
             <div className="text-3xl font-extrabold tracking-[-0.02em]">{serviceName}</div>
             <div className="text-muted-foreground">{businessName}. Scan to book. Tap anywhere to close.</div>
           </div>

@@ -54,7 +54,7 @@ test("market switch: Explore shows only the selected market, and the choice is r
   await expect(page.getByText("2-hour kayak rental")).toBeVisible();
 });
 
-test("share: native sheet gets a #reklame text and the link; without it, the link is copied; cancel shows nothing", async ({ page, context }) => {
+test("share: native sheet gets a text that starts with the ad label, and the link; without it, the link is copied; cancel shows nothing", async ({ page, context }) => {
   await allowPreview(context);
   await context.grantPermissions(["clipboard-read", "clipboard-write"], { origin: new URL(test.info().project.use.baseURL!).origin });
   // Phones: record what would go to the share sheet. "cancel" mode throws AbortError like a closed sheet.
@@ -78,13 +78,14 @@ test("share: native sheet gets a #reklame text and the link; without it, the lin
   await page.getByRole("button", { name: "Accept & join" }).click();
   await expect(page.getByText("Your personal link")).toBeVisible();
   const link = (await page.locator("code").first().innerText()).trim();
-  await expect(page.getByTestId("ad-disclosure-note")).toContainText("#reklame");
+  await expect(page.getByTestId("ad-disclosure-note")).toContainText('"Reklame:"');
 
-  // Native share sheet: #reklame text + the referral link.
+  // Native share sheet: the text starts with the ad label (no hashtag), plus the referral link.
   await page.getByTestId("share-link").click();
   const shared = await page.evaluate(() => (window as unknown as { __shared: { text?: string; url?: string }[] }).__shared);
   expect(shared).toHaveLength(1);
-  expect(shared[0].text).toContain("#reklame");
+  expect(shared[0].text).toMatch(/^(Reklame|Advertising): /);
+  expect(shared[0].text).not.toMatch(/#(reklame|ad)\b/i);
   expect(shared[0].url).toBe(link);
 
   // Cancelled share sheet: no error, no toast.

@@ -5,6 +5,7 @@ import { formatMinor, type Currency } from "@/lib/money";
 import { Highlight } from "@/components/live";
 import { CampaignCover, categoryLabel } from "@/components/campaign-cover";
 import { EmptyState } from "@/components/empty-state";
+import { AdDisclosureNote } from "@/components/ad-disclosure-note";
 import { coverUrls } from "@/lib/photos";
 import { getMarket } from "@/lib/market-server";
 
@@ -28,6 +29,9 @@ export default async function ExplorePage() {
       <div>
         <h1 className="text-[clamp(2rem,5vw,2.75rem)]">Explore campaigns</h1>
         <p className="mt-1 text-muted-foreground">Businesses in {market.place} that sell online (tours, rentals, experiences, tickets) and want customers. Join one, share your link, earn on every verified booking.</p>
+        <div className="mt-3">
+          <AdDisclosureNote />
+        </div>
       </div>
       {!campaigns?.length ? (
         <EmptyState

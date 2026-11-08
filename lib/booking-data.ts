@@ -8,13 +8,14 @@ export const REFERRAL_CODE = /^[a-z0-9]{10}$/;
 /**
  * Public data for the customer booking page. Uses the admin client because
  * customers aren't logged in, so it returns ONLY customer-safe fields
- * (no commission, no promoter identity, no other customers).
+ * (no commission, no other customers; of the promoter only the display name,
+ * for the advertising disclosure).
  */
 export async function getBookingPageData(code: string) {
   if (!REFERRAL_CODE.test(code)) return null;
   const admin = createAdminClient();
 
-  const { data: link } = await admin.from("referral_links").select("campaign_id").eq("code", code).maybeSingle();
+  const { data: link } = await admin.from("referral_links").select("campaign_id, promoter_id").eq("code", code).maybeSingle();
   if (!link) return null;
 
   // "*" (not a column list) so the page keeps working whether or not the
@@ -36,9 +37,11 @@ export async function getBookingPageData(code: string) {
 
   const coverPath = c.status === "published" ? c.photo_paths[0] : undefined;
   const coverUrl = coverPath ? (await signedPhotoUrls([coverPath]))[coverPath] : undefined;
+  const promoterName = await getPromoterDisplayName(link.promoter_id);
 
   return {
     coverUrl,
+    promoterName,
     campaign: {
       serviceName: c.service_name,
       description: c.description,
@@ -51,6 +54,12 @@ export async function getBookingPageData(code: string) {
     business: c.businesses,
     freeSlots: free.map((s) => ({ startsAt: s.starts_at, minutes: s.duration_minutes })),
   };
+}
+
+/** The promoter's display name only (for the advertising disclosure), or null. */
+export async function getPromoterDisplayName(promoterId: string): Promise<string | null> {
+  const { data } = await createAdminClient().from("profiles").select("display_name").eq("id", promoterId).maybeSingle();
+  return data?.display_name?.trim() || null;
 }
 
 /** Where to send the customer after an external referral: the business URL with ?ref=<code>. */
