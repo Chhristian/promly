@@ -15,3 +15,14 @@ export async function allowPreview(context: BrowserContext) {
     route.continue({ headers: { ...route.request().headers(), "x-vercel-trusted-oidc-idp-token": token } }),
   );
 }
+
+/**
+ * Same access header for API requests made with page.request (they skip context.route).
+ * Only for the preview origin; pass these headers only on requests to the app itself.
+ */
+export function previewHeaders(): Record<string, string> {
+  const base = process.env.E2E_BASE_URL;
+  const token = process.env.VERCEL_OIDC_TOKEN;
+  if (!base || !token || !/\.vercel\.app$/.test(new URL(base).hostname) || base.includes("promly-eight")) return {};
+  return { "x-vercel-trusted-oidc-idp-token": token };
+}

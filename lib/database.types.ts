@@ -39,6 +39,57 @@ export type Database = {
   }
   public: {
     Tables: {
+      agreement_documents: {
+        Row: {
+          campaign_id: string
+          file_name: string
+          id: string
+          sha256: string
+          size_bytes: number
+          storage_path: string
+          uploaded_at: string
+          uploaded_by: string | null
+          version: number
+        }
+        Insert: {
+          campaign_id: string
+          file_name?: string
+          id?: string
+          sha256: string
+          size_bytes: number
+          storage_path: string
+          uploaded_at?: string
+          uploaded_by?: string | null
+          version?: number
+        }
+        Update: {
+          campaign_id?: string
+          file_name?: string
+          id?: string
+          sha256?: string
+          size_bytes?: number
+          storage_path?: string
+          uploaded_at?: string
+          uploaded_by?: string | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agreement_documents_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agreement_documents_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       agreements: {
         Row: {
           allowed_channels: string[]
@@ -47,6 +98,7 @@ export type Database = {
           campaign_id: string
           commission_minor: number
           created_at: string
+          document_id: string | null
           id: string
           payout_days: number
           refund_window_days: number
@@ -60,6 +112,7 @@ export type Database = {
           campaign_id: string
           commission_minor: number
           created_at?: string
+          document_id?: string | null
           id?: string
           payout_days: number
           refund_window_days: number
@@ -73,6 +126,7 @@ export type Database = {
           campaign_id?: string
           commission_minor?: number
           created_at?: string
+          document_id?: string | null
           id?: string
           payout_days?: number
           refund_window_days?: number
@@ -80,6 +134,13 @@ export type Database = {
           version?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "agreements_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "agreement_documents"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "agreements_campaign_id_fkey"
             columns: ["campaign_id"]
@@ -287,6 +348,8 @@ export type Database = {
       }
       campaign_memberships: {
         Row: {
+          agreement_document_id: string | null
+          agreement_document_sha256: string | null
           agreement_id: string
           campaign_id: string
           created_at: string
@@ -295,6 +358,8 @@ export type Database = {
           promoter_id: string
         }
         Insert: {
+          agreement_document_id?: string | null
+          agreement_document_sha256?: string | null
           agreement_id: string
           campaign_id: string
           created_at?: string
@@ -303,6 +368,8 @@ export type Database = {
           promoter_id: string
         }
         Update: {
+          agreement_document_id?: string | null
+          agreement_document_sha256?: string | null
           agreement_id?: string
           campaign_id?: string
           created_at?: string
@@ -311,6 +378,13 @@ export type Database = {
           promoter_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "campaign_memberships_agreement_document_id_fkey"
+            columns: ["agreement_document_id"]
+            isOneToOne: false
+            referencedRelation: "agreement_documents"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "campaign_memberships_agreement_id_fkey"
             columns: ["agreement_id"]
@@ -712,6 +786,7 @@ export type Database = {
         Args: { p_agreement_id: string; p_campaign_id: string }
         Returns: boolean
       }
+      can_read_agreement_pdf: { Args: { p_path: string }; Returns: boolean }
       create_booking: {
         Args: {
           p_customer_name: string

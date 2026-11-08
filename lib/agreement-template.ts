@@ -31,6 +31,8 @@ export type AgreementTerms = {
   refundWindowDays: number;
   allowedChannels: string[];
   brandRules: string;
+  /** The business's own agreement PDF included in this version, if any. */
+  attachedPdf?: { version: number; sha256: string } | null;
 };
 
 /** The standard agreement, filled in with the editable fields. Returns paragraphs. */
@@ -56,11 +58,17 @@ export function renderAgreement(t: AgreementTerms): { heading: string; body: str
     },
     {
       heading: "5. Brand rules",
-      body: t.brandRules.trim() || "No additional brand rules.",
+      body: t.brandRules.trim() || (t.attachedPdf ? "See the attached PDF." : "No additional brand rules."),
     },
     {
       heading: "6. Honest marketing",
       body: "The Promoter must not invent discounts, guarantees, reviews or claims that are not part of this campaign, and must not spam or mislead customers.",
     },
+    ...(t.attachedPdf
+      ? [{
+          heading: "7. Attached agreement (PDF)",
+          body: `The Business's own agreement, PDF version ${t.attachedPdf.version} (SHA-256 ${t.attachedPdf.sha256}), is part of this agreement. If it conflicts with sections 2 to 3, those sections apply, because Promly calculates commission from them.`,
+        }]
+      : []),
   ];
 }
