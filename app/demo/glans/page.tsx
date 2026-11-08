@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { Link2Off, Sparkles } from "lucide-react";
 import { GLANS_REF_COOKIE, demoModeOn, isReferralCode } from "@/lib/conversions";
 import { formatMinor, type Currency } from "@/lib/money";
+import { ReferralDisclosure } from "@/components/referral-disclosure";
 import { getGlansCheckout } from "./data";
 import { GlansCheckoutForm } from "./checkout-form";
 
@@ -25,6 +26,7 @@ export default async function GlansDemoPage({ searchParams }: { searchParams: Pr
       <div className="bg-marker px-4 py-2 text-center text-sm font-semibold text-ink" data-testid="glans-demo-banner">
         Demo business – not a real company
       </div>
+      {checkout && <ReferralDisclosure promoterName={checkout.promoterName} businessName={checkout.businessName} />}
 
       <main className="mx-auto max-w-md px-5 pb-12 pt-8">
         <header className="flex items-center gap-2">

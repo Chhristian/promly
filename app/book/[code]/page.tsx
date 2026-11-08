@@ -4,6 +4,7 @@ import { getBookingPageData } from "@/lib/booking-data";
 import { formatMinor, type Currency } from "@/lib/money";
 import { dayKey } from "@/lib/format";
 import { CampaignCover } from "@/components/campaign-cover";
+import { ReferralDisclosure } from "@/components/referral-disclosure";
 import { PromlyMark, PromlyWordmark } from "@/components/promly-logo";
 import { BookingForm } from "./booking-form";
 import { ExternalReferralForm } from "./external-form";
@@ -28,7 +29,7 @@ export default async function BookPage({ params }: { params: Promise<{ code: str
     );
   }
 
-  const { campaign, business, freeSlots, coverUrl } = data;
+  const { campaign, business, freeSlots, coverUrl, promoterName } = data;
   const cur = campaign.currency as Currency;
 
   const days = new Map<string, { startsAt: string; minutes: number }[]>();
@@ -39,6 +40,7 @@ export default async function BookPage({ params }: { params: Promise<{ code: str
 
   return (
     <Shell>
+      <ReferralDisclosure promoterName={promoterName} businessName={business.name} />
       <div className="relative m-2 h-48 overflow-hidden rounded-[1.25rem]">
         <CampaignCover category={business.category} imageUrl={coverUrl} size="lg" />
       </div>

@@ -3,10 +3,14 @@ import "server-only";
 import { headers } from "next/headers";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isReferralCode, pointsToGlansDemo } from "@/lib/conversions";
+import { getPromoterDisplayName } from "@/lib/booking-data";
 
 export type GlansCheckout = {
   ref: string;
   promoterId: string;
+  /** Display name only, for the advertising disclosure. */
+  promoterName: string | null;
+  businessName: string;
   serviceName: string;
   description: string | null;
   priceMinor: number;
@@ -23,7 +27,7 @@ export async function getGlansCheckout(ref: string | undefined): Promise<GlansCh
   const admin = createAdminClient();
   const { data } = await admin
     .from("referral_links")
-    .select("promoter_id, campaigns(service_name, description, price_minor, currency, status, external_booking_url)")
+    .select("promoter_id, campaigns(service_name, description, price_minor, currency, status, external_booking_url, businesses(name))")
     .eq("code", ref)
     .maybeSingle();
   const c = data?.campaigns;
@@ -32,6 +36,8 @@ export async function getGlansCheckout(ref: string | undefined): Promise<GlansCh
   return {
     ref,
     promoterId: data.promoter_id,
+    promoterName: await getPromoterDisplayName(data.promoter_id),
+    businessName: c.businesses?.name ?? "Glans Bilpleie",
     serviceName: c.service_name,
     description: c.description,
     priceMinor: c.price_minor,

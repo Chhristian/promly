@@ -5,7 +5,7 @@ import { getPromoterOverview, siteUrl } from "@/lib/promoter-data";
 import { formatMinor, type Currency } from "@/lib/money";
 import { formatDate, formatSlot } from "@/lib/format";
 import { StatusBadge, bookingStage } from "@/components/stat";
-import { ShareTools } from "@/components/share-tools";
+import { ShareTools, adLangForCurrency } from "@/components/share-tools";
 import { Button } from "@/components/ui/button";
 import { Highlight } from "@/components/live";
 import { EarningsSummary } from "./earnings-summary";
@@ -166,6 +166,7 @@ export default async function PromoterDashboard() {
                         serviceName={c?.service_name ?? ""}
                         businessName={c?.businesses?.name ?? ""}
                         whatsappAllowed={!!m.agreements?.allowed_channels?.includes("whatsapp")}
+                        lang={adLangForCurrency(c?.currency)}
                       />
                     )}
                   </div>
