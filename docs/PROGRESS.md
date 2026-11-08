@@ -1,13 +1,10 @@
-# Morning report: payments and settlement (Sun 8 Nov, 01:30)
+# Morning report: payments and settlement (Sun 8 Nov, updated 08:25)
 
 ## Needs you
 
-1. **Stripe Connect: accept loss liability** in the sandbox Dashboard (Connect → Platform profile,
-   `dashboard.stripe.com/settings/connect/platform-profile`).
-   - Until then, Stripe refuses to create promoter payout accounts.
-   - So "Set up payouts with Stripe" shows a polite error, and the payout e2e test is **skipped**, not passed.
-   - Everything else works.
-   - Afterwards, run `E2E_PAYMENTS=1` e2e again; I expect the payout step to need a short test run to confirm.
+1. ~~Stripe Connect: accept loss liability~~ **Done** (8 Nov, morning).
+   - The demo promoter Alex has a payout account (`acct_1UZKC6Hwrk30pwO6`). Personal details were prefilled with Stripe's test values; you completed Stripe's form with test data.
+   - Transfers and bank payouts are active. The account survives demo resets.
 2. **Optional: swap the full `sk_test_` key for a restricted `rk_test_` key.** Permissions are in `docs/PAYMENTS.md`.
 3. **Webhooks on the preview need `stripe listen` running on a machine.** Command in `docs/PAYMENTS.md`. Vercel protects previews, so Stripe can't call them directly.
    - The production webhook endpoints exist but are **disabled** until payments are merged.
@@ -48,19 +45,21 @@ Preview: **https://promly-git-payments-christian-45cf.vercel.app** (branch `paym
 | Suite | Result |
 |---|---|
 | Unit (Vitest), incl. `payments.test.ts` + `payments-db.test.ts` (PGlite replay of every migration, 105 database checks) | **42/42** |
-| Full e2e on the preview, payments on (`E2E_PAYMENTS=1`) | **9 passed, 1 skipped** (payout: Stripe Connect setting above) |
-| Stage-demo e2e (unchanged) on the preview and on the live site after the migration | passed |
+| Payments e2e on the preview (`E2E_PAYMENTS=1`) | **2/2 passed**, through **"Paid out"**: a real Stripe test-mode invoice (113,75 kr) is paid with a test card, the signed webhook marks it paid, a real test-mode transfer of 100 kr goes to Alex, and a second run pays nothing more |
+| Stage-demo e2e (unchanged) on the preview (payments on) and on the live site after the migration | passed |
+| Full e2e on the preview, payments on (earlier run, before Alex's payout account) | 9 passed, 1 skipped (payout) |
 | Build | passes |
 
-Screenshots (Billing, Earnings, payout setup, sign-up age question, campaign age rating, admin buttons; desktop and phone) were checked on the preview. Demo reset at the end.
+One unexplained failure: on one run the Demo Control Center showed "Something went wrong" during "Create this month's invoices". The next three runs passed and the cause isn't known yet. "Try again" recovers.
+
+Screenshots (Billing, Earnings, payout setup, sign-up age question, campaign age rating, admin buttons; desktop and phone) were checked on the preview. Q&A backup shots of the full flow are outside the repo, in `C:\Users\chris\promly-qa-screenshots`. Demo reset at the end.
 
 ## What's left
 
-- **Payouts end to end:** blocked by the Connect setting above; the code is written.
 - **Monthly schedule:** no cron yet for the monthly invoice run, the daily "final after 14 days" and "cancel if not verified in 7 days" jobs, or the payout run. Today they run from the admin buttons. The database functions exist (`finalize_due_bookings`, `cancel_unverified_bookings`).
 - **Bank-transfer invoices:** NOK invoices offer card only (Stripe has no NOK bank transfer). EUR bank transfer is a TODO for the Mallorca pilot, together with Spanish promoters on Stripe's full account agreement.
 - **Fraud clawback:** there's no admin screen for it yet; the database function and invoice credits are done and tested.
-- **Merge:** not merged. On merge, enable the two production webhook endpoints in Stripe and set `PAYMENTS_ENABLED` for production when you're ready.
+- **Merge:** PR open, not merged. Merge with `PAYMENTS_ENABLED` **off** in production; it's set only for previews of the `payments` branch. To switch payments on later, set the flag for production and enable the two production webhook endpoints in Stripe.
 
 ---
 
