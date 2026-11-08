@@ -1,5 +1,7 @@
 import { requireRole } from "@/lib/auth";
+import { paymentsEnabled } from "@/lib/flags";
 import { DemoControl } from "./demo-control";
+import { PaymentsControl } from "./payments-control";
 
 export default async function DemoControlPage() {
   await requireRole("admin");
@@ -13,6 +15,7 @@ export default async function DemoControlPage() {
         </p>
       </div>
       <DemoControl />
+      {paymentsEnabled() && <PaymentsControl />}
     </div>
   );
 }

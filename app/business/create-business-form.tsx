@@ -45,6 +45,9 @@ export function CreateBusinessForm() {
             <option value="boat_tour">Boat tour</option>
             <option value="fitness">Fitness</option>
             <option value="other">Other services</option>
+            <option value="nightlife">Nightlife (18+)</option>
+            <option value="club">Club (18+)</option>
+            <option value="alcohol">Bar &amp; alcohol (18+)</option>
           </select>
         </div>
         <div className="grid gap-2">
