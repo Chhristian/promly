@@ -91,7 +91,9 @@ test("share: native sheet gets a #reklame text and the link; without it, the lin
   await page.evaluate(() => ((window as unknown as { __shareMode: string }).__shareMode = "cancel"));
   await page.getByTestId("share-link").click();
   await expect(page.getByTestId("share-toast")).toHaveCount(0);
-  await expect(page.getByRole("alert")).toHaveCount(0);
+  // (Next.js keeps an empty route announcer with role=alert on every page, so look inside the share tools.)
+  await expect(page.getByTestId("share-tools").getByRole("alert")).toHaveCount(0);
+  await expect(page.getByTestId("share-tools")).not.toContainText(/error|went wrong|couldn.t/i);
 
   // No native share: copy the link and say so.
   await page.evaluate(() => {
