@@ -132,7 +132,8 @@ returns boolean language sql stable security definer set search_path = '' as $$
           public.current_user_role() = 'promoter'
           and exists (select 1 from public.agreements a
                       where a.document_id = d.id and a.business_accepted_at is not null)
-          and (c.status = 'published'
+          -- is_published_campaign also applies the age rule from the payments migration
+          and (public.is_published_campaign(c.id)
                or exists (select 1 from public.campaign_memberships m
                           where m.campaign_id = c.id and m.promoter_id = (select auth.uid())))
         )
