@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CalendarDays, Compass, LayoutDashboard, PlusCircle, ShieldCheck, Sparkles, type LucideIcon } from "lucide-react";
+import { CalendarDays, Compass, LayoutDashboard, PlusCircle, Receipt, ShieldCheck, Sparkles, Wallet, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const ICONS: Record<string, LucideIcon> = {
@@ -12,6 +12,8 @@ const ICONS: Record<string, LucideIcon> = {
   explore: Compass,
   studio: Sparkles,
   admin: ShieldCheck,
+  billing: Receipt,
+  earnings: Wallet,
 };
 
 export type NavItem = { href: string; label: string; icon: keyof typeof ICONS };

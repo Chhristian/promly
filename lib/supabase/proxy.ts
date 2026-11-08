@@ -53,7 +53,8 @@ export async function updateSession(request: NextRequest) {
     path === "/" ||
     path.startsWith("/auth") ||
     path.startsWith("/r/") ||
-    path.startsWith("/book/");
+    path.startsWith("/book/") ||
+    path === "/api/stripe/webhook"; // Stripe calls it; every request must carry a valid Stripe signature
 
   if (!user && !isPublic) {
     // no user, potentially respond by redirecting the user to the login page

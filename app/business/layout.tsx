@@ -1,5 +1,6 @@
 import { AppShell } from "@/components/app-shell";
 import { requireRole } from "@/lib/auth";
+import { paymentsEnabled } from "@/lib/flags";
 
 export default async function BusinessLayout({ children }: { children: React.ReactNode }) {
   const { profile } = await requireRole("business");
@@ -13,6 +14,7 @@ export default async function BusinessLayout({ children }: { children: React.Rea
         { href: "/business", label: "Dashboard", icon: "dashboard" },
         { href: "/business/bookings", label: "Bookings", icon: "bookings" },
         { href: "/business/campaigns/new", label: "New campaign", icon: "new" },
+        ...(paymentsEnabled() ? [{ href: "/business/billing", label: "Billing", icon: "billing" } as const] : []),
       ]}
     >
       {children}
