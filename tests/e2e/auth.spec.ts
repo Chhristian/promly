@@ -40,6 +40,9 @@ async function signUp(page: Page, role: "business" | "promoter", name: string, e
   await page.goto("/auth/sign-up");
   await page.getByRole("button", { name: role === "business" ? /^Business/ : /^Promoter/ }).click();
   await page.fill("#display-name", name);
+  // With payments on, promoters also say how old they are (16-17 or 18+).
+  const adult = page.getByLabel("18 or older");
+  if (role === "promoter" && (await adult.count())) await adult.check();
   await page.fill("#email", email);
   await page.fill("#password", password);
   await page.fill("#repeat-password", password);

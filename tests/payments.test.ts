@@ -65,6 +65,22 @@ describe("bank payout minimum", () => {
   });
 });
 
+describe("agreement template v2", () => {
+  const terms = {
+    businessName: "Demo Barber Club", serviceName: "Premium Haircut", currency: "NOK" as const, priceMinor: 50_000,
+    commissionMinor: 10_000, payoutDays: 14, refundWindowDays: 7, allowedChannels: ["instagram"], brandRules: "",
+  };
+  it("v1 (existing agreements) is unchanged; v2 adds the payment and age terms", async () => {
+    const { renderAgreement, AGREEMENT_TEMPLATE_VERSION_V2 } = await import("@/lib/agreement-template");
+    const v1 = renderAgreement(terms).map((p) => p.body).join(" ");
+    expect(v1).toContain("7-day refund window");
+    const v2 = renderAgreement({ ...terms, templateVersion: AGREEMENT_TEMPLATE_VERSION_V2 }).map((p) => `${p.heading} ${p.body}`).join(" ");
+    for (const phrase of ["final 14 days after verification", "within 7 days", "never advances commission", "parent or guardian", "payment disputes", "2.75%", "pays the Business directly"]) {
+      expect(v2).toContain(phrase);
+    }
+  });
+});
+
 describe("age rules", () => {
   it("16-17 promoters only see 16+ campaigns; existing accounts (no band) see everything", () => {
     expect(canSeeCampaign("16-17", "16+")).toBe(true);

@@ -7,7 +7,7 @@ import { requireRole } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { parseMajorToMinor } from "@/lib/money";
 import { friendlyError } from "@/lib/errors";
-import { CHANNEL_VALUES } from "@/lib/agreement-template";
+import { AGREEMENT_TEMPLATE_VERSION_V2, CHANNEL_VALUES } from "@/lib/agreement-template";
 import { paymentsEnabled } from "@/lib/flags";
 import { effectiveAgeRating } from "@/lib/payments";
 import type { ActionState } from "@/components/action-form";
@@ -172,6 +172,7 @@ export async function acceptAgreement(_: ActionState, fd: FormData): Promise<Act
       campaign_id: a.campaign_id, commission_minor: a.commission, payout_days: a.payout_days,
       refund_window_days: a.refund_window_days, allowed_channels: a.allowed_channels, brand_rules: a.brand_rules,
       business_accepted_at: new Date().toISOString(), // the database replaces this with its own clock
+      ...(paymentsEnabled() ? { template_version: AGREEMENT_TEMPLATE_VERSION_V2 } : {}),
     })
     .select("id, version")
     .single();

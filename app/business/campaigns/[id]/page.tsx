@@ -134,6 +134,7 @@ export default async function CampaignEditorPage({ params }: { params: Promise<{
             refundWindowDays: agreement.refund_window_days,
             allowedChannels: agreement.allowed_channels,
             brandRules: agreement.brand_rules,
+            templateVersion: agreement.template_version,
           }}
         />
       )}
