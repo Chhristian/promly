@@ -6,6 +6,8 @@ Source: `docs/master-prompt.md` (teammate's master prompt, kept unchanged) **plu
 - **Feature freeze:** Sunday 8 Nov, 11:00 (after this: bug fixes, demo rehearsal, `STAGE_DEMO.md` only)
 - **Fresh project.** There is no existing Promly code to preserve. Master prompt sections that say "inspect/preserve the existing project" don't apply.
 - **Live:** https://promly-eight.vercel.app (every push to `main` deploys automatically; functions run in `fra1`)
+- **Target (decided 8 Nov):** Promly works only with businesses that have an **online checkout** (online booking or ticketing: tours, rentals, experiences, event and club tickets, activities, online classes and memberships). Offline-only businesses such as barbershops are not our audience. New businesses must give their checkout URL (https).
+- **No Marketing Studio (decided 8 Nov):** promo text templates and the promo image / video creator are removed. Promoters get the sharing tools only (copy link, QR code, WhatsApp, native share) with the note "Mark your posts as advertising (#reklame) and follow the business's brand rules."
 
 ---
 
@@ -18,9 +20,9 @@ Work strictly in this order. Don't start a phase until the one before it works *
 | 1 | **P0 core flow** (master §3 items 1–10) | Business and promoter accounts, create + publish campaign (with agreement), real-time discovery, join (accept agreement), unique referral link, customer booking, attribution, business verifies service, simulated settlement, real-time commission updates. Deployed and tested on two devices. |
 | 2 | **Demo reset + `STAGE_DEMO.md`** | "Prepare Stage Demo" restores the demo accounts and campaigns to a known state. Runbook with 60-second and 2-minute versions. |
 | 3 | **Sharing** | Copy link, QR code, WhatsApp share (plus native share on mobile where supported). |
-| 4 | **Promo text templates** | Editable, prewritten templates per channel (TikTok, Instagram, Snapchat, WhatsApp, hook, voiceover, DM), filled from campaign data. **No AI API.** Copy button. |
+| 4 | ~~Promo text templates~~ | Removed 8 Nov (no content creation in Promly). |
 | 5 | **Dashboard polish** | Business and promoter dashboards look like a real product (master §5–7). |
-| 6 | **Video creator (last)** | One template that exports a playable 9:16 MP4. **If it isn't exporting by Saturday 22:00**, replace it with a downloadable promo image (PNG) with a QR code. |
+| 6 | ~~Video creator / promo image~~ | Removed 8 Nov (no content creation in Promly). |
 
 **Skipped entirely:** all of P2 (advanced analytics, extra categories beyond the seed list, expanded admin tools, AI content generation, external integrations). Also skipped: content library, brand asset uploads, withdrawals beyond a labelled "simulated withdrawal" if time allows.
 
@@ -34,7 +36,7 @@ Work strictly in this order. Don't start a phase until the one before it works *
 | Sat 14:30–18:30 | P0 pages and server actions, end to end on localhost |
 | Sat 18:30–20:00 | Realtime, deploy, test on two devices; Playwright E2E test |
 | Sat 20:00–21:00 | Demo reset + `STAGE_DEMO.md` |
-| Sat 21:00–22:00 | Sharing + promo text templates |
+| Sat 21:00–22:00 | Sharing tools |
 | Sat 22:00 | **Video checkpoint** → continue video or switch to PNG + QR |
 | Sun 08:00–11:00 | Dashboard polish, video/PNG finish |
 | **Sun 11:00** | **Feature freeze** |
@@ -49,9 +51,9 @@ Work strictly in this order. Don't start a phase until the one before it works *
 - **Promly's platform fee is charged to the business on top**: `PLATFORM_FEE_BPS = 275` (2.75%), applied to the **booking price** (not to the commission).
 - **Rounding:** fee = `price × bps / 10000`, rounded half-up to a whole minor unit. Done in one place only.
 
-| Example (Demo Barber Club) | NOK | øre |
+| Example (Demo Fjord Boat Tours) | NOK | øre |
 |---|---|---|
-| Booking price (haircut) | 500.00 | 50 000 |
+| Booking price (sunset cruise) | 500.00 | 50 000 |
 | Commission → promoter | 100.00 | 10 000 |
 | Platform fee 2.75% of price → Promly | 13.75 | 1 375 |
 | **Business pays** (commission + fee) | **113.75** | **11 375** |
@@ -137,7 +139,7 @@ Migrations live in `supabase/migrations/` and go to the **hosted** project with 
 | Create campaign + agreement, accept, publish | Business | `/business/campaigns/new` | Promoter marketplace shows it instantly (`campaigns` insert/update) |
 | Browse marketplace | Promoter | `/promoter/explore` | — |
 | Join (accept agreement) → get link | Promoter | `/promoter/campaigns/[id]` | Business dashboard: "Alex joined" (`campaign_memberships`) |
-| Open link, see service, pick slot, book | Customer (no login) | `/r/[code]` → booking form | Business: "New booking — Premium Haircut" (`bookings`) |
+| Open link, see service, pick slot, book | Customer (no login) | `/r/[code]` → booking form | Business: "New booking — Sunset Fjord Cruise" (`bookings`) |
 | Verify service | Business | `/business/bookings/[id]` | Promoter: pending commission appears (`ledger_entries`) |
 | "Simulate end of refund window" (Demo Mode) | Business | same page | Promoter: moves to available (`ledger_entries`) |
 | Dashboards | both | `/business`, `/promoter` | Commissions, sales, pending vs available, payout dates |
@@ -152,8 +154,8 @@ Both dashboards show a **connection status dot** and a **manual refresh button**
 
 ## 6. Demo setup
 
-- Demo accounts: **Demo Barber Club** (business) and **Alex** (promoter). The customer uses a guest session. Credentials are never committed or published (master §18); they go in `.env.local` / Vercel env vars and are handed over privately.
-- Demo campaigns: **Premium Haircut, 500 NOK, 100 NOK commission** (Norway, main demo) and **Jet Ski Adventure, €150, 20% commission** (Spain). Both are labelled as illustrative.
+- Demo accounts: **Demo Fjord Boat Tours** (business) and **Alex** (promoter). The customer uses a guest session. Credentials are never committed or published (master §18); they go in `.env.local` / Vercel env vars and are handed over privately.
+- Demo campaigns: **Sunset Fjord Cruise, 500 NOK, 100 NOK commission, 16+** (Norway, main demo) and **Jet Ski Adventure, €150, 20% commission** (Spain). Both are labelled as illustrative. Prepare Stage Demo also creates illustrative data: 8 fictional online-checkout businesses, 13 campaigns, ~20 fictional promoters and four weeks of history, made with the real booking and money functions.
 - **Prepare Stage Demo** (admin only) deletes and re-seeds **only rows flagged `is_demo`**. This is the one place demo ledger rows are removed; it never touches non-demo data.
 - **Demo Health Check** runs real checks (DB, realtime, accounts, money maths) and never fakes results.
 - `STAGE_DEMO.md`: before / during / after, a 60-second version and a 2-minute version.
@@ -189,9 +191,9 @@ Plus `npm run build` (which type-checks) before every push. The rest of master �
 | 4 Tech stack | ✅ applies |
 | 5–7 Design, dashboards | ✅ in phase 5 (polish); functional versions in P0 |
 | 8 Marketplace | ✅ (Norway + Spain, NOK + EUR, seed category list) |
-| 9 Marketing Studio | 🔶 reduced: sharing + text templates + video/PNG only |
-| 10 Video creator | 🔶 last, with PNG + QR fallback at Sat 22:00 |
-| 11 AI content | 🔶 templates only, no AI API |
+| 9 Marketing Studio | ❌ removed 8 Nov: sharing tools only (link, QR, WhatsApp, native share) |
+| 10 Video creator | ❌ removed 8 Nov |
+| 11 AI content | ❌ none |
 | 12 Referral links and sharing | ✅ |
 | 13 Booking page | ✅ |
 | 14 Realtime | ✅ |

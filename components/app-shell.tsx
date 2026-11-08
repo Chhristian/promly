@@ -47,6 +47,9 @@ export function AppShell({
           </nav>
         </header>
         <main className="mx-auto max-w-6xl px-4 py-6 sm:py-8">{children}</main>
+        <footer className="mx-auto max-w-6xl px-4 pb-8 text-xs text-muted-foreground" data-testid="demo-data-note">
+          Illustrative demo data: the businesses, campaigns and promoters shown are fictional.
+        </footer>
       </div>
     </LiveProvider>
   );

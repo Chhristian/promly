@@ -28,6 +28,18 @@ const MESSAGES: Record<string, string> = {
   campaigns_external_booking_url_https: "The booking link must start with https://",
   agreement_document_not_in_campaign: "That PDF doesn't belong to this campaign.",
   agreement_document_is_immutable: "An uploaded PDF version can't be changed. Upload a new version instead.",
+  // Payments and age ratings
+  billing_overdue: "An invoice is overdue, so campaigns can't go live until it's paid. See Billing.",
+  age_restricted_campaign_is_18_plus: "Age-restricted campaigns (nightlife, clubs, alcohol) are always 18+.",
+  age_restriction_cannot_be_removed: "An age-restricted campaign stays 18+.",
+  minor_promoters_joined: "Promoters aged 16-17 have joined this campaign, so it can't change to 18+.",
+  campaigns_rated_16_plus: "Change your 16+ campaigns to 18+ before switching to this category.",
+  campaign_is_18_plus: "This campaign is 18+ only.",
+  guardian_payout_account_required: "A parent or guardian needs to set up your payout account first (see Earnings).",
+  commission_is_final: "This commission is final (14 days after verification), so it can't be refunded here.",
+  already_invoiced: "This booking is already on an invoice.",
+  under_18: "Payouts to your own account are for 18+. A parent or guardian can hold the account.",
+  age_band_required: "Confirm your age first.",
 };
 
 export function friendlyError(error: { message?: string; code?: string } | null | undefined): string {

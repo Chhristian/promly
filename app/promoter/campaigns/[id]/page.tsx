@@ -104,18 +104,16 @@ export default async function PromoterCampaignPage({ params }: { params: Promise
             businessName={c.businesses.name}
             whatsappAllowed={!!agreement?.allowed_channels.includes("whatsapp")}
           />
-          <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
-            <p className="text-xs text-muted-foreground">
-              You accepted the agreement on {formatDateTime(membership?.promoter_accepted_at)}
-              {membership?.agreement_document_sha256 && (
-                <>, including PDF version {pdf?.version} (SHA-256 <span title={membership.agreement_document_sha256}>{shortHash(membership.agreement_document_sha256)}…</span>)</>
-              )}
-              .
-            </p>
-            <Link href={`/promoter/studio?campaign=${c.id}`} className="text-sm font-medium text-primary hover:underline">
-              Create promo text
-            </Link>
-          </div>
+          <p className="text-sm text-muted-foreground" data-testid="ad-disclosure-note">
+            Mark your posts as advertising (#reklame) and follow the business&apos;s brand rules.
+          </p>
+          <p className="pt-1 text-xs text-muted-foreground">
+            You accepted the agreement on {formatDateTime(membership?.promoter_accepted_at)}
+            {membership?.agreement_document_sha256 && (
+              <>, including PDF version {pdf?.version} (SHA-256 <span title={membership.agreement_document_sha256}>{shortHash(membership.agreement_document_sha256)}…</span>)</>
+            )}
+            .
+          </p>
         </section>
       ) : c.status !== "published" ? (
         <p className="rounded-2xl border border-dashed border-input p-4 text-sm text-muted-foreground">This campaign isn&apos;t accepting new promoters right now.</p>
@@ -141,6 +139,7 @@ export default async function PromoterCampaignPage({ params }: { params: Promise
                 refundWindowDays: agreement.refund_window_days,
                 allowedChannels: agreement.allowed_channels,
                 brandRules: agreement.brand_rules,
+                templateVersion: agreement.template_version,
               }}
             />
           </div>
@@ -161,6 +160,7 @@ export default async function PromoterCampaignPage({ params }: { params: Promise
             refundWindowDays: agreement.refund_window_days,
             allowedChannels: agreement.allowed_channels,
             brandRules: agreement.brand_rules,
+            templateVersion: agreement.template_version,
           }}
         />
       )}

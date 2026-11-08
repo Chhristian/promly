@@ -10,12 +10,14 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "./database.types";
 import { PLATFORM_FEE_BPS, percentToFixedCommission, platformFeeMinor } from "./money";
+import { seedIllustrativeData } from "./demo-illustrative";
 
 type Db = SupabaseClient<Database>;
 export type Role = "business" | "promoter" | "admin";
 
 export const DEMO_ACCOUNTS = {
-  barber: { envPrefix: "DEMO_BUSINESS", email: "demo-barber@example.com", displayName: "Demo Barber Club", role: "business" as Role },
+  // The stage business. The email stays the same so existing logins keep working; only names/content changed.
+  business: { envPrefix: "DEMO_BUSINESS", email: "demo-barber@example.com", displayName: "Demo Fjord Boat Tours", role: "business" as Role },
   spain: { envPrefix: "DEMO_SPAIN_BUSINESS", email: "demo-watersports@example.com", displayName: "Mediterranean Water Sports Demo", role: "business" as Role },
   alex: { envPrefix: "DEMO_PROMOTER", email: "demo-alex@example.com", displayName: "Alex", role: "promoter" as Role },
   admin: { envPrefix: "DEMO_ADMIN", email: "demo-admin@example.com", displayName: "Promly Admin", role: "admin" as Role },
@@ -23,6 +25,10 @@ export const DEMO_ACCOUNTS = {
 export type DemoKey = keyof typeof DEMO_ACCOUNTS;
 
 const OSLO = "Europe/Oslo";
+
+/** The stage demo: same numbers as always (500 kr price, 100 kr commission, fee 13,75, business pays 113,75). */
+export const STAGE_BUSINESS = "Demo Fjord Boat Tours";
+export const STAGE_CAMPAIGN = "Sunset Fjord Cruise";
 export const SLOT_FIRST_HOUR = 8; // first slot 08:00
 export const SLOT_LAST_START_HOUR = 21; // last slot 21:00–22:00
 
@@ -65,6 +71,7 @@ type CampaignSeed = {
   service_name: string;
   description: string;
   price_minor: number;
+  age_rating?: "16+" | "18+";
   agreement: { commission_minor: number; payout_days: 7 | 14; refund_window_days: number; allowed_channels: string[]; brand_rules: string };
 };
 
@@ -76,7 +83,7 @@ async function ensureCampaign(db: Db, businessId: string, c: CampaignSeed) {
   let created = false;
   if (!camp) {
     const ins = await db.from("campaigns")
-      .insert({ business_id: businessId, service_name: c.service_name, description: c.description, price_minor: c.price_minor })
+      .insert({ business_id: businessId, service_name: c.service_name, description: c.description, price_minor: c.price_minor, age_rating: c.age_rating ?? "18+" })
       .select("id, status, current_agreement_id").single();
     if (ins.error) throw ins.error;
     camp = ins.data;
@@ -123,7 +130,7 @@ async function ensureSlots(db: Db, businessId: string): Promise<number> {
   return count ?? 0;
 }
 
-export type SeedSummary = { lines: string[]; haircutCampaignId: string };
+export type SeedSummary = { lines: string[]; stageCampaignId: string };
 
 /** Mark demo profiles and create the demo businesses, draft campaigns and slots. Accounts must already exist. */
 export async function seedDemoData(db: Db): Promise<SeedSummary> {
@@ -139,25 +146,28 @@ export async function seedDemoData(db: Db): Promise<SeedSummary> {
   }
 
   const lines: string[] = [];
-  const barber = await ensureBusiness(db, ids.barber!, {
-    name: "Demo Barber Club", description: "Classic cuts and beard trims in the heart of Oslo. Illustrative demo business.",
-    city: "Oslo", country: "NO", currency: "NOK", category: "barbershop",
+  const stageBiz = await ensureBusiness(db, ids.business!, {
+    name: STAGE_BUSINESS, description: "Small-boat cruises on the Oslofjord, booked online. Illustrative demo business.",
+    city: "Oslo", country: "NO", currency: "NOK", category: "boat_tour",
+    checkout_url: "https://example.com/demo-fjord-boat-tours/book",
   });
   const spain = await ensureBusiness(db, ids.spain!, {
     name: "Mediterranean Water Sports Demo", description: "Jet ski adventures on the Mediterranean coast. Illustrative demo business.",
     city: "Málaga", country: "ES", currency: "EUR", category: "jet_ski",
+    checkout_url: "https://example.com/mediterranean-water-sports/book",
   });
-  lines.push(`business ${barber.created ? "created" : "exists "}  Demo Barber Club`);
+  lines.push(`business ${stageBiz.created ? "created" : "exists "}  ${STAGE_BUSINESS}`);
   lines.push(`business ${spain.created ? "created" : "exists "}  Mediterranean Water Sports Demo`);
 
-  const haircut = await ensureCampaign(db, barber.id, {
-    service_name: "Premium Haircut",
-    description: "A premium haircut with wash, styling and a hot-towel finish (about 45 minutes).",
+  const stageCamp = await ensureCampaign(db, stageBiz.id, {
+    service_name: STAGE_CAMPAIGN,
+    description: "A 90-minute evening cruise past the islands of the inner Oslofjord. Warm blankets on board; book online and show your ticket at the pier.",
     price_minor: 50_000,
+    age_rating: "16+",
     agreement: {
       commission_minor: 10_000, payout_days: 7, refund_window_days: 3,
       allowed_channels: ["tiktok", "instagram", "snapchat", "whatsapp", "word_of_mouth", "qr_print"],
-      brand_rules: "Use only the official photos. No discounts or guarantees that aren't in the campaign.",
+      brand_rules: "Use only the official photos. Don't promise weather or sightings. No discounts that aren't in the campaign.",
     },
   });
   const jetski = await ensureCampaign(db, spain.id, {
@@ -170,13 +180,19 @@ export async function seedDemoData(db: Db): Promise<SeedSummary> {
       brand_rules: "Always mention the safety briefing. Don't promise weather conditions.",
     },
   });
-  lines.push(`campaign ${haircut.created ? "created" : "exists "}  Premium Haircut — 500 NOK, 100 NOK commission (${haircut.status})`);
+  lines.push(`campaign ${stageCamp.created ? "created" : "exists "}  ${STAGE_CAMPAIGN} — 500 NOK, 100 NOK commission, 16+ (${stageCamp.status})`);
   lines.push(`campaign ${jetski.created ? "created" : "exists "}  Jet Ski Adventure — €150, 20% = €30 commission (${jetski.status})`);
 
-  const s1 = await ensureSlots(db, barber.id);
+  const s1 = await ensureSlots(db, stageBiz.id);
   const s2 = await ensureSlots(db, spain.id);
-  lines.push(`slots    added ${s1} for Demo Barber Club, ${s2} for Mediterranean Water Sports Demo`);
-  return { lines, haircutCampaignId: haircut.id };
+  lines.push(`slots    added ${s1} for ${STAGE_BUSINESS}, ${s2} for Mediterranean Water Sports Demo`);
+
+  // Payments: Alex is an adult promoter (sees and joins everything exactly as before).
+  if (ids.alex) {
+    const { error: ageErr } = await db.rpc("set_age_band", { p_actor_id: ids.alex, p_age_band: "18+" });
+    if (!ageErr) lines.push("promoter Alex confirmed 18+");
+  }
+  return { lines, stageCampaignId: stageCamp.id };
 }
 
 /** "Prepare Stage Demo": delete ALL demo-flagged data, then seed it fresh. */
@@ -191,6 +207,7 @@ export async function resetDemo(db: Db): Promise<SeedSummary> {
   const { error } = await db.rpc("purge_demo_data");
   if (error) throw new Error("purge_demo_data failed: " + error.message);
   const summary = await seedDemoData(db);
+  summary.lines.push(...(await seedIllustrativeData(db)));
 
   // Move the files into the new campaigns' folders and re-attach them.
   let moved = 0;
@@ -254,7 +271,7 @@ export async function runServerHealthChecks(db: Db, liveUrl: string | null): Pro
       const { data } = await db.from("profiles").select("role").eq("id", ids[k]!).maybeSingle();
       if (data?.role !== a.role) problems.push(`${a.displayName} has role ${data?.role ?? "none"}, expected ${a.role}`);
     }
-    return problems.length ? { ok: false, detail: problems.join("; ") } : { ok: true, detail: "Demo Barber Club, Water Sports, Alex, Admin" };
+    return problems.length ? { ok: false, detail: problems.join("; ") } : { ok: true, detail: "Demo Fjord Boat Tours, Water Sports, Alex, Admin" };
   });
 
   await run("Fee maths: 500 NOK → 13.75 NOK", async () => {
@@ -270,15 +287,16 @@ export async function runServerHealthChecks(db: Db, liveUrl: string | null): Pro
       .from("campaigns")
       .select("service_name, status, current_agreement_id, businesses!inner(is_demo)")
       .eq("businesses.is_demo", true);
-    const haircut = data?.find((c) => c.service_name === "Premium Haircut");
-    if (!haircut) return { ok: false, detail: "Premium Haircut not found. Run Prepare Stage Demo." };
-    if (!haircut.current_agreement_id) return { ok: false, detail: "Premium Haircut has no accepted agreement." };
-    return { ok: true, detail: (data ?? []).map((c) => `${c.service_name}: ${c.status}`).join(", ") };
+    const stageCampaign = data?.find((c) => c.service_name === STAGE_CAMPAIGN);
+    if (!stageCampaign) return { ok: false, detail: `${STAGE_CAMPAIGN} not found. Run Prepare Stage Demo.` };
+    if (!stageCampaign.current_agreement_id) return { ok: false, detail: `${STAGE_CAMPAIGN} has no accepted agreement.` };
+    const stage = (data ?? []).filter((c) => [STAGE_CAMPAIGN, "Jet Ski Adventure"].includes(c.service_name));
+    return { ok: true, detail: stage.map((c) => `${c.service_name}: ${c.status}`).join(", ") };
   });
 
   await run("Free time slots today and tomorrow", async () => {
-    const { data: biz } = await db.from("businesses").select("id").eq("name", "Demo Barber Club").eq("is_demo", true).maybeSingle();
-    if (!biz) return { ok: false, detail: "Demo Barber Club not found" };
+    const { data: biz } = await db.from("businesses").select("id").eq("name", STAGE_BUSINESS).eq("is_demo", true).maybeSingle();
+    if (!biz) return { ok: false, detail: `${STAGE_BUSINESS} not found` };
     const nowIso = new Date().toISOString();
     const [{ data: slots }, { data: taken }] = await Promise.all([
       db.from("time_slots").select("starts_at").eq("business_id", biz.id).gt("starts_at", nowIso),

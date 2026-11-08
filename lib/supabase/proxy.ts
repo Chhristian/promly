@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { hasEnvVars } from "../utils";
+import { GLANS_DEMO_PATH, GLANS_REF_COOKIE, GLANS_REF_COOKIE_MAX_AGE, demoModeOn, isReferralCode } from "../conversions";
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
@@ -53,13 +54,29 @@ export async function updateSession(request: NextRequest) {
     path === "/" ||
     path.startsWith("/auth") ||
     path.startsWith("/r/") ||
-    path.startsWith("/book/");
+    path.startsWith("/book/") ||
+    path === "/api/stripe/webhook" || // Stripe calls it; every request must carry a valid Stripe signature
+    path === "/api/conversions" || // businesses' own systems call it; every request must carry a valid HMAC signature
+    path === GLANS_DEMO_PATH; // fictional demo business checkout (Demo Mode only, 404 otherwise)
 
   if (!user && !isPublic) {
     // no user, potentially respond by redirecting the user to the login page
     const url = request.nextUrl.clone();
     url.pathname = "/auth/login";
     return NextResponse.redirect(url);
+  }
+
+  // Glans demo: keep the ?ref= from Promly in a cookie for 30 days (an extra
+  // cookie on the same response; the Supabase cookies are left as they are).
+  const ref = request.nextUrl.searchParams.get("ref");
+  if (path === GLANS_DEMO_PATH && demoModeOn() && isReferralCode(ref)) {
+    supabaseResponse.cookies.set(GLANS_REF_COOKIE, ref, {
+      maxAge: GLANS_REF_COOKIE_MAX_AGE,
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      path: GLANS_DEMO_PATH,
+    });
   }
 
   // IMPORTANT: You *must* return the supabaseResponse object as it is.

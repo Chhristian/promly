@@ -9,11 +9,11 @@ const defaultUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL
 export const metadata: Metadata = {
   metadataBase: new URL(defaultUrl),
   title: "Promly: refer a sale, get paid when the customer shows up",
-  description: "Performance-based marketing marketplace: promote local businesses and earn commission on verified bookings.",
+  description: "Performance-based marketing marketplace: promote businesses that sell online (tours, rentals, experiences, tickets) and earn commission on verified bookings.",
 };
 
 export const viewport: Viewport = {
-  themeColor: "#f2f4f7",
+  themeColor: "#F4F6FA",
   width: "device-width",
   initialScale: 1,
 };

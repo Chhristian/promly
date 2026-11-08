@@ -7,9 +7,12 @@ import { requireRole } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { parseMajorToMinor } from "@/lib/money";
 import { friendlyError } from "@/lib/errors";
-import { CHANNEL_VALUES } from "@/lib/agreement-template";
+import { AGREEMENT_TEMPLATE_VERSION_V2, CHANNEL_VALUES } from "@/lib/agreement-template";
 import { AGREEMENT_PDF_BUCKET, AGREEMENT_PDF_MAX_BYTES, hasPdfMagicBytes, isAgreementPdfPath } from "@/lib/agreement-pdf";
 import { createHash } from "node:crypto";
+import { BUSINESS_CATEGORY_VALUES } from "@/lib/categories";
+import { paymentsEnabled } from "@/lib/flags";
+import { effectiveAgeRating } from "@/lib/payments";
 import type { ActionState } from "@/components/action-form";
 
 const amount = z
@@ -32,7 +35,12 @@ const businessSchema = z.object({
   name: z.string().trim().min(1, "Enter the business name").max(120),
   city: z.string().trim().max(80),
   country: z.enum(["NO", "ES"]),
-  category: z.enum(["barbershop", "beauty", "restaurant", "experience", "water_sports", "jet_ski", "boat_tour", "fitness", "other"]),
+  category: z.enum(BUSINESS_CATEGORY_VALUES),
+  checkout_url: z
+    .string()
+    .trim()
+    .max(500, "The checkout link is too long")
+    .refine((s) => /^https:\/\/\S+$/.test(s) && URL.canParse(s), "Add your online checkout or booking page (https://…)"),
   description: z.string().trim().max(2000),
 });
 
@@ -43,7 +51,7 @@ export async function createBusiness(_: ActionState, fd: FormData): Promise<Acti
   const b = parsed.data;
   const { error } = await supabase.from("businesses").insert({
     owner_id: user.id, name: b.name, city: b.city, country: b.country,
-    currency: b.country === "NO" ? "NOK" : "EUR", category: b.category, description: b.description,
+    currency: b.country === "NO" ? "NOK" : "EUR", category: b.category, description: b.description, checkout_url: b.checkout_url,
   });
   if (error) return { error: friendlyError(error) };
   revalidatePath("/business");
@@ -66,7 +74,22 @@ const campaignSchema = z.object({
   price: amount,
   external_booking_url: externalBookingUrl.default(""),
   external_booking_url_was: z.string().default(""),
+  age_fields: z.string().optional(),
+  age_rating: z.enum(["16+", "18+"]).optional(),
+  age_restricted: z.literal("on").optional(),
 });
+
+/** Age rating patch (only when the form showed the age fields and payments are on). The database enforces it too. */
+async function agePatch(
+  supabase: Awaited<ReturnType<typeof requireRole>>["supabase"],
+  businessId: string,
+  c: z.infer<typeof campaignSchema>,
+): Promise<{ age_rating?: "16+" | "18+"; age_restricted?: boolean }> {
+  if (!paymentsEnabled() || c.age_fields !== "1") return {};
+  const { data: biz } = await supabase.from("businesses").select("category").eq("id", businessId).maybeSingle();
+  const restricted = c.age_restricted === "on";
+  return { age_rating: effectiveAgeRating(biz?.category ?? "other", restricted, c.age_rating ?? "18+"), ...(restricted ? { age_restricted: true } : {}) };
+}
 
 /**
  * Only send external_booking_url when it is set or being cleared, so creating
@@ -92,6 +115,7 @@ export async function createCampaign(_: ActionState, fd: FormData): Promise<Acti
       description: parsed.data.description,
       price_minor: parsed.data.price,
       ...externalUrlPatch(parsed.data),
+      ...(await agePatch(supabase, biz.id, parsed.data)),
     })
     .select("id")
     .single();
@@ -104,6 +128,7 @@ export async function updateCampaign(_: ActionState, fd: FormData): Promise<Acti
   const id = z.uuid().safeParse(fd.get("campaign_id"));
   const parsed = campaignSchema.safeParse(Object.fromEntries(fd));
   if (!id.success || !parsed.success) return { error: parsed.success ? "Invalid campaign" : firstIssue(parsed.error) };
+  const { data: current } = await supabase.from("campaigns").select("business_id").eq("id", id.data).maybeSingle();
   const { data, error } = await supabase
     .from("campaigns")
     .update({
@@ -111,6 +136,7 @@ export async function updateCampaign(_: ActionState, fd: FormData): Promise<Acti
       description: parsed.data.description,
       price_minor: parsed.data.price,
       ...externalUrlPatch(parsed.data),
+      ...(current ? await agePatch(supabase, current.business_id, parsed.data) : {}),
     })
     .eq("id", id.data)
     .select("id");
@@ -157,6 +183,7 @@ export async function acceptAgreement(_: ActionState, fd: FormData): Promise<Act
       refund_window_days: a.refund_window_days, allowed_channels: a.allowed_channels, brand_rules: a.brand_rules,
       document_id: a.document_id || null, // the database checks it belongs to this campaign
       business_accepted_at: new Date().toISOString(), // the database replaces this with its own clock
+      ...(paymentsEnabled() ? { template_version: AGREEMENT_TEMPLATE_VERSION_V2 } : {}),
     })
     .select("id, version")
     .single();

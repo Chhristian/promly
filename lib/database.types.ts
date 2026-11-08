@@ -150,6 +150,39 @@ export type Database = {
           },
         ]
       }
+      billing_paused_campaigns: {
+        Row: {
+          campaign_id: string
+          invoice_id: string
+          paused_at: string
+        }
+        Insert: {
+          campaign_id: string
+          invoice_id: string
+          paused_at?: string
+        }
+        Update: {
+          campaign_id?: string
+          invoice_id?: string
+          paused_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "billing_paused_campaigns_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "billing_paused_campaigns_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "business_invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       booking_contacts: {
         Row: {
           booking_id: string
@@ -177,6 +210,13 @@ export type Database = {
             foreignKeyName: "booking_contacts_booking_id_fkey"
             columns: ["booking_id"]
             isOneToOne: true
+            referencedRelation: "booking_settlement"
+            referencedColumns: ["booking_id"]
+          },
+          {
+            foreignKeyName: "booking_contacts_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: true
             referencedRelation: "bookings"
             referencedColumns: ["id"]
           },
@@ -193,6 +233,7 @@ export type Database = {
           currency: string
           fee_bps: number
           fee_minor: number
+          final_at: string | null
           id: string
           payout_at: string | null
           payout_days: number
@@ -218,6 +259,7 @@ export type Database = {
           currency: string
           fee_bps: number
           fee_minor: number
+          final_at?: string | null
           id?: string
           payout_at?: string | null
           payout_days: number
@@ -243,6 +285,7 @@ export type Database = {
           currency?: string
           fee_bps?: number
           fee_minor?: number
+          final_at?: string | null
           id?: string
           payout_at?: string | null
           payout_days?: number
@@ -296,9 +339,78 @@ export type Database = {
           },
         ]
       }
+      business_invoices: {
+        Row: {
+          business_id: string
+          commission_minor: number
+          created_at: string
+          currency: string
+          due_at: string | null
+          fee_minor: number
+          finalized_at: string | null
+          hosted_invoice_url: string | null
+          id: string
+          overdue_at: string | null
+          paid_at: string | null
+          payment_failed_at: string | null
+          period_month: string
+          status: string
+          stripe_invoice_id: string | null
+          total_minor: number
+          voided_at: string | null
+        }
+        Insert: {
+          business_id: string
+          commission_minor: number
+          created_at?: string
+          currency: string
+          due_at?: string | null
+          fee_minor: number
+          finalized_at?: string | null
+          hosted_invoice_url?: string | null
+          id?: string
+          overdue_at?: string | null
+          paid_at?: string | null
+          payment_failed_at?: string | null
+          period_month: string
+          status?: string
+          stripe_invoice_id?: string | null
+          total_minor: number
+          voided_at?: string | null
+        }
+        Update: {
+          business_id?: string
+          commission_minor?: number
+          created_at?: string
+          currency?: string
+          due_at?: string | null
+          fee_minor?: number
+          finalized_at?: string | null
+          hosted_invoice_url?: string | null
+          id?: string
+          overdue_at?: string | null
+          paid_at?: string | null
+          payment_failed_at?: string | null
+          period_month?: string
+          status?: string
+          stripe_invoice_id?: string | null
+          total_minor?: number
+          voided_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_invoices_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       businesses: {
         Row: {
           category: string
+          checkout_url: string | null
           city: string
           country: string
           created_at: string
@@ -312,6 +424,7 @@ export type Database = {
         }
         Insert: {
           category: string
+          checkout_url?: string | null
           city?: string
           country: string
           created_at?: string
@@ -325,6 +438,7 @@ export type Database = {
         }
         Update: {
           category?: string
+          checkout_url?: string | null
           city?: string
           country?: string
           created_at?: string
@@ -410,6 +524,8 @@ export type Database = {
       }
       campaigns: {
         Row: {
+          age_rating: string
+          age_restricted: boolean
           business_id: string
           commission_minor: number
           created_at: string
@@ -427,6 +543,8 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          age_rating?: string
+          age_restricted?: boolean
           business_id: string
           commission_minor?: number
           created_at?: string
@@ -444,6 +562,8 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          age_rating?: string
+          age_restricted?: boolean
           business_id?: string
           commission_minor?: number
           created_at?: string
@@ -473,6 +593,133 @@ export type Database = {
             columns: ["current_agreement_id"]
             isOneToOne: false
             referencedRelation: "agreements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clawbacks: {
+        Row: {
+          admin_id: string
+          amount_minor: number
+          booking_id: string
+          created_at: string
+          currency: string
+          reason: string
+        }
+        Insert: {
+          admin_id: string
+          amount_minor: number
+          booking_id: string
+          created_at?: string
+          currency: string
+          reason: string
+        }
+        Update: {
+          admin_id?: string
+          amount_minor?: number
+          booking_id?: string
+          created_at?: string
+          currency?: string
+          reason?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clawbacks_admin_id_fkey"
+            columns: ["admin_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clawbacks_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: true
+            referencedRelation: "booking_settlement"
+            referencedColumns: ["booking_id"]
+          },
+          {
+            foreignKeyName: "clawbacks_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: true
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invoice_lines: {
+        Row: {
+          active: boolean
+          booking_id: string
+          business_id: string
+          commission_minor: number
+          created_at: string
+          currency: string
+          fee_minor: number
+          id: number
+          invoice_id: string
+          kind: string
+          promoter_id: string
+        }
+        Insert: {
+          active?: boolean
+          booking_id: string
+          business_id: string
+          commission_minor: number
+          created_at?: string
+          currency: string
+          fee_minor: number
+          id?: never
+          invoice_id: string
+          kind?: string
+          promoter_id: string
+        }
+        Update: {
+          active?: boolean
+          booking_id?: string
+          business_id?: string
+          commission_minor?: number
+          created_at?: string
+          currency?: string
+          fee_minor?: number
+          id?: never
+          invoice_id?: string
+          kind?: string
+          promoter_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_lines_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "booking_settlement"
+            referencedColumns: ["booking_id"]
+          },
+          {
+            foreignKeyName: "invoice_lines_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoice_lines_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoice_lines_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "business_invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoice_lines_promoter_id_fkey"
+            columns: ["promoter_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -512,6 +759,13 @@ export type Database = {
           party_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "ledger_entries_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "booking_settlement"
+            referencedColumns: ["booking_id"]
+          },
           {
             foreignKeyName: "ledger_entries_booking_id_fkey"
             columns: ["booking_id"]
@@ -559,6 +813,131 @@ export type Database = {
           },
         ]
       }
+      payout_items: {
+        Row: {
+          active: boolean
+          amount_minor: number
+          booking_id: string
+          created_at: string
+          id: number
+          invoice_line_id: number | null
+          kind: string
+          payout_id: string
+        }
+        Insert: {
+          active?: boolean
+          amount_minor: number
+          booking_id: string
+          created_at?: string
+          id?: never
+          invoice_line_id?: number | null
+          kind: string
+          payout_id: string
+        }
+        Update: {
+          active?: boolean
+          amount_minor?: number
+          booking_id?: string
+          created_at?: string
+          id?: never
+          invoice_line_id?: number | null
+          kind?: string
+          payout_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payout_items_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "booking_settlement"
+            referencedColumns: ["booking_id"]
+          },
+          {
+            foreignKeyName: "payout_items_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payout_items_invoice_line_id_fkey"
+            columns: ["invoice_line_id"]
+            isOneToOne: false
+            referencedRelation: "invoice_lines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payout_items_payout_id_fkey"
+            columns: ["payout_id"]
+            isOneToOne: false
+            referencedRelation: "booking_settlement"
+            referencedColumns: ["payout_id"]
+          },
+          {
+            foreignKeyName: "payout_items_payout_id_fkey"
+            columns: ["payout_id"]
+            isOneToOne: false
+            referencedRelation: "payouts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payouts: {
+        Row: {
+          amount_minor: number
+          created_at: string
+          currency: string
+          failed_at: string | null
+          failure_reason: string | null
+          id: string
+          idempotency_key: string
+          promoter_id: string
+          reversed_at: string | null
+          status: string
+          stripe_account_id: string
+          stripe_transfer_id: string | null
+          transferred_at: string | null
+        }
+        Insert: {
+          amount_minor: number
+          created_at?: string
+          currency: string
+          failed_at?: string | null
+          failure_reason?: string | null
+          id?: string
+          idempotency_key: string
+          promoter_id: string
+          reversed_at?: string | null
+          status?: string
+          stripe_account_id: string
+          stripe_transfer_id?: string | null
+          transferred_at?: string | null
+        }
+        Update: {
+          amount_minor?: number
+          created_at?: string
+          currency?: string
+          failed_at?: string | null
+          failure_reason?: string | null
+          id?: string
+          idempotency_key?: string
+          promoter_id?: string
+          reversed_at?: string | null
+          status?: string
+          stripe_account_id?: string
+          stripe_transfer_id?: string | null
+          transferred_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payouts_promoter_id_fkey"
+            columns: ["promoter_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
@@ -582,6 +961,32 @@ export type Database = {
           role?: string
         }
         Relationships: []
+      }
+      promoter_age: {
+        Row: {
+          age_band: string
+          confirmed_at: string
+          profile_id: string
+        }
+        Insert: {
+          age_band: string
+          confirmed_at?: string
+          profile_id: string
+        }
+        Update: {
+          age_band?: string
+          confirmed_at?: string
+          profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promoter_age_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       referral_events: {
         Row: {
@@ -664,6 +1069,91 @@ export type Database = {
           },
         ]
       }
+      stripe_accounts: {
+        Row: {
+          created_at: string
+          guardian_consent_at: string | null
+          holder: string
+          payouts_enabled: boolean
+          profile_id: string
+          stripe_account_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          guardian_consent_at?: string | null
+          holder?: string
+          payouts_enabled?: boolean
+          profile_id: string
+          stripe_account_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          guardian_consent_at?: string | null
+          holder?: string
+          payouts_enabled?: boolean
+          profile_id?: string
+          stripe_account_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stripe_accounts_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stripe_customers: {
+        Row: {
+          business_id: string
+          created_at: string
+          stripe_customer_id: string
+        }
+        Insert: {
+          business_id: string
+          created_at?: string
+          stripe_customer_id: string
+        }
+        Update: {
+          business_id?: string
+          created_at?: string
+          stripe_customer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stripe_customers_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: true
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stripe_events: {
+        Row: {
+          id: string
+          processed_at: string | null
+          received_at: string
+          type: string
+        }
+        Insert: {
+          id: string
+          processed_at?: string | null
+          received_at?: string
+          type: string
+        }
+        Update: {
+          id?: string
+          processed_at?: string | null
+          received_at?: string
+          type?: string
+        }
+        Relationships: []
+      }
       time_slots: {
         Row: {
           business_id: string
@@ -698,7 +1188,53 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      booking_settlement: {
+        Row: {
+          booking_id: string | null
+          booking_status: string | null
+          business_id: string | null
+          business_total_minor: number | null
+          clawed_back: boolean | null
+          commission_minor: number | null
+          currency: string | null
+          due_at: string | null
+          fee_minor: number | null
+          final_at: string | null
+          final_due_at: string | null
+          invoice_id: string | null
+          invoiced_at: string | null
+          overdue_at: string | null
+          paid_at: string | null
+          paid_out_at: string | null
+          payout_id: string | null
+          promoter_id: string | null
+          settlement_status: string | null
+          verified_at: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookings_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_promoter_id_fkey"
+            columns: ["promoter_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoice_lines_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "business_invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       _create_unslotted_booking: {
@@ -712,6 +1248,52 @@ export type Database = {
         }
         Returns: string
       }
+      _due_credits: {
+        Args: { p_business_id: string }
+        Returns: {
+          booking_id: string
+          commission_minor: number
+          currency: string
+          fee_minor: number
+          kind: string
+          promoter_id: string
+        }[]
+      }
+      _finalize_booking: {
+        Args: { p_booking: Database["public"]["Tables"]["bookings"]["Row"] }
+        Returns: {
+          agreement_id: string
+          business_id: string
+          business_total_minor: number
+          campaign_id: string
+          commission_minor: number
+          created_at: string
+          currency: string
+          fee_bps: number
+          fee_minor: number
+          final_at: string | null
+          id: string
+          payout_at: string | null
+          payout_days: number
+          price_minor: number
+          promoter_id: string
+          referral_link_id: string
+          refund_window_days: number
+          refund_window_ends_at: string | null
+          refunded_at: string | null
+          released_at: string | null
+          slot_start: string | null
+          source: string
+          status: string
+          verified_at: string | null
+        }
+        SetofOptions: {
+          from: "bookings"
+          to: "bookings"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       _lock_booking_for_owner: {
         Args: { p_actor_id: string; p_booking_id: string }
         Returns: {
@@ -724,6 +1306,7 @@ export type Database = {
           currency: string
           fee_bps: number
           fee_minor: number
+          final_at: string | null
           id: string
           payout_at: string | null
           payout_days: number
@@ -747,6 +1330,19 @@ export type Database = {
         }
       }
       _new_discount_code: { Args: { p_display_name: string }; Returns: string }
+      _payable_items: {
+        Args: { p_currency: string; p_promoter_id: string }
+        Returns: {
+          amount_minor: number
+          booking_id: string
+          invoice_line_id: number
+          kind: string
+        }[]
+      }
+      _release_billing_hold: {
+        Args: { p_business_id: string }
+        Returns: undefined
+      }
       _release_booking: {
         Args: { p_booking: Database["public"]["Tables"]["bookings"]["Row"] }
         Returns: {
@@ -759,6 +1355,7 @@ export type Database = {
           currency: string
           fee_bps: number
           fee_minor: number
+          final_at: string | null
           id: string
           payout_at: string | null
           payout_days: number
@@ -781,12 +1378,51 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      attach_stripe_invoice: {
+        Args: {
+          p_due_at: string
+          p_hosted_invoice_url: string
+          p_invoice_id: string
+          p_stripe_invoice_id: string
+        }
+        Returns: {
+          business_id: string
+          commission_minor: number
+          created_at: string
+          currency: string
+          due_at: string | null
+          fee_minor: number
+          finalized_at: string | null
+          hosted_invoice_url: string | null
+          id: string
+          overdue_at: string | null
+          paid_at: string | null
+          payment_failed_at: string | null
+          period_month: string
+          status: string
+          stripe_invoice_id: string | null
+          total_minor: number
+          voided_at: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "business_invoices"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      begin_stripe_event: {
+        Args: { p_event_id: string; p_type: string }
+        Returns: boolean
+      }
       campaign_id_from_path: { Args: { p_name: string }; Returns: string }
       can_join_campaign: {
         Args: { p_agreement_id: string; p_campaign_id: string }
         Returns: boolean
       }
       can_read_agreement_pdf: { Args: { p_path: string }; Returns: boolean }
+      can_see_age_rating: { Args: { p_age_rating: string }; Returns: boolean }
+      cancel_unverified_bookings: { Args: never; Returns: number }
       create_booking: {
         Args: {
           p_customer_name: string
@@ -807,18 +1443,147 @@ export type Database = {
         }
         Returns: string
       }
+      create_invoice_draft: {
+        Args: { p_business_id: string; p_period_month: string }
+        Returns: string
+      }
       current_user_role: { Args: never; Returns: string }
+      final_after_days: { Args: never; Returns: number }
+      finalize_due_bookings: { Args: never; Returns: number }
+      finish_stripe_event: { Args: { p_event_id: string }; Returns: undefined }
+      fraud_clawback: {
+        Args: { p_admin_id: string; p_booking_id: string; p_reason: string }
+        Returns: {
+          admin_id: string
+          amount_minor: number
+          booking_id: string
+          created_at: string
+          currency: string
+          reason: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "clawbacks"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      is_age_restricted_category: {
+        Args: { p_category: string }
+        Returns: boolean
+      }
       is_business_owner: { Args: { p_business_id: string }; Returns: boolean }
       is_campaign_member: { Args: { p_campaign_id: string }; Returns: boolean }
       is_published_campaign: {
         Args: { p_campaign_id: string }
         Returns: boolean
       }
+      mark_invoice_overdue: {
+        Args: { p_stripe_invoice_id: string }
+        Returns: {
+          business_id: string
+          commission_minor: number
+          created_at: string
+          currency: string
+          due_at: string | null
+          fee_minor: number
+          finalized_at: string | null
+          hosted_invoice_url: string | null
+          id: string
+          overdue_at: string | null
+          paid_at: string | null
+          payment_failed_at: string | null
+          period_month: string
+          status: string
+          stripe_invoice_id: string | null
+          total_minor: number
+          voided_at: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "business_invoices"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      mark_invoice_paid: {
+        Args: { p_paid_at: string; p_stripe_invoice_id: string }
+        Returns: {
+          business_id: string
+          commission_minor: number
+          created_at: string
+          currency: string
+          due_at: string | null
+          fee_minor: number
+          finalized_at: string | null
+          hosted_invoice_url: string | null
+          id: string
+          overdue_at: string | null
+          paid_at: string | null
+          payment_failed_at: string | null
+          period_month: string
+          status: string
+          stripe_invoice_id: string | null
+          total_minor: number
+          voided_at: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "business_invoices"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      mark_invoice_payment_failed: {
+        Args: { p_stripe_invoice_id: string }
+        Returns: undefined
+      }
+      mark_invoice_voided: {
+        Args: { p_stripe_invoice_id: string }
+        Returns: undefined
+      }
+      mark_payout_failed: {
+        Args: { p_payout_id: string; p_reason: string }
+        Returns: undefined
+      }
+      mark_payout_reversed: {
+        Args: { p_stripe_transfer_id: string }
+        Returns: undefined
+      }
+      mark_payout_transferred: {
+        Args: { p_payout_id: string; p_stripe_transfer_id: string }
+        Returns: {
+          amount_minor: number
+          created_at: string
+          currency: string
+          failed_at: string | null
+          failure_reason: string | null
+          id: string
+          idempotency_key: string
+          promoter_id: string
+          reversed_at: string | null
+          status: string
+          stripe_account_id: string
+          stripe_transfer_id: string | null
+          transferred_at: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "payouts"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       owns_campaign: { Args: { p_campaign_id: string }; Returns: boolean }
       platform_fee_minor: {
         Args: { p_fee_bps: number; p_price_minor: number }
         Returns: number
       }
+      prepare_payout: {
+        Args: { p_currency: string; p_promoter_id: string; p_run_key: string }
+        Returns: string
+      }
+      promoter_is_minor: { Args: { p_profile_id: string }; Returns: boolean }
       purge_demo_data: { Args: never; Returns: undefined }
       refund_booking: {
         Args: { p_actor_id: string; p_booking_id: string }
@@ -832,6 +1597,42 @@ export type Database = {
           currency: string
           fee_bps: number
           fee_minor: number
+          final_at: string | null
+          id: string
+          payout_at: string | null
+          payout_days: number
+          price_minor: number
+          promoter_id: string
+          referral_link_id: string
+          refund_window_days: number
+          refund_window_ends_at: string | null
+          refunded_at: string | null
+          released_at: string | null
+          slot_start: string | null
+          source: string
+          status: string
+          verified_at: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "bookings"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      refund_booking_before_final: {
+        Args: { p_actor_id: string; p_booking_id: string }
+        Returns: {
+          agreement_id: string
+          business_id: string
+          business_total_minor: number
+          campaign_id: string
+          commission_minor: number
+          created_at: string
+          currency: string
+          fee_bps: number
+          fee_minor: number
+          final_at: string | null
           id: string
           payout_at: string | null
           payout_days: number
@@ -876,6 +1677,74 @@ export type Database = {
           currency: string
           fee_bps: number
           fee_minor: number
+          final_at: string | null
+          id: string
+          payout_at: string | null
+          payout_days: number
+          price_minor: number
+          promoter_id: string
+          referral_link_id: string
+          refund_window_days: number
+          refund_window_ends_at: string | null
+          refunded_at: string | null
+          released_at: string | null
+          slot_start: string | null
+          source: string
+          status: string
+          verified_at: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "bookings"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      save_stripe_account: {
+        Args: {
+          p_guardian_consent_at: string
+          p_holder: string
+          p_payouts_enabled: boolean
+          p_profile_id: string
+          p_stripe_account_id: string
+        }
+        Returns: {
+          created_at: string
+          guardian_consent_at: string | null
+          holder: string
+          payouts_enabled: boolean
+          profile_id: string
+          stripe_account_id: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "stripe_accounts"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      save_stripe_customer: {
+        Args: { p_business_id: string; p_stripe_customer_id: string }
+        Returns: undefined
+      }
+      set_age_band: {
+        Args: { p_actor_id: string; p_age_band: string }
+        Returns: undefined
+      }
+      simulate_end_of_holding_period: {
+        Args: { p_actor_id: string; p_booking_id: string }
+        Returns: {
+          agreement_id: string
+          business_id: string
+          business_total_minor: number
+          campaign_id: string
+          commission_minor: number
+          created_at: string
+          currency: string
+          fee_bps: number
+          fee_minor: number
+          final_at: string | null
           id: string
           payout_at: string | null
           payout_days: number
@@ -910,6 +1779,7 @@ export type Database = {
           currency: string
           fee_bps: number
           fee_minor: number
+          final_at: string | null
           id: string
           payout_at: string | null
           payout_days: number
@@ -932,6 +1802,10 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      update_stripe_account_status: {
+        Args: { p_payouts_enabled: boolean; p_stripe_account_id: string }
+        Returns: undefined
+      }
       verify_booking: {
         Args: { p_actor_id: string; p_booking_id: string }
         Returns: {
@@ -944,6 +1818,7 @@ export type Database = {
           currency: string
           fee_bps: number
           fee_minor: number
+          final_at: string | null
           id: string
           payout_at: string | null
           payout_days: number

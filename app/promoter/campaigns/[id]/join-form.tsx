@@ -13,7 +13,7 @@ export function JoinForm({ campaignId, agreementId, pdfVersion }: { campaignId: 
       <input type="hidden" name="campaign_id" value={campaignId} />
       <input type="hidden" name="agreement_id" value={agreementId} />
       <label className="flex items-start gap-2 text-sm">
-        <input type="checkbox" name="accept" required className="mt-1 accent-[hsl(232_87%_54%)]" />
+        <input type="checkbox" name="accept" required className="mt-1 accent-cobalt" />
         <span>
           {pdfVersion
             ? `I have read and accept this agreement, including the attached PDF (version ${pdfVersion}).`

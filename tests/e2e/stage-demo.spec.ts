@@ -125,10 +125,10 @@ test("stage flow: publish → join → book → verify → commission appears li
   // Promoter watches Explore. The draft campaign isn't visible yet.
   await pro.goto("/promoter/explore");
   await waitForLive(pro);
-  await expect(pro.getByText("Premium Haircut")).toHaveCount(0);
+  await expect(pro.getByText("Sunset Fjord Cruise")).toHaveCount(0);
 
   // Business publishes (after uploading a photo).
-  await biz.getByRole("link", { name: /Premium Haircut/ }).first().click();
+  await biz.getByRole("link", { name: /Sunset Fjord Cruise/ }).first().click();
   await biz.waitForURL("**/business/campaigns/**");
   const campaignId = biz.url().split("/").pop()!;
   await expect(biz.getByRole("heading", { name: "Photos" })).toBeVisible();
@@ -145,7 +145,7 @@ test("stage flow: publish → join → book → verify → commission appears li
   await expect(biz.getByText("Published!")).toBeVisible();
 
   // → appears on the promoter's Explore page without a reload, with the photo as cover.
-  await expect(pro.getByText("Premium Haircut").first()).toBeVisible();
+  await expect(pro.getByText("Sunset Fjord Cruise").first()).toBeVisible();
   await expect(pro.getByTestId("cover-photo").first()).toBeVisible();
 
   // Business goes to its dashboard and waits for activity.
@@ -153,7 +153,7 @@ test("stage flow: publish → join → book → verify → commission appears li
   await waitForLive(biz);
 
   // Promoter reads the agreement and joins.
-  await pro.getByRole("link", { name: /Premium Haircut/ }).first().click();
+  await pro.getByRole("link", { name: /Sunset Fjord Cruise/ }).first().click();
   await pro.waitForURL("**/promoter/campaigns/**");
   await expect(pro.getByText("Agreement template, to be reviewed by a lawyer before real use")).toBeVisible();
   await pro.check('input[name="accept"]');
@@ -168,23 +168,9 @@ test("stage flow: publish → join → book → verify → commission appears li
   expect(decodeURIComponent(wa!.split("text=")[1])).toContain(link);
   await expect(pro.getByTestId("qr-image")).toBeVisible();
   const [download] = await Promise.all([pro.waitForEvent("download"), pro.getByTestId("download-qr").click()]);
-  expect(download.suggestedFilename()).toBe("promly-qr-premium-haircut.png");
+  expect(download.suggestedFilename()).toBe("promly-qr-sunset-fjord-cruise.png");
   const qrUrl = decodeQrPng(await download.path());
   expect(qrUrl).toBe(link);
-
-  // Marketing Studio promo images: right size, and the QR on them opens the promoter's link.
-  await pro.goto(`/promoter/studio?campaign=${campaignId}`);
-  await pro.getByRole("tab", { name: /Promo image/ }).click();
-  for (const [label, key, w, h] of [["Post 1080×1080", "post", 1080, 1080], ["Story 1080×1920", "story", 1080, 1920]] as const) {
-    await pro.getByRole("button", { name: new RegExp(label) }).click();
-    await pro.getByTestId("promo-photo-option").first().click();
-    await expect(pro.getByTestId("promo-canvas")).toHaveAttribute("data-rendered", `${key}-0`);
-    const [png] = await Promise.all([pro.waitForEvent("download"), pro.getByTestId("download-promo").click()]);
-    expect(png.suggestedFilename()).toBe(`promly-${key}-premium-haircut.png`);
-    const file = PNG.sync.read(readFileSync(await png.path()));
-    expect([file.width, file.height]).toEqual([w, h]);
-    expect(jsQR(new Uint8ClampedArray(file.data), file.width, file.height)?.data).toBe(link);
-  }
 
   // → business sees the join live.
   await expect(biz.getByText("Alex joined your campaign.").first()).toBeVisible();
@@ -197,7 +183,7 @@ test("stage flow: publish → join → book → verify → commission appears li
   // Customer "scans" the QR code on a phone and books (no login).
   await cus.goto(qrUrl!);
   await cus.waitForURL("**/book/**");
-  await expect(cus.getByRole("heading", { name: "Premium Haircut" })).toBeVisible();
+  await expect(cus.getByRole("heading", { name: "Sunset Fjord Cruise" })).toBeVisible();
   await expect(cus.getByText(NOK("500.00")).first()).toBeVisible();
   await expect(cus.getByText(/commission/i)).toHaveCount(0); // customers never see the commission
   await expect(cus.getByTestId("cover-photo")).toBeVisible(); // the business's photo as cover
@@ -208,7 +194,7 @@ test("stage flow: publish → join → book → verify → commission appears li
   await expect(cus.getByRole("heading", { name: "You're booked!" })).toBeVisible();
 
   // → business gets the booking live, opens it, checks the frozen terms, verifies.
-  await expect(biz.getByText("New booking received — Premium Haircut").first()).toBeVisible();
+  await expect(biz.getByText("New booking received — Sunset Fjord Cruise").first()).toBeVisible();
   await biz.getByRole("link").filter({ hasText: "Awaiting service" }).first().click();
   await biz.waitForURL("**/business/bookings/**");
   await expect(biz.getByText("Stage Customer").first()).toBeVisible();

@@ -21,7 +21,7 @@ export async function getBookingPageData(code: string) {
   // external_booking_url migration has been applied yet.
   const { data: c } = await admin
     .from("campaigns")
-    .select("*, businesses(name, city, country, description, category)")
+    .select("*, businesses(name, city, country, description, category, is_demo)")
     .eq("id", link.campaign_id)
     .single();
   if (!c || !c.businesses) return null;

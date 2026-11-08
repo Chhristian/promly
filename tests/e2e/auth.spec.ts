@@ -40,6 +40,9 @@ async function signUp(page: Page, role: "business" | "promoter", name: string, e
   await page.goto("/auth/sign-up");
   await page.getByRole("button", { name: role === "business" ? /^Business/ : /^Promoter/ }).click();
   await page.fill("#display-name", name);
+  // With payments on, promoters also say how old they are (16-17 or 18+).
+  const adult = page.getByLabel("18 or older");
+  if (role === "promoter" && (await adult.count())) await adult.check();
   await page.fill("#email", email);
   await page.fill("#password", password);
   await page.fill("#repeat-password", password);
@@ -60,7 +63,7 @@ async function logOut(page: Page) {
 
 test("a new business signs up, logs out and logs back in", async ({ page }) => {
   const a = newAccount("business");
-  await signUp(page, "business", "E2E Barber", a.email, a.password);
+  await signUp(page, "business", "E2E Boat Tours", a.email, a.password);
   await page.waitForURL("**/business", { timeout: 15_000 });
   await expect(page.getByRole("heading", { name: "Set up your business" })).toBeVisible();
   await logOut(page);
